@@ -4,6 +4,12 @@
 
 本專案是舊版（保留於 `legacy/` 供參考）的重建，採純前端架構：所有計算皆在瀏覽器內以 RDKit WASM 執行，部署於 GitHub Pages（路徑 `/chemscutter/`）。目前處於重建階段。
 
+## 網站
+
+https://t22016aemc.github.io/chemscutter/
+
+推送到 `main` 會自動執行型別檢查、測試與建置，全部通過後部署到 GitHub Pages；任何一步失敗就不會更新網站。網站首頁底部顯示版本（git commit 短雜湊）與建置時間，可用來確認是否已更新到最新版本。
+
 ## 目錄結構
 
 - `src/engine/`：化學計算引擎（純 TypeScript）
