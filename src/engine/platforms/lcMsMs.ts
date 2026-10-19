@@ -19,6 +19,8 @@ import {
 import { PROTON_MASS_LEGACY_ROUNDED } from '../constants/masses';
 import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateLcMsMsRegime } from '../platform/parameterRegime';
+import { addStructureOnce, buildParentContext, buildParentStructure, createPlatformOutput } from './shared/context';
+import { buildSignals } from './shared/signals';
 
 export interface LcMsMsRunResult {
   candidates: FragmentCandidate[];
@@ -35,11 +37,8 @@ export function runLcMsMsFragmentation(
   config: SimulationConfig,
   fg: FunctionalGroupInfo
 ): LcMsMsRunResult {
-  const parentSmiles = mol.get_smiles();
-  const parentStoich = analyzeRDKitMolStoichiometry(mol, false);
-  const parentFormula = parentStoich.neutralFormula;
-  const parentMass = parentStoich.neutralExactMass;
-  const parentImg = molToSvgDataUri(mol, 300, 240);
+  const parent = buildParentContext(mol);
+  const { parentSmiles, parentStoich, parentFormula, parentMass, parentImg } = parent;
 
   const regime = evaluateLcMsMsRegime(config, fg);
   const { ionization, analyzer, fragmentationMethod: fragMethod, collisionEnergy: ce } = regime;
@@ -49,36 +48,20 @@ export function runLcMsMsFragmentation(
     ? `LC-MS/MS Generic, ${analyzer}, ${fragMethod}, CE ${ce} eV (General)`
     : `LC-MS/MS, ${ionization}, ${analyzer}, ${fragMethod}, CE ${ce} eV (Instrument-aware)`;
 
-  const candidates: FragmentCandidate[] = [];
-  const structures: StructureItem[] = [];
-  const signals: SignalItem[] = [];
-  const seenStructureKeys = new Set<string>();
+  const out = createPlatformOutput();
+  const { candidates, structures, seenStructureKeys } = out;
 
   // Add Parent Molecule
-  structures.push({
-    id: 'Parent',
-    name: '母分子前驅物 (Precursor Molecule)',
-    formula: parentFormula,
-    neutralFormula: parentFormula,
-    smiles: parentSmiles,
-    canonicalSmiles: parentSmiles,
-    exact_mass: parentMass,
-    neutralExactMass: parentMass,
-    ionExactMass: parentMass,
-    mz: parentMass,
-    charge: 0,
-    image: parentImg,
-    relative_intensity: 100.0,
-    heuristicScore: 100.0,
-    priority: 'High',
-    confidence: 'High',
-    mode: regime.enableNegative && regime.enablePositive ? 'Both' : regime.enableNegative ? 'Negative' : 'Positive',
-    mechanism: regime.regimeSummary,
-    fragmentationPathway: 'Precursor Selection (MS1)',
-    pathwayStatus: 'Verified Graph Product',
-    massBalanceVerified: true
-  });
-  seenStructureKeys.add(parentSmiles);
+  addStructureOnce(
+    out,
+    parentSmiles,
+    buildParentStructure(parent, {
+      name: '母分子前驅物 (Precursor Molecule)',
+      mode: regime.enableNegative && regime.enablePositive ? 'Both' : regime.enableNegative ? 'Negative' : 'Positive',
+      mechanism: regime.regimeSummary,
+      fragmentationPathway: 'Precursor Selection (MS1)'
+    })
+  );
 
   const isLowCE = regime.ceRegime === 'low_ce';
   const isHighCE = regime.ceRegime === 'high_ce';
@@ -929,38 +912,10 @@ export function runLcMsMsFragmentation(
     sweepResults = sweepList;
   }
 
-  for (const c of finalCandidates) {
-    signals.push({
-      id: c.id,
-      type:
-        c.parentStructureId === 'Parent'
-          ? '准分子離子 (Precursor Adduct)'
-          : `產物離子 (${c.parentStructureId || c.id})`,
-      mode: c.polarity,
-      adduct: c.ionType,
-      formula: c.formula,
-      neutralFormula: c.neutralFormula,
-      smiles: c.smiles,
-      canonicalSmiles: c.canonicalSmiles,
-      mz: c.mz,
-      neutralExactMass: c.neutralExactMass,
-      ionExactMass: c.ionExactMass,
-      charge: c.charge,
-      relative_intensity: c.heuristicScore,
-      heuristicScore: c.heuristicScore,
-      priority: c.priority,
-      confidence: c.confidence,
-      mechanism: c.mechanism,
-      fragmentationPathway: c.fragmentationPathway,
-      pathwayStatus: c.pathwayStatus,
-      neutralLoss: c.neutralLoss,
-      neutralLossMass: c.neutralLossMass,
-      massBalanceVerified: c.massBalanceVerified,
-      parentStructureId: c.parentStructureId,
-      sourceRule: c.sourceRule,
-      parameterContext: c.parameterContext
-    });
-  }
+  const signals = buildSignals(finalCandidates, {
+    precursorType: '准分子離子 (Precursor Adduct)',
+    fragmentTypePrefix: '產物離子'
+  });
 
   return {
     candidates: finalCandidates,

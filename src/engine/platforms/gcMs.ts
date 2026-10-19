@@ -23,6 +23,8 @@ import {
 } from '../constants/masses';
 import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateGcMsRegime } from '../platform/parameterRegime';
+import { addStructureOnce, buildParentContext, buildParentStructure, createPlatformOutput } from './shared/context';
+import { buildSignals } from './shared/signals';
 
 export interface GcMsRunResult {
   candidates: FragmentCandidate[];
@@ -39,11 +41,8 @@ export function runGcMsFragmentation(
   config: SimulationConfig,
   fg: FunctionalGroupInfo
 ): GcMsRunResult {
-  const parentSmiles = mol.get_smiles();
-  const parentStoich = analyzeRDKitMolStoichiometry(mol, false);
-  const parentFormula = parentStoich.neutralFormula;
-  const parentMass = parentStoich.neutralExactMass;
-  const parentImg = molToSvgDataUri(mol, 300, 240);
+  const parent = buildParentContext(mol);
+  const { parentSmiles, parentStoich, parentFormula, parentMass, parentImg } = parent;
 
   const regime = evaluateGcMsRegime(config, fg);
   const { isCI, electronEnergy: ee, reagentGas, analyzer } = regime;
@@ -52,36 +51,23 @@ export function runGcMsFragmentation(
     ? `GC-MS CI (${reagentGas} reagent gas), ${analyzer}`
     : `GC-MS EI (${ee} eV), ${analyzer}, ${ee >= 55 ? 'Standard NIST 70eV Regime' : 'Low-Energy Soft EI Regime'}`;
 
-  const candidates: FragmentCandidate[] = [];
-  const structures: StructureItem[] = [];
-  const signals: SignalItem[] = [];
-  const seenStructureKeys = new Set<string>();
+  const out = createPlatformOutput();
+  const { candidates, structures, seenStructureKeys } = out;
 
-  // Add Parent Molecule
-  structures.push({
-    id: 'Parent',
-    name: isCI ? '母分子 (CI Precursor Molecule)' : '母分子自由基陽離子 (Molecular Radical Cation M⁺•)',
-    formula: isCI ? parentFormula : `${parentFormula}+.`,
-    neutralFormula: parentFormula,
-    smiles: parentSmiles,
-    canonicalSmiles: parentSmiles,
-    exact_mass: parentMass,
-    neutralExactMass: parentMass,
-    ionExactMass: isCI ? parentMass : Number((parentMass - ELECTRON_MASS).toFixed(4)),
-    mz: isCI ? parentMass : Number((parentMass - ELECTRON_MASS).toFixed(4)),
-    charge: isCI ? 0 : 1,
-    image: parentImg,
-    relative_intensity: 100.0,
-    heuristicScore: 100.0,
-    priority: 'High',
-    confidence: 'High',
-    mode: 'Positive',
-    mechanism: regime.regimeSummary,
-    fragmentationPathway: isCI ? `CI (${reagentGas}) Ionization` : `EI (${ee} eV) Electron Impact`,
-    pathwayStatus: 'Verified Graph Product',
-    massBalanceVerified: true
-  });
-  seenStructureKeys.add(parentSmiles);
+  // Add Parent Molecule（EI 時母體為分子自由基陽離子 M⁺•）
+  addStructureOnce(
+    out,
+    parentSmiles,
+    buildParentStructure(parent, {
+      name: isCI ? '母分子 (CI Precursor Molecule)' : '母分子自由基陽離子 (Molecular Radical Cation M⁺•)',
+      mode: 'Positive',
+      mechanism: regime.regimeSummary,
+      fragmentationPathway: isCI ? `CI (${reagentGas}) Ionization` : `EI (${ee} eV) Electron Impact`,
+      ion: isCI
+        ? undefined
+        : { formula: `${parentFormula}+.`, mass: Number((parentMass - ELECTRON_MASS).toFixed(4)), charge: 1 }
+    })
+  );
 
   // ============================================================================
   // 1. Molecular Ion M+. (in EI) or [M+H]+ & Reagent Adducts (in CI)
@@ -1090,38 +1076,10 @@ export function runGcMsFragmentation(
     sweepResults = sweepList;
   }
 
-  for (const c of finalCandidates) {
-    signals.push({
-      id: c.id,
-      type:
-        c.parentStructureId === 'Parent'
-          ? '分子離子 (Molecular/Precursor Ion)'
-          : `碎片離子 (${c.parentStructureId || c.id})`,
-      mode: 'Positive',
-      adduct: c.ionType,
-      formula: c.formula,
-      neutralFormula: c.neutralFormula,
-      smiles: c.smiles,
-      canonicalSmiles: c.canonicalSmiles,
-      mz: c.mz,
-      neutralExactMass: c.neutralExactMass,
-      ionExactMass: c.ionExactMass,
-      charge: c.charge,
-      relative_intensity: c.heuristicScore,
-      heuristicScore: c.heuristicScore,
-      priority: c.priority,
-      confidence: c.confidence,
-      mechanism: c.mechanism,
-      fragmentationPathway: c.fragmentationPathway,
-      pathwayStatus: c.pathwayStatus,
-      neutralLoss: c.neutralLoss,
-      neutralLossMass: c.neutralLossMass,
-      massBalanceVerified: c.massBalanceVerified,
-      parentStructureId: c.parentStructureId,
-      sourceRule: c.sourceRule,
-      parameterContext: c.parameterContext
-    });
-  }
+  const signals = buildSignals(finalCandidates, {
+    precursorType: '分子離子 (Molecular/Precursor Ion)',
+    fragmentTypePrefix: '碎片離子'
+  });
 
   return {
     candidates: finalCandidates,
