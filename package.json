@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "golden:generate": "tsx scripts/golden/generate-golden.ts",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:clean": "node -e \"for (const d of ['node_modules/.vitest-cache','node_modules/.vite/vitest']) require('fs').rmSync(d,{recursive:true,force:true})\" && vitest run"
   },
   "dependencies": {
     "@rdkit/rdkit": "^2026.9.1",

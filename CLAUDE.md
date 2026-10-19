@@ -35,7 +35,7 @@ CheMScutter 是質譜候選碎片模擬器：輸入化學結構，預測其在 T
 ## 完成標準
 每次修改後必須執行並全部通過：
 1. npm run typecheck
-2. npm test
+2. npm run test:clean（先清除 Vitest 快取再跑全部測試。原因：快取會保留 import.meta.glob 的檔案清單，新增或刪除標準答案檔後可能造成測試假通過）
 3. npm run build
 
 ## 提交
