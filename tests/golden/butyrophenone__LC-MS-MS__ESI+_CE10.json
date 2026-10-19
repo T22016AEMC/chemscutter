@@ -73,7 +73,9 @@
       "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論",
       "McLafferty 斷裂理論：6-元環過渡態 γ-H 轉移與 β-鍵斷裂"
     ],
+    "input_smiles": "CCCC(=O)c1ccccc1",
     "negative_path_enabled": false,
+    "removed_components": [],
     "smiles": "CCCC(=O)c1ccccc1"
   },
   "signals": [

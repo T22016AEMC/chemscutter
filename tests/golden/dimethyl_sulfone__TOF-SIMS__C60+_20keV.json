@@ -275,7 +275,9 @@
     "fragmentation_theories": [
       "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
     ],
+    "input_smiles": "CS(C)(=O)=O",
     "negative_path_enabled": false,
+    "removed_components": [],
     "smiles": "CS(C)(=O)=O"
   },
   "signals": [

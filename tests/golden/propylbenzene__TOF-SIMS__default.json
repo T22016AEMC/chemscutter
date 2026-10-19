@@ -716,7 +716,9 @@
       "McLafferty 斷裂理論：6-元環過渡態 γ-H 轉移與 β-鍵斷裂",
       "苄位斷裂 / Tropylium 鎓離子穩定共振重排機制"
     ],
+    "input_smiles": "CCCc1ccccc1",
     "negative_path_enabled": false,
+    "removed_components": [],
     "smiles": "CCCc1ccccc1"
   },
   "signals": [

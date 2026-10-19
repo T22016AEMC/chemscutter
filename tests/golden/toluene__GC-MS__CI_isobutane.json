@@ -72,7 +72,9 @@
       "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論",
       "苄位斷裂 / Tropylium 鎓離子穩定共振重排機制"
     ],
+    "input_smiles": "Cc1ccccc1",
     "negative_path_enabled": false,
+    "removed_components": [],
     "smiles": "Cc1ccccc1"
   },
   "signals": [

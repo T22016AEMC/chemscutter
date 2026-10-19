@@ -349,7 +349,9 @@
       "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論",
       "高電負性/酸性官能基陰離子裂解分支 (Negative Cleavage Path: [M-H]⁻ 與酸根陰離子解離)"
     ],
+    "input_smiles": "Clc1ccc(Br)cc1",
     "negative_path_enabled": true,
+    "removed_components": [],
     "smiles": "Clc1ccc(Br)cc1"
   },
   "signals": [

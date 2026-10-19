@@ -854,7 +854,9 @@
       "高電負性/酸性官能基陰離子裂解分支 (Negative Cleavage Path: [M-H]⁻ 與酸根陰離子解離)",
       "苄位斷裂 / Tropylium 鎓離子穩定共振重排機制"
     ],
+    "input_smiles": "CC(C)Cc1ccc(C(C)C(=O)O)cc1",
     "negative_path_enabled": true,
+    "removed_components": [],
     "smiles": "CC(C)Cc1ccc(C(C)C(=O)O)cc1"
   },
   "signals": [

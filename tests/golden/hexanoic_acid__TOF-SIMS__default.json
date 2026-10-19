@@ -1613,7 +1613,9 @@
       "McLafferty 斷裂理論：6-元環過渡態 γ-H 轉移與 β-鍵斷裂",
       "高電負性/酸性官能基陰離子裂解分支 (Negative Cleavage Path: [M-H]⁻ 與酸根陰離子解離)"
     ],
+    "input_smiles": "CCCCCC(=O)O",
     "negative_path_enabled": true,
+    "removed_components": [],
     "smiles": "CCCCCC(=O)O"
   },
   "signals": [

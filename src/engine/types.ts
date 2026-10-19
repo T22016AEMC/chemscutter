@@ -137,7 +137,10 @@ export interface StructureItem {
 }
 
 export interface ParentMolecule {
-  smiles: string;
+  smiles: string;                    // 標準化後（實際分析）的 SMILES
+  input_smiles?: string;             // 原始輸入解析後的 SMILES（標準化前）
+  removed_components?: string[];     // 標準化時移除的成分（抗衡離子等）SMILES，沒有則為空陣列
+  standardization_note?: string;     // 標準化說明；未做任何改動時省略
   formula: string;
   exact_mass: number;
   detected_format?: string;

@@ -11,6 +11,7 @@ import type {
 import type { CommonChemJson, RDKitDescriptors } from './rdkit/types';
 import { getRDKit } from './rdkit/loader';
 import { parseInputToMol } from './chem/inputParsing';
+import { standardizeMolecule } from './chem/standardize';
 import { calculateFormulaFromJson } from './chem/formula';
 import { detectFunctionalGroups } from './rules/functionalGroups';
 import { runTofSimsFragmentation } from './platforms/tofSims';
@@ -65,10 +66,16 @@ export async function runMultiPlatformAnalysis(
   config?: Partial<SimulationConfig>
 ): Promise<AnalysisResult> {
   const RDKit = await getRDKit();
-  const { mol, format, error } = parseInputToMol(rawInput, RDKit);
-  if (error || !mol || !mol.is_valid()) {
+  const { mol: inputMol, format, error } = parseInputToMol(rawInput, RDKit);
+  if (error || !inputMol || !inputMol.is_valid()) {
     throw new Error(error || '無效的化學結構式');
   }
+
+  // Q14：移除抗衡離子並中和可中和的電荷，以中性母體分析
+  const inputSmiles = inputMol.get_smiles();
+  const standardized = standardizeMolecule(inputMol, RDKit);
+  const mol = standardized.mol;
+  if (mol !== inputMol) inputMol.delete();
 
   const parentSmiles = mol.get_smiles();
   const parentJson = JSON.parse(mol.get_json()) as CommonChemJson;
@@ -124,6 +131,9 @@ export async function runMultiPlatformAnalysis(
     disclaimer: disclaimerText,
     parent: {
       smiles: parentSmiles,
+      input_smiles: inputSmiles,
+      removed_components: standardized.removedComponents,
+      standardization_note: standardized.note,
       formula: parentFormula,
       exact_mass: Number(parentMass.toFixed(4)),
       detected_format: format,
