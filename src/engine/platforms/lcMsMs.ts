@@ -28,6 +28,8 @@ import {
   verifyAgainstParent
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
+import { addIsotopeSignals } from './shared/isotopeSignals';
+import { buildParameterSweep } from './shared/parameterSweep';
 import { precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -656,44 +658,13 @@ export function runLcMsMsFragmentation(
   // ============================================================================
   // 5. Isotope Signatures
   // ============================================================================
-  const isotopes = generateIsotopeCandidates(
-    parentFormula,
-    parentMass,
-    config.polarity || 'Positive',
-    fg
-  );
-  for (const iso of isotopes) {
-    if (iso.mode === 'Positive' && !regime.enablePositive) continue;
-    if (iso.mode === 'Negative' && !regime.enableNegative) continue;
-    candidates.push({
-      id: `LCMS_Iso_${iso.formula}`,
-      technique: 'LC-MS/MS',
-      polarity: iso.mode,
-      precursorMz: parentMass,
-      mz: iso.mz,
-      formula: iso.formula,
-      neutralFormula: parentFormula,
-      smiles: parentSmiles,
-      canonicalSmiles: parentSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: iso.mz,
-      charge: iso.mode === 'Negative' ? -1 : 1,
-      ionType: iso.adduct,
-      mechanism: iso.mechanism,
-      fragmentationPathway: 'Natural Isotope Abundance Pattern (M+2)',
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: iso.priority,
-      confidence: iso.confidence,
-      sourceRule: 'IsotopePattern',
-      heuristicScore: iso.relative_intensity,
-      image: parentImg,
-      explanation: iso.mechanism,
-      parameterContext
-    });
-  }
+  addIsotopeSignals(out, ctx, fg, {
+    // LEGACY-QUIRK(Q27): 未設定極性時預設 'Positive'（TOF-SIMS 預設 'Both'）；sourceRule 為 IsotopePattern（其他平台為 IsotopeSignature）
+    mode: config.polarity || 'Positive',
+    enabled: { positive: regime.enablePositive, negative: regime.enableNegative },
+    idPrefix: 'LCMS_Iso_',
+    sourceRule: 'IsotopePattern'
+  });
 
   // Deduplicate and rank final candidate list
   const finalCandidates = deduplicateAndRankCandidates(candidates);
@@ -702,72 +673,43 @@ export function runLcMsMsFragmentation(
   // 6. Parameter Sweep Support (Collision Energy Sweep: default 10, 25, 40 eV or custom range)
   // ============================================================================
   const activeSweepRange = config.collisionEnergyRange || { start: 10, end: 40, step: 15 };
-  let sweepResults: SweepResultItem[] | undefined;
-  if (activeSweepRange) {
-    const { start, end, step } = activeSweepRange;
-    const sweepList: SweepResultItem[] = [];
-    const validStep = Math.max(1, step || 5);
-
-    for (let currentCE = start; currentCE <= end; currentCE += validStep) {
-      const topList = finalCandidates
-        .filter((c) => !c.ionType.includes('³⁷Cl') && !c.ionType.includes('⁸¹Br'))
-        .map((c) => {
-          const massRatio = c.neutralExactMass / (parentMass || 1);
-          let energyScore = c.heuristicScore || 50;
-
-          if (currentCE <= 15) {
-            if (c.ionType === '[M+H]+' || c.ionType === '[M-H]-') energyScore = 98;
-            else if (c.sourceRule.includes('Sequential') || c.sourceRule.includes('Diagnostic')) energyScore = 20;
-            else if (massRatio > 0.65) energyScore += 12;
-            else energyScore -= 25;
-          } else if (currentCE >= 35) {
-            if (c.ionType === '[M+H]+' || c.ionType === '[M-H]-') energyScore = 35;
-            else if (c.sourceRule.includes('Sequential') || c.sourceRule.includes('Diagnostic') || massRatio < 0.7) {
-              energyScore = Math.min(96, energyScore + 22);
-            }
-          }
-
-          let likelihood: 'Dominant' | 'Prominent' | 'Trace' | 'Unfavored' = 'Prominent';
-          if (energyScore >= 80) likelihood = 'Dominant';
-          else if (energyScore >= 55) likelihood = 'Prominent';
-          else if (energyScore >= 35) likelihood = 'Trace';
-          else likelihood = 'Unfavored';
-
-          return {
-            id: c.id,
-            ionType: c.ionType,
-            formula: c.formula,
-            mz: c.mz,
-            priority: (energyScore > 68 ? 'High' : energyScore > 42 ? 'Medium' : 'Low') as 'High' | 'Medium' | 'Low',
-            likelihood,
-            score: energyScore
-          };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 4)
-        .map(({ id, ionType, formula, mz, priority, likelihood }) => ({
-          id,
-          ionType,
-          formula,
-          mz,
-          priority,
-          likelihood
-        }));
-
-      sweepList.push({
-        parameterValue: currentCE,
-        parameterLabel: `CE ${currentCE} eV`,
-        regimeSummary:
-          currentCE <= 15
-            ? '低能區：前驅離子與一階弱鍵脫除為主'
-            : currentCE >= 35
-            ? '高能區：二階連續重排與小分子診斷離子為主'
-            : '中能區：一階與二階產物離子並存',
-        topCandidates: topList
-      });
-    }
-    sweepResults = sweepList;
+  // 已簡化：舊版另有 if (activeSweepRange)；activeSweepRange 為使用者設定或上一行的預設物件，恆為真
+  const { start, end, step } = activeSweepRange;
+  const validStep = Math.max(1, step || 5);
+  const cePoints: number[] = [];
+  for (let currentCE = start; currentCE <= end; currentCE += validStep) {
+    cePoints.push(currentCE);
   }
+
+  const sweepResults: SweepResultItem[] | undefined = buildParameterSweep(finalCandidates, {
+    points: cePoints,
+    label: (currentCE) => `CE ${currentCE} eV`,
+    regimeSummary: (currentCE) =>
+      currentCE <= 15
+        ? '低能區：前驅離子與一階弱鍵脫除為主'
+        : currentCE >= 35
+        ? '高能區：二階連續重排與小分子診斷離子為主'
+        : '中能區：一階與二階產物離子並存',
+    score: (c, currentCE) => {
+      const massRatio = c.neutralExactMass / (parentMass || 1);
+      let energyScore = c.heuristicScore || 50;
+
+      if (currentCE <= 15) {
+        if (c.ionType === '[M+H]+' || c.ionType === '[M-H]-') energyScore = 98;
+        else if (c.sourceRule.includes('Sequential') || c.sourceRule.includes('Diagnostic')) energyScore = 20;
+        else if (massRatio > 0.65) energyScore += 12;
+        else energyScore -= 25;
+      } else if (currentCE >= 35) {
+        if (c.ionType === '[M+H]+' || c.ionType === '[M-H]-') energyScore = 35;
+        else if (c.sourceRule.includes('Sequential') || c.sourceRule.includes('Diagnostic') || massRatio < 0.7) {
+          energyScore = Math.min(96, energyScore + 22);
+        }
+      }
+      return energyScore;
+    },
+    // LEGACY-QUIRK(Q28): priority 門檻為 68／42（GC-MS 為 65／40）
+    priorityThresholds: { high: 68, medium: 42 }
+  });
 
   const signals = buildSignals(finalCandidates, {
     precursorType: '准分子離子 (Precursor Adduct)',

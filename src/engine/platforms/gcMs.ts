@@ -31,6 +31,8 @@ import {
   verifyAgainstParent
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
+import { addIsotopeSignals } from './shared/isotopeSignals';
+import { buildParameterSweep } from './shared/parameterSweep';
 import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -685,37 +687,13 @@ export function runGcMsFragmentation(
   // ============================================================================
   // 5. Halogen Isotope Signatures
   // ============================================================================
-  const isotopes = generateIsotopeCandidates(parentFormula, parentMass, 'Positive', fg);
-  for (const iso of isotopes) {
-    candidates.push({
-      id: `GCMS_Iso_${iso.formula}`,
-      technique: 'GC-MS',
-      polarity: 'Positive',
-      precursorMz: parentMass,
-      mz: iso.mz,
-      formula: iso.formula,
-      neutralFormula: parentFormula,
-      smiles: parentSmiles,
-      canonicalSmiles: parentSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: iso.mz,
-      charge: 1,
-      ionType: iso.adduct,
-      mechanism: iso.mechanism,
-      fragmentationPathway: 'Natural Isotope Abundance Pattern (M+2)',
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: iso.priority,
-      confidence: iso.confidence,
-      sourceRule: 'IsotopeSignature',
-      heuristicScore: iso.relative_intensity,
-      image: parentImg,
-      explanation: iso.mechanism,
-      parameterContext
-    });
-  }
+  // GC-MS 只有正離子：以 'Positive' 產生的同位素訊號必定為正離子，因此不需依極性過濾
+  addIsotopeSignals(out, ctx, fg, {
+    mode: 'Positive',
+    enabled: { positive: true, negative: true },
+    idPrefix: 'GCMS_Iso_',
+    sourceRule: 'IsotopeSignature'
+  });
 
   // Deduplicate and rank final candidate list
   const finalCandidates = deduplicateAndRankCandidates(candidates);
@@ -725,65 +703,32 @@ export function runGcMsFragmentation(
   // ============================================================================
   let sweepResults: SweepResultItem[] | undefined;
   if (!isCI && config.electronEnergy) {
-    const sweepList: SweepResultItem[] = [];
-    const energies = [20, 35, 50, 70];
+    sweepResults = buildParameterSweep(finalCandidates, {
+      points: [20, 35, 50, 70],
+      label: (curEE) => `EE ${curEE} eV`,
+      regimeSummary: (curEE) =>
+        curEE <= 25
+          ? '軟電離閾值區：M⁺• 強烈主導，二階開環不發生'
+          : curEE >= 70
+          ? 'NIST 70 eV 標準區：一階與二階特徵裂解完整展開'
+          : '中能過渡區：一階重排與 α-裂解逐漸增強',
+      score: (c, curEE) => {
+        const massRatio = c.neutralExactMass / (parentMass || 1);
+        let energyScore = c.heuristicScore || 50;
 
-    for (const curEE of energies) {
-      const topList = finalCandidates
-        .filter((c) => !c.ionType.includes('³⁷Cl') && !c.ionType.includes('⁸¹Br'))
-        .map((c) => {
-          const massRatio = c.neutralExactMass / (parentMass || 1);
-          let energyScore = c.heuristicScore || 50;
-
-          if (curEE <= 25) {
-            if (c.ionType === 'M+.') energyScore = 96;
-            else if (c.sourceRule.includes('AcetyleneLoss') || c.sourceRule.includes('RingOpening')) energyScore = 15;
-            else energyScore -= 22;
-          } else if (curEE >= 70) {
-            if (c.ionType === 'M+.' && !fg.hasAromaticRing) energyScore -= 18;
-            if (massRatio < 0.75) energyScore = Math.min(96, energyScore + 14);
-          }
-
-          let likelihood: 'Dominant' | 'Prominent' | 'Trace' | 'Unfavored' = 'Prominent';
-          if (energyScore >= 80) likelihood = 'Dominant';
-          else if (energyScore >= 55) likelihood = 'Prominent';
-          else if (energyScore >= 35) likelihood = 'Trace';
-          else likelihood = 'Unfavored';
-
-          return {
-            id: c.id,
-            ionType: c.ionType,
-            formula: c.formula,
-            mz: c.mz,
-            priority: (energyScore > 65 ? 'High' : energyScore > 40 ? 'Medium' : 'Low') as 'High' | 'Medium' | 'Low',
-            likelihood,
-            score: energyScore
-          };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 4)
-        .map(({ id, ionType, formula, mz, priority, likelihood }) => ({
-          id,
-          ionType,
-          formula,
-          mz,
-          priority,
-          likelihood
-        }));
-
-      sweepList.push({
-        parameterValue: curEE,
-        parameterLabel: `EE ${curEE} eV`,
-        regimeSummary:
-          curEE <= 25
-            ? '軟電離閾值區：M⁺• 強烈主導，二階開環不發生'
-            : curEE >= 70
-            ? 'NIST 70 eV 標準區：一階與二階特徵裂解完整展開'
-            : '中能過渡區：一階重排與 α-裂解逐漸增強',
-        topCandidates: topList
-      });
-    }
-    sweepResults = sweepList;
+        if (curEE <= 25) {
+          if (c.ionType === 'M+.') energyScore = 96;
+          else if (c.sourceRule.includes('AcetyleneLoss') || c.sourceRule.includes('RingOpening')) energyScore = 15;
+          else energyScore -= 22;
+        } else if (curEE >= 70) {
+          if (c.ionType === 'M+.' && !fg.hasAromaticRing) energyScore -= 18;
+          if (massRatio < 0.75) energyScore = Math.min(96, energyScore + 14);
+        }
+        return energyScore;
+      },
+      // LEGACY-QUIRK(Q28): priority 門檻為 65／40（LC-MS/MS 為 68／42）
+      priorityThresholds: { high: 65, medium: 40 }
+    });
   }
 
   const signals = buildSignals(finalCandidates, {

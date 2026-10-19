@@ -44,6 +44,7 @@ import {
   verifyAgainstParent
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
+import { addIsotopeSignals } from './shared/isotopeSignals';
 import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -909,44 +910,13 @@ export function runTofSimsFragmentation(
   // ============================================================================
   // 5. Isotope Signatures
   // ============================================================================
-  const isotopes = generateIsotopeCandidates(
-    parentFormula,
-    parentMass,
-    config.polarity || 'Both',
-    fg
-  );
-  for (const iso of isotopes) {
-    if (iso.mode === 'Positive' && !regime.enablePositive) continue;
-    if (iso.mode === 'Negative' && !regime.enableNegative) continue;
-    candidates.push({
-      id: `Iso_${iso.formula}`,
-      technique: 'TOF-SIMS',
-      polarity: iso.mode,
-      precursorMz: parentMass,
-      mz: iso.mz,
-      formula: iso.formula,
-      neutralFormula: parentFormula,
-      smiles: parentSmiles,
-      canonicalSmiles: parentSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: iso.mz,
-      charge: iso.mode === 'Negative' ? -1 : 1,
-      ionType: iso.adduct,
-      mechanism: iso.mechanism,
-      fragmentationPathway: 'Natural Isotope Abundance Pattern (M+2)',
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: iso.priority,
-      confidence: iso.confidence,
-      sourceRule: 'IsotopeSignature',
-      heuristicScore: iso.relative_intensity,
-      image: parentImg,
-      explanation: iso.mechanism,
-      parameterContext
-    });
-  }
+  addIsotopeSignals(out, ctx, fg, {
+    // LEGACY-QUIRK(Q27): 未設定極性時預設 'Both'（LC-MS/MS 預設 'Positive'）；sourceRule 為 IsotopeSignature（LC-MS/MS 為 IsotopePattern）
+    mode: config.polarity || 'Both',
+    enabled: { positive: regime.enablePositive, negative: regime.enableNegative },
+    idPrefix: 'Iso_',
+    sourceRule: 'IsotopeSignature'
+  });
 
   const finalCandidates = deduplicateAndRankCandidates(candidates);
   const signals = buildSignals(finalCandidates, {
