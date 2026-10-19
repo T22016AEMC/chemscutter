@@ -3,7 +3,7 @@
 // 此測試永久保留，不可 import legacy/。
 import { describe, expect, it } from 'vitest';
 import { runMultiPlatformAnalysis } from '../src/engine';
-import { buildCases } from './fixtures/cases';
+import { buildGoldenCases } from './fixtures/cases';
 import { normalizeForCompare } from './fixtures/normalize';
 
 const goldenFiles = import.meta.glob<{ default: unknown }>('./golden/*.json', { eager: true });
@@ -14,7 +14,7 @@ function loadGolden(id: string): unknown {
   return mod.default;
 }
 
-const cases = buildCases();
+const cases = buildGoldenCases();
 
 describe('標準答案（golden master）', () => {
   it('案例清單與標準答案檔一一對應', () => {

@@ -1,0 +1,263 @@
+{
+  "activeRegimeDescription": "ESI- / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 高碰撞能 (40 eV)：前驅離子大幅耗盡，開啟二階連續脫除 (Sequential losses) 與低 m/z 特徵診斷陽離子",
+  "candidates": [
+    {
+      "canonicalSmiles": "CCOC",
+      "charge": -1,
+      "confidence": "Medium",
+      "exactMass": 60.0575,
+      "explanation": "負離子碰撞活化下脫去中性 CH2，負電荷保留於共軛鹼碎片 C3H7O- (CCOC)",
+      "formula": "C3H7O-",
+      "fragmentationPathway": "[M-H]- → -CH2 → C3H7O-",
+      "heuristicScore": 34.2,
+      "id": "LCMS_Frag_2_neg",
+      "imageHash": "3a93c28c5dacc63978a36f32514ced0b97ddb3a54d1b85b6ae1dc85a09c2156b",
+      "ionExactMass": 59.0502,
+      "ionType": "[Frag-H]-",
+      "massBalanceError": 0,
+      "massBalanceVerified": true,
+      "mechanism": "CID 負離子骨架異裂 (非環單鍵斷裂 (Exocyclic Single-Bond Cleavage))：酸性官能基去質子化形成共軛鹼陰離子",
+      "mz": 59.0502,
+      "neutralExactMass": 60.0575,
+      "neutralFormula": "C3H8O",
+      "neutralLoss": "CH2",
+      "neutralLossMass": 14.0157,
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 40 eV (General)",
+      "parentStructureId": "LCMS_Frag_2",
+      "pathwayStatus": "Candidate",
+      "polarity": "Negative",
+      "precursorMz": 73.0659,
+      "priority": "Low",
+      "smiles": "CCOC",
+      "sourceRule": "LCMS_CID_NegativeCleavage",
+      "technique": "LC-MS/MS"
+    }
+  ],
+  "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
+  "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 40 eV (General)",
+  "parent": {
+    "detected_format": "SMILES",
+    "detected_groups": [
+      "甲氧基 (-OCH3)"
+    ],
+    "exact_mass": 74.0732,
+    "formula": "C4H10O",
+    "fragmentation_theories": [
+      "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
+    ],
+    "negative_path_enabled": false,
+    "smiles": "CCOCC"
+  },
+  "signals": [
+    {
+      "adduct": "[Frag-H]-",
+      "canonicalSmiles": "CCOC",
+      "charge": -1,
+      "confidence": "Medium",
+      "formula": "C3H7O-",
+      "fragmentationPathway": "[M-H]- → -CH2 → C3H7O-",
+      "heuristicScore": 34.2,
+      "id": "LCMS_Frag_2_neg",
+      "ionExactMass": 59.0502,
+      "massBalanceVerified": true,
+      "mechanism": "CID 負離子骨架異裂 (非環單鍵斷裂 (Exocyclic Single-Bond Cleavage))：酸性官能基去質子化形成共軛鹼陰離子",
+      "mode": "Negative",
+      "mz": 59.0502,
+      "neutralExactMass": 60.0575,
+      "neutralFormula": "C3H8O",
+      "neutralLoss": "CH2",
+      "neutralLossMass": 14.0157,
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 40 eV (General)",
+      "parentStructureId": "LCMS_Frag_2",
+      "pathwayStatus": "Candidate",
+      "priority": "Low",
+      "relative_intensity": 34.2,
+      "smiles": "CCOC",
+      "sourceRule": "LCMS_CID_NegativeCleavage",
+      "type": "產物離子 (LCMS_Frag_2)"
+    }
+  ],
+  "simulationConfig": {
+    "analyzer": "QTOF",
+    "collisionEnergy": 40,
+    "fragmentationMethod": "CID",
+    "ionization": "ESI-",
+    "polarity": "Negative",
+    "simulationMode": "General",
+    "technique": "LC-MS/MS"
+  },
+  "simulationModeLabel": "General",
+  "structures": [
+    {
+      "canonicalSmiles": "CCOCC",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 74.0732,
+      "formula": "C4H10O",
+      "fragmentationPathway": "Precursor Selection (MS1)",
+      "heuristicScore": 100,
+      "id": "Parent",
+      "imageHash": "cd357519529e9761d107421a1021de1ab57a772900e0469a83e51c69d8b6d63c",
+      "ionExactMass": 74.0732,
+      "massBalanceVerified": true,
+      "mechanism": "ESI- / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 高碰撞能 (40 eV)：前驅離子大幅耗盡，開啟二階連續脫除 (Sequential losses) 與低 m/z 特徵診斷陽離子",
+      "mode": "Negative",
+      "mz": 74.0732,
+      "name": "母分子前驅物 (Precursor Molecule)",
+      "neutralExactMass": 74.0732,
+      "neutralFormula": "C4H10O",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 100,
+      "smiles": "CCOCC"
+    },
+    {
+      "canonicalSmiles": "C",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 16.0313,
+      "formula": "CH4",
+      "fragmentationPathway": "非環單鍵斷裂 (Exocyclic Single-Bond Cleavage)",
+      "heuristicScore": 82,
+      "id": "LCMS_Frag_1",
+      "imageHash": "79d76e674ce77d61cc28bf3f4a6b991cffbe14cc12207d8f817ab0435214ca63",
+      "ionExactMass": 16.0313,
+      "massBalanceVerified": true,
+      "mechanism": "CID 碰撞誘導異裂：非環單鍵斷裂 (Exocyclic Single-Bond Cleavage)",
+      "mode": "Both",
+      "mz": 16.0313,
+      "name": "MS/MS 碎片 1 (非環單鍵斷裂)",
+      "neutralExactMass": 16.0313,
+      "neutralFormula": "CH4",
+      "neutralLoss": "C3H6O",
+      "neutralLossMass": 58.0419,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 82,
+      "smiles": "C"
+    },
+    {
+      "canonicalSmiles": "CCOC",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 60.0575,
+      "formula": "C3H8O",
+      "fragmentationPathway": "非環單鍵斷裂 (Exocyclic Single-Bond Cleavage)",
+      "heuristicScore": 38,
+      "id": "LCMS_Frag_2",
+      "imageHash": "3a93c28c5dacc63978a36f32514ced0b97ddb3a54d1b85b6ae1dc85a09c2156b",
+      "ionExactMass": 60.0575,
+      "massBalanceVerified": true,
+      "mechanism": "CID 碰撞誘導異裂：非環單鍵斷裂 (Exocyclic Single-Bond Cleavage)",
+      "mode": "Both",
+      "mz": 60.0575,
+      "name": "MS/MS 碎片 2 (非環單鍵斷裂)",
+      "neutralExactMass": 60.0575,
+      "neutralFormula": "C3H8O",
+      "neutralLoss": "CH2",
+      "neutralLossMass": 14.0157,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "Low",
+      "relative_intensity": 38,
+      "smiles": "CCOC"
+    },
+    {
+      "canonicalSmiles": "CC",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 30.047,
+      "formula": "C2H6",
+      "fragmentationPathway": "雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)",
+      "heuristicScore": 82,
+      "id": "LCMS_Frag_3",
+      "imageHash": "0a6b597bb09a2ca21c646dc843076aceb8e1b70e0fd95778c99eac98a0206bf0",
+      "ionExactMass": 30.047,
+      "massBalanceVerified": true,
+      "mechanism": "CID 碰撞誘導異裂：雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)",
+      "mode": "Both",
+      "mz": 30.047,
+      "name": "MS/MS 碎片 3 (雜原子單鍵斷裂)",
+      "neutralExactMass": 30.047,
+      "neutralFormula": "C2H6",
+      "neutralLoss": "C2H4O",
+      "neutralLossMass": 44.0262,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 82,
+      "smiles": "CC"
+    },
+    {
+      "canonicalSmiles": "CCO",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 46.0419,
+      "formula": "C2H6O",
+      "fragmentationPathway": "雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)",
+      "heuristicScore": 38,
+      "id": "LCMS_Frag_4",
+      "imageHash": "7b0c0a83cf945aa60593405911397e209d7a9f932ad1118970ed3ce8208266d9",
+      "ionExactMass": 46.0419,
+      "massBalanceVerified": true,
+      "mechanism": "CID 碰撞誘導異裂：雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)",
+      "mode": "Both",
+      "mz": 46.0419,
+      "name": "MS/MS 碎片 4 (雜原子單鍵斷裂)",
+      "neutralExactMass": 46.0419,
+      "neutralFormula": "C2H6O",
+      "neutralLoss": "C2H4",
+      "neutralLossMass": 28.0313,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "Low",
+      "relative_intensity": 38,
+      "smiles": "CCO"
+    }
+  ],
+  "sweepResults": [
+    {
+      "parameterLabel": "CE 10 eV",
+      "parameterValue": 10,
+      "regimeSummary": "低能區：前驅離子與一階弱鍵脫除為主",
+      "topCandidates": [
+        {
+          "formula": "C3H7O-",
+          "id": "LCMS_Frag_2_neg",
+          "ionType": "[Frag-H]-",
+          "likelihood": "Trace",
+          "mz": 59.0502,
+          "priority": "Medium"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 25 eV",
+      "parameterValue": 25,
+      "regimeSummary": "中能區：一階與二階產物離子並存",
+      "topCandidates": [
+        {
+          "formula": "C3H7O-",
+          "id": "LCMS_Frag_2_neg",
+          "ionType": "[Frag-H]-",
+          "likelihood": "Unfavored",
+          "mz": 59.0502,
+          "priority": "Low"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 40 eV",
+      "parameterValue": 40,
+      "regimeSummary": "高能區：二階連續重排與小分子診斷離子為主",
+      "topCandidates": [
+        {
+          "formula": "C3H7O-",
+          "id": "LCMS_Frag_2_neg",
+          "ionType": "[Frag-H]-",
+          "likelihood": "Unfavored",
+          "mz": 59.0502,
+          "priority": "Low"
+        }
+      ]
+    }
+  ],
+  "technique": "LC-MS/MS"
+}

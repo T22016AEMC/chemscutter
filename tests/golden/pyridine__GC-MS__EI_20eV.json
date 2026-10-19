@@ -1,0 +1,288 @@
+{
+  "activeRegimeDescription": "GC-MS 低能量軟電離 EI (20 eV)：大幅保留分子自由基陽離子 M⁺• 與低能障一階重排，抑制二階芳環開環 (-C₂H₂) 與深層骨架碎裂",
+  "candidates": [
+    {
+      "canonicalSmiles": "c1ccncc1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 79.0422,
+      "explanation": "20 eV 電子束撞擊脫除一個價電子，形成奇數電子自由基陽離子 C5H5N⁺• (m/z 79.0417)",
+      "formula": "C5H5N+.",
+      "fragmentationPathway": "EI (20 eV) Direct Ionization → M+.",
+      "heuristicScore": 96,
+      "id": "GCMS_Prec_Mrad_pos",
+      "imageHash": "bd9cbc3178807f6518be18f5b7f9b4e4c7041455d85e0e5eeeef9fbd963e6c21",
+      "ionExactMass": 79.0417,
+      "ionType": "M+.",
+      "massBalanceVerified": true,
+      "mechanism": "EI (20 eV) 電子撞擊直接游離分子自由基陽離子 (Molecular Radical Cation M⁺•)",
+      "mz": 79.0417,
+      "neutralExactMass": 79.0422,
+      "neutralFormula": "C5H5N",
+      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 79.0417,
+      "priority": "High",
+      "smiles": "c1ccncc1",
+      "sourceRule": "GCMS_EI_MolecularIon",
+      "technique": "GC-MS"
+    },
+    {
+      "canonicalSmiles": "[C+]1=CC=CC=C1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 77.0386,
+      "explanation": "芳香化合物在 EI 質譜中的經典指紋碎片峰 c1cc[c+]cc1 (C6H5+, m/z 77.0386)",
+      "formula": "C6H5+",
+      "fragmentationPathway": "M+. → Arylic Cleavage → [C6H5]+",
+      "heuristicScore": 88,
+      "id": "GCMS_Phenyl_pos",
+      "imageHash": "30458a452d2f3fd3db7c35cef18705512a78f0787ac7d54830a677e7a83fb6f7",
+      "ionExactMass": 77.0386,
+      "ionType": "[C6H5]+",
+      "massBalanceError": 12,
+      "massBalanceVerified": false,
+      "mechanism": "苯環取代基均裂解離苯基陽離子 (c1cc[c+]cc1, m/z 77.0386)",
+      "mz": 77.0386,
+      "neutralExactMass": 77.0391,
+      "neutralFormula": "C6H5",
+      "neutralLoss": "N",
+      "neutralLossMass": 14.0031,
+      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+      "parentStructureId": "GCMS_Phenyl_pos",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 79.0422,
+      "priority": "High",
+      "smiles": "[C+]1=CC=CC=C1",
+      "sourceRule": "GCMS_PhenylCleavage",
+      "technique": "GC-MS"
+    }
+  ],
+  "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
+  "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+  "parent": {
+    "detected_format": "SMILES",
+    "detected_groups": [
+      "芳香環系 (Aromatic Ring)"
+    ],
+    "exact_mass": 79.0422,
+    "formula": "C5H5N",
+    "fragmentation_theories": [
+      "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
+    ],
+    "negative_path_enabled": false,
+    "smiles": "c1ccncc1"
+  },
+  "signals": [
+    {
+      "adduct": "M+.",
+      "canonicalSmiles": "c1ccncc1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C5H5N+.",
+      "fragmentationPathway": "EI (20 eV) Direct Ionization → M+.",
+      "heuristicScore": 96,
+      "id": "GCMS_Prec_Mrad_pos",
+      "ionExactMass": 79.0417,
+      "massBalanceVerified": true,
+      "mechanism": "EI (20 eV) 電子撞擊直接游離分子自由基陽離子 (Molecular Radical Cation M⁺•)",
+      "mode": "Positive",
+      "mz": 79.0417,
+      "neutralExactMass": 79.0422,
+      "neutralFormula": "C5H5N",
+      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 96,
+      "smiles": "c1ccncc1",
+      "sourceRule": "GCMS_EI_MolecularIon",
+      "type": "分子離子 (Molecular/Precursor Ion)"
+    },
+    {
+      "adduct": "[C6H5]+",
+      "canonicalSmiles": "[C+]1=CC=CC=C1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C6H5+",
+      "fragmentationPathway": "M+. → Arylic Cleavage → [C6H5]+",
+      "heuristicScore": 88,
+      "id": "GCMS_Phenyl_pos",
+      "ionExactMass": 77.0386,
+      "massBalanceVerified": false,
+      "mechanism": "苯環取代基均裂解離苯基陽離子 (c1cc[c+]cc1, m/z 77.0386)",
+      "mode": "Positive",
+      "mz": 77.0386,
+      "neutralExactMass": 77.0391,
+      "neutralFormula": "C6H5",
+      "neutralLoss": "N",
+      "neutralLossMass": 14.0031,
+      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+      "parentStructureId": "GCMS_Phenyl_pos",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 88,
+      "smiles": "[C+]1=CC=CC=C1",
+      "sourceRule": "GCMS_PhenylCleavage",
+      "type": "碎片離子 (GCMS_Phenyl_pos)"
+    }
+  ],
+  "simulationConfig": {
+    "analyzer": "Quadrupole",
+    "electronEnergy": 20,
+    "ionization": "EI",
+    "polarity": "Positive",
+    "simulationMode": "Instrument-aware",
+    "technique": "GC-MS"
+  },
+  "simulationModeLabel": "Instrument-aware",
+  "structures": [
+    {
+      "canonicalSmiles": "c1ccncc1",
+      "charge": 1,
+      "confidence": "High",
+      "exact_mass": 79.0422,
+      "formula": "C5H5N+.",
+      "fragmentationPathway": "EI (20 eV) Electron Impact",
+      "heuristicScore": 100,
+      "id": "Parent",
+      "imageHash": "bd9cbc3178807f6518be18f5b7f9b4e4c7041455d85e0e5eeeef9fbd963e6c21",
+      "ionExactMass": 79.0417,
+      "massBalanceVerified": true,
+      "mechanism": "GC-MS 低能量軟電離 EI (20 eV)：大幅保留分子自由基陽離子 M⁺• 與低能障一階重排，抑制二階芳環開環 (-C₂H₂) 與深層骨架碎裂",
+      "mode": "Positive",
+      "mz": 79.0417,
+      "name": "母分子自由基陽離子 (Molecular Radical Cation M⁺•)",
+      "neutralExactMass": 79.0422,
+      "neutralFormula": "C5H5N",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 100,
+      "smiles": "c1ccncc1"
+    },
+    {
+      "canonicalSmiles": "[C+]1=CC=CC=C1",
+      "charge": 1,
+      "confidence": "High",
+      "exact_mass": 77.0386,
+      "formula": "C6H5+",
+      "fragmentationPathway": "M+. → Arylic Cleavage → [C6H5]+",
+      "heuristicScore": 88,
+      "id": "GCMS_Phenyl_pos",
+      "imageHash": "30458a452d2f3fd3db7c35cef18705512a78f0787ac7d54830a677e7a83fb6f7",
+      "ionExactMass": 77.0386,
+      "ionType": "[C6H5]+",
+      "massBalanceVerified": false,
+      "mechanism": "芳環取代基 α-斷裂形成苯基陽離子 c1cc[c+]cc1 (m/z 77.0386)",
+      "mode": "Positive",
+      "mz": 77.0386,
+      "name": "苯基陽離子 (Phenyl Cation, [C₆H₅]⁺)",
+      "neutralExactMass": 77.0391,
+      "neutralFormula": "C6H5",
+      "neutralLoss": "N",
+      "neutralLossMass": 14.0031,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 88,
+      "smiles": "[C+]1=CC=CC=C1"
+    }
+  ],
+  "sweepResults": [
+    {
+      "parameterLabel": "EE 20 eV",
+      "parameterValue": 20,
+      "regimeSummary": "軟電離閾值區：M⁺• 強烈主導，二階開環不發生",
+      "topCandidates": [
+        {
+          "formula": "C5H5N+.",
+          "id": "GCMS_Prec_Mrad_pos",
+          "ionType": "M+.",
+          "likelihood": "Dominant",
+          "mz": 79.0417,
+          "priority": "High"
+        },
+        {
+          "formula": "C6H5+",
+          "id": "GCMS_Phenyl_pos",
+          "ionType": "[C6H5]+",
+          "likelihood": "Prominent",
+          "mz": 77.0386,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "EE 35 eV",
+      "parameterValue": 35,
+      "regimeSummary": "中能過渡區：一階重排與 α-裂解逐漸增強",
+      "topCandidates": [
+        {
+          "formula": "C5H5N+.",
+          "id": "GCMS_Prec_Mrad_pos",
+          "ionType": "M+.",
+          "likelihood": "Dominant",
+          "mz": 79.0417,
+          "priority": "High"
+        },
+        {
+          "formula": "C6H5+",
+          "id": "GCMS_Phenyl_pos",
+          "ionType": "[C6H5]+",
+          "likelihood": "Dominant",
+          "mz": 77.0386,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "EE 50 eV",
+      "parameterValue": 50,
+      "regimeSummary": "中能過渡區：一階重排與 α-裂解逐漸增強",
+      "topCandidates": [
+        {
+          "formula": "C5H5N+.",
+          "id": "GCMS_Prec_Mrad_pos",
+          "ionType": "M+.",
+          "likelihood": "Dominant",
+          "mz": 79.0417,
+          "priority": "High"
+        },
+        {
+          "formula": "C6H5+",
+          "id": "GCMS_Phenyl_pos",
+          "ionType": "[C6H5]+",
+          "likelihood": "Dominant",
+          "mz": 77.0386,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "EE 70 eV",
+      "parameterValue": 70,
+      "regimeSummary": "NIST 70 eV 標準區：一階與二階特徵裂解完整展開",
+      "topCandidates": [
+        {
+          "formula": "C5H5N+.",
+          "id": "GCMS_Prec_Mrad_pos",
+          "ionType": "M+.",
+          "likelihood": "Dominant",
+          "mz": 79.0417,
+          "priority": "High"
+        },
+        {
+          "formula": "C6H5+",
+          "id": "GCMS_Phenyl_pos",
+          "ionType": "[C6H5]+",
+          "likelihood": "Dominant",
+          "mz": 77.0386,
+          "priority": "High"
+        }
+      ]
+    }
+  ],
+  "technique": "GC-MS"
+}

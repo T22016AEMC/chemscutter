@@ -1,0 +1,266 @@
+{
+  "activeRegimeDescription": "ESI+ / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 低碰撞能 (10 eV)：保留高比例前驅離子，僅開啟低能障中性脫除与弱雜原子鍵異裂，抑制骨架深層斷裂",
+  "candidates": [
+    {
+      "canonicalSmiles": "[OH+]=Cc1ccccc1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 106.0419,
+      "explanation": "軟電離過程中母分子獲得質子形成主要正前驅離子 C7H7O+ (m/z 107.0492)",
+      "formula": "C7H7O+",
+      "fragmentationPathway": "ESI+ Protonation → [M+H]+",
+      "heuristicScore": 98,
+      "id": "Prec_M_H_pos",
+      "imageHash": "97dbebb31b401732a3e7e928e353d92aa579ae7aa3a37ccf44bca08a5750d43f",
+      "ionExactMass": 107.0492,
+      "ionType": "[M+H]+",
+      "massBalanceVerified": true,
+      "mechanism": "ESI+ 正離子化：羰基氧原子質子化 (C=OH⁺)",
+      "mz": 107.0492,
+      "neutralExactMass": 106.0419,
+      "neutralFormula": "C7H6O",
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 107.0492,
+      "priority": "High",
+      "smiles": "[OH+]=Cc1ccccc1",
+      "sourceRule": "LCMS_Protonation",
+      "technique": "LC-MS/MS"
+    },
+    {
+      "canonicalSmiles": "c1ccccc1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 78.047,
+      "explanation": "前驅離子 [M+H]⁺ 在碰撞室中脫去中性 CO (27.9949 Da) 生成 C6H7+",
+      "formula": "C6H7+",
+      "fragmentationPathway": "[M+H]+ → -CO → C6H7+",
+      "heuristicScore": 88,
+      "id": "LCMS_NL_CO_1_pos",
+      "imageHash": "3668507621b49761b9ab3c458e1a3c08b08b346bbdf50ed272a52a592bd7d0b4",
+      "ionExactMass": 79.0543,
+      "ionType": "[M+H-CO]+",
+      "massBalanceError": 0,
+      "massBalanceVerified": true,
+      "mechanism": "CID (10 eV) 碰撞誘導脫除：醛基脫一氧化碳重排 (Decarbonylation, -CO)",
+      "mz": 79.0543,
+      "neutralExactMass": 78.047,
+      "neutralFormula": "C6H6",
+      "neutralLoss": "CO",
+      "neutralLossMass": 27.9949,
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "LCMS_NL_CO_1",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 107.0492,
+      "priority": "High",
+      "smiles": "c1ccccc1",
+      "sourceRule": "LCMS_CID_NeutralLoss_Pos",
+      "technique": "LC-MS/MS"
+    }
+  ],
+  "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
+  "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+  "parent": {
+    "detected_format": "SMILES",
+    "detected_groups": [
+      "醛基 (-CHO)",
+      "芳香環系 (Aromatic Ring)"
+    ],
+    "exact_mass": 106.0419,
+    "formula": "C7H6O",
+    "fragmentation_theories": [
+      "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
+    ],
+    "negative_path_enabled": false,
+    "smiles": "O=Cc1ccccc1"
+  },
+  "signals": [
+    {
+      "adduct": "[M+H]+",
+      "canonicalSmiles": "[OH+]=Cc1ccccc1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C7H7O+",
+      "fragmentationPathway": "ESI+ Protonation → [M+H]+",
+      "heuristicScore": 98,
+      "id": "Prec_M_H_pos",
+      "ionExactMass": 107.0492,
+      "massBalanceVerified": true,
+      "mechanism": "ESI+ 正離子化：羰基氧原子質子化 (C=OH⁺)",
+      "mode": "Positive",
+      "mz": 107.0492,
+      "neutralExactMass": 106.0419,
+      "neutralFormula": "C7H6O",
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 98,
+      "smiles": "[OH+]=Cc1ccccc1",
+      "sourceRule": "LCMS_Protonation",
+      "type": "准分子離子 (Precursor Adduct)"
+    },
+    {
+      "adduct": "[M+H-CO]+",
+      "canonicalSmiles": "c1ccccc1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C6H7+",
+      "fragmentationPathway": "[M+H]+ → -CO → C6H7+",
+      "heuristicScore": 88,
+      "id": "LCMS_NL_CO_1_pos",
+      "ionExactMass": 79.0543,
+      "massBalanceVerified": true,
+      "mechanism": "CID (10 eV) 碰撞誘導脫除：醛基脫一氧化碳重排 (Decarbonylation, -CO)",
+      "mode": "Positive",
+      "mz": 79.0543,
+      "neutralExactMass": 78.047,
+      "neutralFormula": "C6H6",
+      "neutralLoss": "CO",
+      "neutralLossMass": 27.9949,
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "LCMS_NL_CO_1",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 88,
+      "smiles": "c1ccccc1",
+      "sourceRule": "LCMS_CID_NeutralLoss_Pos",
+      "type": "產物離子 (LCMS_NL_CO_1)"
+    }
+  ],
+  "simulationConfig": {
+    "analyzer": "QTOF",
+    "collisionEnergy": 10,
+    "fragmentationMethod": "CID",
+    "ionization": "ESI+",
+    "polarity": "Positive",
+    "simulationMode": "General",
+    "technique": "LC-MS/MS"
+  },
+  "simulationModeLabel": "General",
+  "structures": [
+    {
+      "canonicalSmiles": "O=Cc1ccccc1",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 106.0419,
+      "formula": "C7H6O",
+      "fragmentationPathway": "Precursor Selection (MS1)",
+      "heuristicScore": 100,
+      "id": "Parent",
+      "imageHash": "632caf92013de9a957eb5c64805cb5bad9ecc90caa755c2c43979fd5b0cf5431",
+      "ionExactMass": 106.0419,
+      "massBalanceVerified": true,
+      "mechanism": "ESI+ / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 低碰撞能 (10 eV)：保留高比例前驅離子，僅開啟低能障中性脫除与弱雜原子鍵異裂，抑制骨架深層斷裂",
+      "mode": "Positive",
+      "mz": 106.0419,
+      "name": "母分子前驅物 (Precursor Molecule)",
+      "neutralExactMass": 106.0419,
+      "neutralFormula": "C7H6O",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 100,
+      "smiles": "O=Cc1ccccc1"
+    },
+    {
+      "canonicalSmiles": "c1ccccc1",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 78.047,
+      "formula": "C6H6",
+      "fragmentationPathway": "CID Neutral Loss (-CO)",
+      "heuristicScore": 88,
+      "id": "LCMS_NL_CO_1",
+      "imageHash": "3668507621b49761b9ab3c458e1a3c08b08b346bbdf50ed272a52a592bd7d0b4",
+      "ionExactMass": 78.047,
+      "massBalanceVerified": true,
+      "mechanism": "醛基 C-C 鍵斷裂伴隨氫遷移脫去中性一氧化碳 CO (27.9949 Da)",
+      "mode": "Positive",
+      "mz": 78.047,
+      "name": "MS/MS 重排脫除產物 (醛基脫一氧化碳重排 (Decarbonylation, -CO))",
+      "neutralExactMass": 78.047,
+      "neutralFormula": "C6H6",
+      "neutralLoss": "CO",
+      "neutralLossMass": 27.9949,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "Medium",
+      "relative_intensity": 88,
+      "smiles": "c1ccccc1"
+    }
+  ],
+  "sweepResults": [
+    {
+      "parameterLabel": "CE 10 eV",
+      "parameterValue": 10,
+      "regimeSummary": "低能區：前驅離子與一階弱鍵脫除為主",
+      "topCandidates": [
+        {
+          "formula": "C6H7+",
+          "id": "LCMS_NL_CO_1_pos",
+          "ionType": "[M+H-CO]+",
+          "likelihood": "Dominant",
+          "mz": 79.0543,
+          "priority": "High"
+        },
+        {
+          "formula": "C7H7O+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Dominant",
+          "mz": 107.0492,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 25 eV",
+      "parameterValue": 25,
+      "regimeSummary": "中能區：一階與二階產物離子並存",
+      "topCandidates": [
+        {
+          "formula": "C7H7O+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Dominant",
+          "mz": 107.0492,
+          "priority": "High"
+        },
+        {
+          "formula": "C6H7+",
+          "id": "LCMS_NL_CO_1_pos",
+          "ionType": "[M+H-CO]+",
+          "likelihood": "Dominant",
+          "mz": 79.0543,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 40 eV",
+      "parameterValue": 40,
+      "regimeSummary": "高能區：二階連續重排與小分子診斷離子為主",
+      "topCandidates": [
+        {
+          "formula": "C6H7+",
+          "id": "LCMS_NL_CO_1_pos",
+          "ionType": "[M+H-CO]+",
+          "likelihood": "Dominant",
+          "mz": 79.0543,
+          "priority": "High"
+        },
+        {
+          "formula": "C7H7O+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Trace",
+          "mz": 107.0492,
+          "priority": "Low"
+        }
+      ]
+    }
+  ],
+  "technique": "LC-MS/MS"
+}

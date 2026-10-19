@@ -1,0 +1,158 @@
+{
+  "activeRegimeDescription": "Auto / Generic CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 中段碰撞能 (20 eV)：平衡呈現前驅離子、一階中性脫除、官能基異裂與特徵產物離子",
+  "candidates": [
+    {
+      "canonicalSmiles": "c1ccc2ccccc2c1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 128.0626,
+      "explanation": "軟電離過程中母分子獲得質子形成主要正前驅離子 C10H9+ (m/z 129.0699)",
+      "formula": "C10H9+",
+      "fragmentationPathway": "Auto Protonation → [M+H]+",
+      "heuristicScore": 80,
+      "id": "Prec_M_H_pos",
+      "imageHash": "d7aa0533fe0be0bdaa162840c401620e9c5e2572380e8410aea19b8facb33a3b",
+      "ionExactMass": 129.0699,
+      "ionType": "[M+H]+",
+      "massBalanceVerified": true,
+      "mechanism": "Auto 正離子化：氣相質子轉移形成准分子陽離子",
+      "mz": 129.0699,
+      "neutralExactMass": 128.0626,
+      "neutralFormula": "C10H8",
+      "parameterContext": "LC-MS/MS Generic, Generic, CID, CE 20 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 129.0699,
+      "priority": "High",
+      "smiles": "c1ccc2ccccc2c1",
+      "sourceRule": "LCMS_Protonation",
+      "technique": "LC-MS/MS"
+    }
+  ],
+  "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
+  "parameterContext": "LC-MS/MS Generic, Generic, CID, CE 20 eV (General)",
+  "parent": {
+    "detected_format": "SMILES",
+    "detected_groups": [
+      "芳香環系 (Aromatic Ring)"
+    ],
+    "exact_mass": 128.0626,
+    "formula": "C10H8",
+    "fragmentation_theories": [
+      "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
+    ],
+    "negative_path_enabled": false,
+    "smiles": "c1ccc2ccccc2c1"
+  },
+  "signals": [
+    {
+      "adduct": "[M+H]+",
+      "canonicalSmiles": "c1ccc2ccccc2c1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C10H9+",
+      "fragmentationPathway": "Auto Protonation → [M+H]+",
+      "heuristicScore": 80,
+      "id": "Prec_M_H_pos",
+      "ionExactMass": 129.0699,
+      "massBalanceVerified": true,
+      "mechanism": "Auto 正離子化：氣相質子轉移形成准分子陽離子",
+      "mode": "Positive",
+      "mz": 129.0699,
+      "neutralExactMass": 128.0626,
+      "neutralFormula": "C10H8",
+      "parameterContext": "LC-MS/MS Generic, Generic, CID, CE 20 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 80,
+      "smiles": "c1ccc2ccccc2c1",
+      "sourceRule": "LCMS_Protonation",
+      "type": "准分子離子 (Precursor Adduct)"
+    }
+  ],
+  "simulationConfig": {
+    "analyzer": "Generic",
+    "collisionEnergy": 20,
+    "fragmentationMethod": "CID",
+    "ionization": "Auto",
+    "polarity": "Both",
+    "simulationMode": "General",
+    "technique": "LC-MS/MS"
+  },
+  "simulationModeLabel": "General",
+  "structures": [
+    {
+      "canonicalSmiles": "c1ccc2ccccc2c1",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 128.0626,
+      "formula": "C10H8",
+      "fragmentationPathway": "Precursor Selection (MS1)",
+      "heuristicScore": 100,
+      "id": "Parent",
+      "imageHash": "d7aa0533fe0be0bdaa162840c401620e9c5e2572380e8410aea19b8facb33a3b",
+      "ionExactMass": 128.0626,
+      "massBalanceVerified": true,
+      "mechanism": "Auto / Generic CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 中段碰撞能 (20 eV)：平衡呈現前驅離子、一階中性脫除、官能基異裂與特徵產物離子",
+      "mode": "Both",
+      "mz": 128.0626,
+      "name": "母分子前驅物 (Precursor Molecule)",
+      "neutralExactMass": 128.0626,
+      "neutralFormula": "C10H8",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 100,
+      "smiles": "c1ccc2ccccc2c1"
+    }
+  ],
+  "sweepResults": [
+    {
+      "parameterLabel": "CE 10 eV",
+      "parameterValue": 10,
+      "regimeSummary": "低能區：前驅離子與一階弱鍵脫除為主",
+      "topCandidates": [
+        {
+          "formula": "C10H9+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Dominant",
+          "mz": 129.0699,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 25 eV",
+      "parameterValue": 25,
+      "regimeSummary": "中能區：一階與二階產物離子並存",
+      "topCandidates": [
+        {
+          "formula": "C10H9+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Dominant",
+          "mz": 129.0699,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 40 eV",
+      "parameterValue": 40,
+      "regimeSummary": "高能區：二階連續重排與小分子診斷離子為主",
+      "topCandidates": [
+        {
+          "formula": "C10H9+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Trace",
+          "mz": 129.0699,
+          "priority": "Low"
+        }
+      ]
+    }
+  ],
+  "technique": "LC-MS/MS"
+}

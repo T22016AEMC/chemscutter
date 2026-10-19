@@ -1,0 +1,158 @@
+{
+  "activeRegimeDescription": "ESI+ / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 低碰撞能 (10 eV)：保留高比例前驅離子，僅開啟低能障中性脫除与弱雜原子鍵異裂，抑制骨架深層斷裂",
+  "candidates": [
+    {
+      "canonicalSmiles": "c1ccc2[nH]ccc2c1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 117.0578,
+      "explanation": "軟電離過程中母分子獲得質子形成主要正前驅離子 C8H8N+ (m/z 118.0651)",
+      "formula": "C8H8N+",
+      "fragmentationPathway": "ESI+ Protonation → [M+H]+",
+      "heuristicScore": 98,
+      "id": "Prec_M_H_pos",
+      "imageHash": "2c858c36ffee4d39ef1c7138dedc1669c193654da631354094a24113d810d3ed",
+      "ionExactMass": 118.0651,
+      "ionType": "[M+H]+",
+      "massBalanceVerified": true,
+      "mechanism": "ESI+ 正離子化：氣相質子轉移形成准分子陽離子",
+      "mz": 118.0651,
+      "neutralExactMass": 117.0578,
+      "neutralFormula": "C8H7N",
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 118.0651,
+      "priority": "High",
+      "smiles": "c1ccc2[nH]ccc2c1",
+      "sourceRule": "LCMS_Protonation",
+      "technique": "LC-MS/MS"
+    }
+  ],
+  "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
+  "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+  "parent": {
+    "detected_format": "SMILES",
+    "detected_groups": [
+      "芳香環系 (Aromatic Ring)"
+    ],
+    "exact_mass": 117.0578,
+    "formula": "C8H7N",
+    "fragmentation_theories": [
+      "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
+    ],
+    "negative_path_enabled": false,
+    "smiles": "c1ccc2[nH]ccc2c1"
+  },
+  "signals": [
+    {
+      "adduct": "[M+H]+",
+      "canonicalSmiles": "c1ccc2[nH]ccc2c1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C8H8N+",
+      "fragmentationPathway": "ESI+ Protonation → [M+H]+",
+      "heuristicScore": 98,
+      "id": "Prec_M_H_pos",
+      "ionExactMass": 118.0651,
+      "massBalanceVerified": true,
+      "mechanism": "ESI+ 正離子化：氣相質子轉移形成准分子陽離子",
+      "mode": "Positive",
+      "mz": 118.0651,
+      "neutralExactMass": 117.0578,
+      "neutralFormula": "C8H7N",
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 98,
+      "smiles": "c1ccc2[nH]ccc2c1",
+      "sourceRule": "LCMS_Protonation",
+      "type": "准分子離子 (Precursor Adduct)"
+    }
+  ],
+  "simulationConfig": {
+    "analyzer": "QTOF",
+    "collisionEnergy": 10,
+    "fragmentationMethod": "CID",
+    "ionization": "ESI+",
+    "polarity": "Positive",
+    "simulationMode": "General",
+    "technique": "LC-MS/MS"
+  },
+  "simulationModeLabel": "General",
+  "structures": [
+    {
+      "canonicalSmiles": "c1ccc2[nH]ccc2c1",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 117.0578,
+      "formula": "C8H7N",
+      "fragmentationPathway": "Precursor Selection (MS1)",
+      "heuristicScore": 100,
+      "id": "Parent",
+      "imageHash": "2c858c36ffee4d39ef1c7138dedc1669c193654da631354094a24113d810d3ed",
+      "ionExactMass": 117.0578,
+      "massBalanceVerified": true,
+      "mechanism": "ESI+ / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 低碰撞能 (10 eV)：保留高比例前驅離子，僅開啟低能障中性脫除与弱雜原子鍵異裂，抑制骨架深層斷裂",
+      "mode": "Positive",
+      "mz": 117.0578,
+      "name": "母分子前驅物 (Precursor Molecule)",
+      "neutralExactMass": 117.0578,
+      "neutralFormula": "C8H7N",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 100,
+      "smiles": "c1ccc2[nH]ccc2c1"
+    }
+  ],
+  "sweepResults": [
+    {
+      "parameterLabel": "CE 10 eV",
+      "parameterValue": 10,
+      "regimeSummary": "低能區：前驅離子與一階弱鍵脫除為主",
+      "topCandidates": [
+        {
+          "formula": "C8H8N+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Dominant",
+          "mz": 118.0651,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 25 eV",
+      "parameterValue": 25,
+      "regimeSummary": "中能區：一階與二階產物離子並存",
+      "topCandidates": [
+        {
+          "formula": "C8H8N+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Dominant",
+          "mz": 118.0651,
+          "priority": "High"
+        }
+      ]
+    },
+    {
+      "parameterLabel": "CE 40 eV",
+      "parameterValue": 40,
+      "regimeSummary": "高能區：二階連續重排與小分子診斷離子為主",
+      "topCandidates": [
+        {
+          "formula": "C8H8N+",
+          "id": "Prec_M_H_pos",
+          "ionType": "[M+H]+",
+          "likelihood": "Trace",
+          "mz": 118.0651,
+          "priority": "Low"
+        }
+      ]
+    }
+  ],
+  "technique": "LC-MS/MS"
+}

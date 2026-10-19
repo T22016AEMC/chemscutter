@@ -401,7 +401,7 @@ describe('參數區間判斷（全部案例的 config）', () => {
 
 describe('以標準答案資料比對', () => {
   it('golden 檔案數量正確', () => {
-    expect(goldenCases).toHaveLength(93);
+    expect(goldenCases).toHaveLength(591);
   });
 
   it.each(goldenCases.map((g) => [g.id, g.data]))('deduplicateAndRankCandidates %s', (_id, data) => {

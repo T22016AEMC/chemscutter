@@ -191,6 +191,58 @@ export const EXTRA_MOLECULES: Record<string, string> = {
   testosterone: 'CC12CCC3C(CCC4=CC(=O)CCC34C)C1CCC2O',
 };
 
+/**
+ * 補覆蓋缺口的 6 組參數組合（階段 1d）。同 PARAM_VARIANTS，從介面基礎 config 出發再套用表單會修改的欄位。
+ * - CI_isobutane：介面可產生（游離方式選 CI，反應氣選異丁烷）
+ * - IonTrap_ESI+_CE25：介面可產生（分析器選 Ion Trap）
+ * - ESI+_CE40：介面可產生
+ * - InstrumentAware_ESI+_CE25：介面的 LC 表單不會修改 simulationMode，只有載入預設範本
+ *   （如「LC-MS/MS ESI⁺ QTOF」）才會得到 Instrument-aware，且範本會多帶 precursorAdduct '[M+H]+'；
+ *   此組為引擎層級 config，介面無法產生完全相同的內容
+ * - positive_only：介面可產生（極性選正離子模式）
+ * - Cs+_both：介面可產生（主要轟擊離子選 Cs⁺，極性維持 Both）
+ */
+export const GAP_VARIANTS: { technique: MassTechnique; suffix: string; config: SimulationConfig }[] = [
+  {
+    technique: 'GC-MS',
+    suffix: 'CI_isobutane',
+    config: { ...UI_BASE['GC-MS'], ionization: 'CI', reagentGas: 'Isobutane' },
+  },
+  {
+    technique: 'LC-MS/MS',
+    suffix: 'IonTrap_ESI+_CE25',
+    config: { ...UI_BASE['LC-MS/MS'], ionization: 'ESI+', polarity: 'Positive', analyzer: 'Ion Trap', collisionEnergy: 25 },
+  },
+  {
+    technique: 'LC-MS/MS',
+    suffix: 'ESI+_CE40',
+    config: { ...UI_BASE['LC-MS/MS'], ionization: 'ESI+', polarity: 'Positive', collisionEnergy: 40 },
+  },
+  {
+    technique: 'LC-MS/MS',
+    suffix: 'InstrumentAware_ESI+_CE25',
+    config: {
+      ...UI_BASE['LC-MS/MS'],
+      ionization: 'ESI+',
+      polarity: 'Positive',
+      collisionEnergy: 25,
+      simulationMode: 'Instrument-aware',
+    },
+  },
+  {
+    technique: 'TOF-SIMS',
+    suffix: 'positive_only',
+    config: { ...UI_BASE['TOF-SIMS'], polarity: 'Positive' },
+  },
+  {
+    technique: 'TOF-SIMS',
+    suffix: 'Cs+_both',
+    config: { ...UI_BASE['TOF-SIMS'], primaryIon: 'Cs+', simulationMode: 'Instrument-aware', polarity: 'Both' },
+  },
+];
+
+export const GAP_MOLECULES = ['aspirin', 'butyrophenone', 'bromochlorobenzene', 'toluene', 'methyl_hexanoate', 'phenylalanine'];
+
 export interface Case {
   id: string;
   /** INPUTS 中的輸入名稱 */
@@ -232,4 +284,30 @@ export function buildExtraCases(): Case[] {
     }
   }
   return cases;
+}
+
+/** 缺口補強案例：6 個分子 × 6 組新參數組合 */
+export function buildGapCases(): Case[] {
+  const all: Record<string, string> = { ...MOLECULES, ...EXTRA_MOLECULES };
+  const cases: Case[] = [];
+  for (const name of GAP_MOLECULES) {
+    for (const v of GAP_VARIANTS) {
+      cases.push({
+        id: `${name}__${techniqueId(v.technique)}__${v.suffix}`,
+        inputName: name,
+        input: all[name],
+        config: v.config,
+      });
+    }
+  }
+  return cases;
+}
+
+/**
+ * 標準答案的完整案例清單（產生腳本與 tests/golden.test.ts 讀取這份）：
+ * 原 93 個 + 擴充分子 462 個 + 缺口補強 36 個 = 591 個。
+ * 原 93 個的順序與內容不可變動（buildCases() 另供對照測試使用）。
+ */
+export function buildGoldenCases(): Case[] {
+  return [...buildCases(), ...buildExtraCases(), ...buildGapCases()];
 }

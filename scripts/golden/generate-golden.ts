@@ -5,14 +5,14 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runMultiPlatformAnalysis } from '../../legacy/src/server/chemistryEngine';
-import { buildCases } from '../../tests/fixtures/cases';
+import { buildGoldenCases } from '../../tests/fixtures/cases';
 import { toGoldenJson } from '../../tests/fixtures/normalize';
 
 const OUT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../tests/golden');
 
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
-  const cases = buildCases();
+  const cases = buildGoldenCases();
   const index: unknown[] = [];
 
   for (const c of cases) {

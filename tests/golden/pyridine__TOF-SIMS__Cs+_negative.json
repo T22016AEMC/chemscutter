@@ -1,0 +1,110 @@
+{
+  "activeRegimeDescription": "Cs⁺ (25 keV) 活性金屬表面注入：降低表面功函數，強烈提升電負性負離子 ([M-H]⁻、酸根、鹵離子) 與 [M+Cs]⁺ 配位峰",
+  "candidates": [
+    {
+      "canonicalSmiles": "c1ccncc1",
+      "charge": -1,
+      "confidence": "High",
+      "exactMass": 79.0422,
+      "explanation": "母分子脫去一顆質子 H⁺ 形成真實共軛鹼離子式 C5H4N- (c1ccncc1)",
+      "formula": "C5H4N-",
+      "fragmentationPathway": "Surface Deprotonation → [M-H]-",
+      "heuristicScore": 67,
+      "id": "Parent_H_neg",
+      "imageHash": "bd9cbc3178807f6518be18f5b7f9b4e4c7041455d85e0e5eeeef9fbd963e6c21",
+      "ionExactMass": 78.0349,
+      "ionType": "[M-H]-",
+      "massBalanceVerified": true,
+      "mechanism": "陰離子裂解分支：酸性官能基去質子化形成共軛鹼陰離子",
+      "mz": 78.0349,
+      "neutralExactMass": 79.0422,
+      "neutralFormula": "C5H5N",
+      "parameterContext": "TOF-SIMS, Cs+ (25 keV), Polarity: Negative, Mode: Instrument-aware",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Candidate",
+      "polarity": "Negative",
+      "precursorMz": 78.0349,
+      "priority": "Medium",
+      "smiles": "c1ccncc1",
+      "sourceRule": "TOF-SIMS_Deprotonation",
+      "technique": "TOF-SIMS"
+    }
+  ],
+  "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
+  "parameterContext": "TOF-SIMS, Cs+ (25 keV), Polarity: Negative, Mode: Instrument-aware",
+  "parent": {
+    "detected_format": "SMILES",
+    "detected_groups": [
+      "芳香環系 (Aromatic Ring)"
+    ],
+    "exact_mass": 79.0422,
+    "formula": "C5H5N",
+    "fragmentation_theories": [
+      "准平衡理論 (Quasi-Equilibrium Theory, QET) / RRKM 微觀反應速率理論"
+    ],
+    "negative_path_enabled": false,
+    "smiles": "c1ccncc1"
+  },
+  "signals": [
+    {
+      "adduct": "[M-H]-",
+      "canonicalSmiles": "c1ccncc1",
+      "charge": -1,
+      "confidence": "High",
+      "formula": "C5H4N-",
+      "fragmentationPathway": "Surface Deprotonation → [M-H]-",
+      "heuristicScore": 67,
+      "id": "Parent_H_neg",
+      "ionExactMass": 78.0349,
+      "massBalanceVerified": true,
+      "mechanism": "陰離子裂解分支：酸性官能基去質子化形成共軛鹼陰離子",
+      "mode": "Negative",
+      "mz": 78.0349,
+      "neutralExactMass": 79.0422,
+      "neutralFormula": "C5H5N",
+      "parameterContext": "TOF-SIMS, Cs+ (25 keV), Polarity: Negative, Mode: Instrument-aware",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Candidate",
+      "priority": "Medium",
+      "relative_intensity": 67,
+      "smiles": "c1ccncc1",
+      "sourceRule": "TOF-SIMS_Deprotonation",
+      "type": "准分子離子 (Precursor/Adduct)"
+    }
+  ],
+  "simulationConfig": {
+    "analyzer": "TOF",
+    "polarity": "Negative",
+    "primaryIon": "Cs+",
+    "primaryIonEnergy": 25,
+    "simulationMode": "Instrument-aware",
+    "technique": "TOF-SIMS"
+  },
+  "simulationModeLabel": "Instrument-aware",
+  "structures": [
+    {
+      "canonicalSmiles": "c1ccncc1",
+      "charge": 0,
+      "confidence": "High",
+      "exact_mass": 79.0422,
+      "formula": "C5H5N",
+      "fragmentationPathway": "Intact Surface Desorption",
+      "heuristicScore": 100,
+      "id": "Parent",
+      "imageHash": "bd9cbc3178807f6518be18f5b7f9b4e4c7041455d85e0e5eeeef9fbd963e6c21",
+      "ionExactMass": 79.0422,
+      "massBalanceVerified": true,
+      "mechanism": "Cs⁺ (25 keV) 活性金屬表面注入：降低表面功函數，強烈提升電負性負離子 ([M-H]⁻、酸根、鹵離子) 與 [M+Cs]⁺ 配位峰",
+      "mode": "Positive",
+      "mz": 79.0422,
+      "name": "母分子 (Parent Molecule)",
+      "neutralExactMass": 79.0422,
+      "neutralFormula": "C5H5N",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 100,
+      "smiles": "c1ccncc1"
+    }
+  ],
+  "technique": "TOF-SIMS"
+}
