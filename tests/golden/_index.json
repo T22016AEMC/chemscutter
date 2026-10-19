@@ -1,0 +1,1130 @@
+[
+  {
+    "candidateCount": 44,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 127.3,
+    "error": false,
+    "id": "aspirin__TOF-SIMS__default",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 27,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 86.6,
+    "error": false,
+    "id": "aspirin__LC-MS-MS__default",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 33.5,
+    "error": false,
+    "id": "aspirin__GC-MS__default",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 30.5,
+    "error": false,
+    "id": "salicylic_acid__TOF-SIMS__default",
+    "input": "OC(=O)c1ccccc1O"
+  },
+  {
+    "candidateCount": 13,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 24.8,
+    "error": false,
+    "id": "salicylic_acid__LC-MS-MS__default",
+    "input": "OC(=O)c1ccccc1O"
+  },
+  {
+    "candidateCount": 10,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 14.9,
+    "error": false,
+    "id": "salicylic_acid__GC-MS__default",
+    "input": "OC(=O)c1ccccc1O"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 27.8,
+    "error": false,
+    "id": "caffeine__TOF-SIMS__default",
+    "input": "Cn1cnc2c1c(=O)n(C)c(=O)n2C"
+  },
+  {
+    "candidateCount": 4,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 27.7,
+    "error": false,
+    "id": "caffeine__LC-MS-MS__default",
+    "input": "Cn1cnc2c1c(=O)n(C)c(=O)n2C"
+  },
+  {
+    "candidateCount": 6,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 18.1,
+    "error": false,
+    "id": "caffeine__GC-MS__default",
+    "input": "Cn1cnc2c1c(=O)n(C)c(=O)n2C"
+  },
+  {
+    "candidateCount": 54,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 100.2,
+    "error": false,
+    "id": "ibuprofen__TOF-SIMS__default",
+    "input": "CC(C)Cc1ccc(cc1)C(C)C(=O)O"
+  },
+  {
+    "candidateCount": 30,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 65.1,
+    "error": false,
+    "id": "ibuprofen__LC-MS-MS__default",
+    "input": "CC(C)Cc1ccc(cc1)C(C)C(=O)O"
+  },
+  {
+    "candidateCount": 27,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 32.8,
+    "error": false,
+    "id": "ibuprofen__GC-MS__default",
+    "input": "CC(C)Cc1ccc(cc1)C(C)C(=O)O"
+  },
+  {
+    "candidateCount": 35,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 30.6,
+    "error": false,
+    "id": "acetaminophen__TOF-SIMS__default",
+    "input": "CC(=O)Nc1ccc(O)cc1"
+  },
+  {
+    "candidateCount": 18,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 28.8,
+    "error": false,
+    "id": "acetaminophen__LC-MS-MS__default",
+    "input": "CC(=O)Nc1ccc(O)cc1"
+  },
+  {
+    "candidateCount": 16,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 17.3,
+    "error": false,
+    "id": "acetaminophen__GC-MS__default",
+    "input": "CC(=O)Nc1ccc(O)cc1"
+  },
+  {
+    "candidateCount": 12,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 7.1,
+    "error": false,
+    "id": "toluene__TOF-SIMS__default",
+    "input": "Cc1ccccc1"
+  },
+  {
+    "candidateCount": 5,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 6.3,
+    "error": false,
+    "id": "toluene__LC-MS-MS__default",
+    "input": "Cc1ccccc1"
+  },
+  {
+    "candidateCount": 7,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 5.4,
+    "error": false,
+    "id": "toluene__GC-MS__default",
+    "input": "Cc1ccccc1"
+  },
+  {
+    "candidateCount": 29,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 16.9,
+    "error": false,
+    "id": "hexan_2_one__TOF-SIMS__default",
+    "input": "CCCCC(C)=O"
+  },
+  {
+    "candidateCount": 15,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 18.7,
+    "error": false,
+    "id": "hexan_2_one__LC-MS-MS__default",
+    "input": "CCCCC(C)=O"
+  },
+  {
+    "candidateCount": 17,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 14.1,
+    "error": false,
+    "id": "hexan_2_one__GC-MS__default",
+    "input": "CCCCC(C)=O"
+  },
+  {
+    "candidateCount": 30,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 29.9,
+    "error": false,
+    "id": "butyrophenone__TOF-SIMS__default",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 16,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 26.5,
+    "error": false,
+    "id": "butyrophenone__LC-MS-MS__default",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 19,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 17,
+    "error": false,
+    "id": "butyrophenone__GC-MS__default",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 17.5,
+    "error": false,
+    "id": "methyl_benzoate__TOF-SIMS__default",
+    "input": "COC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 13,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 20,
+    "error": false,
+    "id": "methyl_benzoate__LC-MS-MS__default",
+    "input": "COC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 13,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 13.4,
+    "error": false,
+    "id": "methyl_benzoate__GC-MS__default",
+    "input": "COC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 26,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 15.7,
+    "error": false,
+    "id": "bromochlorobenzene__TOF-SIMS__default",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 12,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 11.2,
+    "error": false,
+    "id": "bromochlorobenzene__LC-MS-MS__default",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 8,
+    "error": false,
+    "id": "bromochlorobenzene__GC-MS__default",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 28,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 22.7,
+    "error": false,
+    "id": "fluorobenzoic_acid__TOF-SIMS__default",
+    "input": "OC(=O)c1ccc(F)cc1"
+  },
+  {
+    "candidateCount": 17,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 21.7,
+    "error": false,
+    "id": "fluorobenzoic_acid__LC-MS-MS__default",
+    "input": "OC(=O)c1ccc(F)cc1"
+  },
+  {
+    "candidateCount": 13,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 13.5,
+    "error": false,
+    "id": "fluorobenzoic_acid__GC-MS__default",
+    "input": "OC(=O)c1ccc(F)cc1"
+  },
+  {
+    "candidateCount": 18,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 15.1,
+    "error": false,
+    "id": "nitrobenzene__TOF-SIMS__default",
+    "input": "[O-][N+](=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 10,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 12.1,
+    "error": false,
+    "id": "nitrobenzene__LC-MS-MS__default",
+    "input": "[O-][N+](=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 7,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 8.2,
+    "error": false,
+    "id": "nitrobenzene__GC-MS__default",
+    "input": "[O-][N+](=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 13,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 8,
+    "error": false,
+    "id": "benzonitrile__TOF-SIMS__default",
+    "input": "N#Cc1ccccc1"
+  },
+  {
+    "candidateCount": 6,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 10.7,
+    "error": false,
+    "id": "benzonitrile__LC-MS-MS__default",
+    "input": "N#Cc1ccccc1"
+  },
+  {
+    "candidateCount": 6,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 4.9,
+    "error": false,
+    "id": "benzonitrile__GC-MS__default",
+    "input": "N#Cc1ccccc1"
+  },
+  {
+    "candidateCount": 16,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 8.2,
+    "error": false,
+    "id": "ethanol__TOF-SIMS__default",
+    "input": "CCO"
+  },
+  {
+    "candidateCount": 7,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 7.5,
+    "error": false,
+    "id": "ethanol__LC-MS-MS__default",
+    "input": "CCO"
+  },
+  {
+    "candidateCount": 9,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 5.3,
+    "error": false,
+    "id": "ethanol__GC-MS__default",
+    "input": "CCO"
+  },
+  {
+    "candidateCount": 19,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 16,
+    "error": false,
+    "id": "benzenesulfonic_acid__TOF-SIMS__default",
+    "input": "OS(=O)(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 14.5,
+    "error": false,
+    "id": "benzenesulfonic_acid__LC-MS-MS__default",
+    "input": "OS(=O)(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 8,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 9.8,
+    "error": false,
+    "id": "benzenesulfonic_acid__GC-MS__default",
+    "input": "OS(=O)(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 16.4,
+    "error": false,
+    "id": "dimethylbenzylamine__TOF-SIMS__default",
+    "input": "CN(C)Cc1ccccc1"
+  },
+  {
+    "candidateCount": 12,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 16.7,
+    "error": false,
+    "id": "dimethylbenzylamine__LC-MS-MS__default",
+    "input": "CN(C)Cc1ccccc1"
+  },
+  {
+    "candidateCount": 12,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 11.1,
+    "error": false,
+    "id": "dimethylbenzylamine__GC-MS__default",
+    "input": "CN(C)Cc1ccccc1"
+  },
+  {
+    "candidateCount": 16,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 54.8,
+    "error": false,
+    "id": "glucose__TOF-SIMS__default",
+    "input": "OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O"
+  },
+  {
+    "candidateCount": 9,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 59.1,
+    "error": false,
+    "id": "glucose__LC-MS-MS__default",
+    "input": "OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O"
+  },
+  {
+    "candidateCount": 9,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 33,
+    "error": false,
+    "id": "glucose__GC-MS__default",
+    "input": "OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O"
+  },
+  {
+    "candidateCount": 44,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 46.7,
+    "error": false,
+    "id": "name_aspirin__TOF-SIMS__default",
+    "input": "aspirin"
+  },
+  {
+    "candidateCount": 27,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 42.1,
+    "error": false,
+    "id": "name_aspirin__LC-MS-MS__default",
+    "input": "aspirin"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 25.6,
+    "error": false,
+    "id": "name_aspirin__GC-MS__default",
+    "input": "aspirin"
+  },
+  {
+    "candidateCount": 22,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 18.5,
+    "error": false,
+    "id": "molfile_ethyl_acetate__TOF-SIMS__default",
+    "input": "\n     RDKit          2D\n\n  6  5  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2990    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5981   -0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8971    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.1962   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8971    2.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  4  6  2  0\nM  END\n"
+  },
+  {
+    "candidateCount": 13,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 15.6,
+    "error": false,
+    "id": "molfile_ethyl_acetate__LC-MS-MS__default",
+    "input": "\n     RDKit          2D\n\n  6  5  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2990    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5981   -0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8971    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.1962   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8971    2.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  4  6  2  0\nM  END\n"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 12.4,
+    "error": false,
+    "id": "molfile_ethyl_acetate__GC-MS__default",
+    "input": "\n     RDKit          2D\n\n  6  5  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2990    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5981   -0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8971    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.1962   -0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8971    2.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  2  3  1  0\n  3  4  1  0\n  4  5  1  0\n  4  6  2  0\nM  END\n"
+  },
+  {
+    "candidateCount": 0,
+    "config": {
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 0.9,
+    "error": true,
+    "id": "invalid_input__TOF-SIMS__default",
+    "input": "not_a_molecule_xyz"
+  },
+  {
+    "candidateCount": 0,
+    "config": {
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 0.1,
+    "error": true,
+    "id": "invalid_input__LC-MS-MS__default",
+    "input": "not_a_molecule_xyz"
+  },
+  {
+    "candidateCount": 0,
+    "config": {
+      "technique": "GC-MS"
+    },
+    "durationMs": 0.1,
+    "error": true,
+    "id": "invalid_input__GC-MS__default",
+    "input": "not_a_molecule_xyz"
+  },
+  {
+    "candidateCount": 44,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Both",
+      "primaryIon": "Bi3+",
+      "primaryIonEnergy": 30,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 44.8,
+    "error": false,
+    "id": "aspirin__TOF-SIMS__Bi3+_30keV",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 24,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Both",
+      "primaryIon": "C60+",
+      "primaryIonEnergy": 20,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 40.6,
+    "error": false,
+    "id": "aspirin__TOF-SIMS__C60+_20keV",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 12,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Negative",
+      "primaryIon": "Cs+",
+      "primaryIonEnergy": 25,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 40.7,
+    "error": false,
+    "id": "aspirin__TOF-SIMS__Cs+_negative",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 10,
+      "fragmentationMethod": "CID",
+      "ionization": "ESI+",
+      "polarity": "Positive",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 34.7,
+    "error": false,
+    "id": "aspirin__LC-MS-MS__ESI+_CE10",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 14,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 40,
+      "fragmentationMethod": "CID",
+      "ionization": "ESI-",
+      "polarity": "Negative",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 39,
+    "error": false,
+    "id": "aspirin__LC-MS-MS__ESI-_CE40",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 14,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 25,
+      "fragmentationMethod": "CID",
+      "ionization": "APCI+",
+      "polarity": "Positive",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 35.4,
+    "error": false,
+    "id": "aspirin__LC-MS-MS__APCI+",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 30,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 25,
+      "collisionEnergyRange": {
+        "end": 40,
+        "start": 10,
+        "step": 15
+      },
+      "fragmentationMethod": "CID",
+      "ionization": "Auto",
+      "polarity": "Both",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 45.9,
+    "error": false,
+    "id": "aspirin__LC-MS-MS__CEsweep_10-40_step15",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "EI",
+      "polarity": "Positive",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 27.7,
+    "error": false,
+    "id": "aspirin__GC-MS__EI_70eV",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 19,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 20,
+      "ionization": "EI",
+      "polarity": "Positive",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 24.2,
+    "error": false,
+    "id": "aspirin__GC-MS__EI_20eV",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 6,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "CI",
+      "polarity": "Positive",
+      "reagentGas": "Methane",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 10.5,
+    "error": false,
+    "id": "aspirin__GC-MS__CI_methane",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 3,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "CI",
+      "polarity": "Positive",
+      "reagentGas": "Ammonia",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 9.5,
+    "error": false,
+    "id": "aspirin__GC-MS__CI_ammonia",
+    "input": "CC(=O)Oc1ccccc1C(=O)O"
+  },
+  {
+    "candidateCount": 30,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Both",
+      "primaryIon": "Bi3+",
+      "primaryIonEnergy": 30,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 22,
+    "error": false,
+    "id": "butyrophenone__TOF-SIMS__Bi3+_30keV",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 6,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Both",
+      "primaryIon": "C60+",
+      "primaryIonEnergy": 20,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 14.5,
+    "error": false,
+    "id": "butyrophenone__TOF-SIMS__C60+_20keV",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 1,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Negative",
+      "primaryIon": "Cs+",
+      "primaryIonEnergy": 25,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 12.6,
+    "error": false,
+    "id": "butyrophenone__TOF-SIMS__Cs+_negative",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 2,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 10,
+      "fragmentationMethod": "CID",
+      "ionization": "ESI+",
+      "polarity": "Positive",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 13.2,
+    "error": false,
+    "id": "butyrophenone__LC-MS-MS__ESI+_CE10",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 5,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 40,
+      "fragmentationMethod": "CID",
+      "ionization": "ESI-",
+      "polarity": "Negative",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 15.3,
+    "error": false,
+    "id": "butyrophenone__LC-MS-MS__ESI-_CE40",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 10,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 25,
+      "fragmentationMethod": "CID",
+      "ionization": "APCI+",
+      "polarity": "Positive",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 18.8,
+    "error": false,
+    "id": "butyrophenone__LC-MS-MS__APCI+",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 16,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 25,
+      "collisionEnergyRange": {
+        "end": 40,
+        "start": 10,
+        "step": 15
+      },
+      "fragmentationMethod": "CID",
+      "ionization": "Auto",
+      "polarity": "Both",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 20.5,
+    "error": false,
+    "id": "butyrophenone__LC-MS-MS__CEsweep_10-40_step15",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 19,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "EI",
+      "polarity": "Positive",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 15.4,
+    "error": false,
+    "id": "butyrophenone__GC-MS__EI_70eV",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 20,
+      "ionization": "EI",
+      "polarity": "Positive",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 14,
+    "error": false,
+    "id": "butyrophenone__GC-MS__EI_20eV",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 2,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "CI",
+      "polarity": "Positive",
+      "reagentGas": "Methane",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 2.7,
+    "error": false,
+    "id": "butyrophenone__GC-MS__CI_methane",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 2,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "CI",
+      "polarity": "Positive",
+      "reagentGas": "Ammonia",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 3.3,
+    "error": false,
+    "id": "butyrophenone__GC-MS__CI_ammonia",
+    "input": "CCCC(=O)c1ccccc1"
+  },
+  {
+    "candidateCount": 26,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Both",
+      "primaryIon": "Bi3+",
+      "primaryIonEnergy": 30,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 12.1,
+    "error": false,
+    "id": "bromochlorobenzene__TOF-SIMS__Bi3+_30keV",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 21,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Both",
+      "primaryIon": "C60+",
+      "primaryIonEnergy": 20,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 12.1,
+    "error": false,
+    "id": "bromochlorobenzene__TOF-SIMS__C60+_20keV",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "analyzer": "TOF",
+      "polarity": "Negative",
+      "primaryIon": "Cs+",
+      "primaryIonEnergy": 25,
+      "simulationMode": "Instrument-aware",
+      "technique": "TOF-SIMS"
+    },
+    "durationMs": 8.1,
+    "error": false,
+    "id": "bromochlorobenzene__TOF-SIMS__Cs+_negative",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 7,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 10,
+      "fragmentationMethod": "CID",
+      "ionization": "ESI+",
+      "polarity": "Positive",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 8.9,
+    "error": false,
+    "id": "bromochlorobenzene__LC-MS-MS__ESI+_CE10",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 7,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 40,
+      "fragmentationMethod": "CID",
+      "ionization": "ESI-",
+      "polarity": "Negative",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 9.4,
+    "error": false,
+    "id": "bromochlorobenzene__LC-MS-MS__ESI-_CE40",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 7,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 25,
+      "fragmentationMethod": "CID",
+      "ionization": "APCI+",
+      "polarity": "Positive",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 8.7,
+    "error": false,
+    "id": "bromochlorobenzene__LC-MS-MS__APCI+",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 12,
+    "config": {
+      "analyzer": "QTOF",
+      "collisionEnergy": 25,
+      "collisionEnergyRange": {
+        "end": 40,
+        "start": 10,
+        "step": 15
+      },
+      "fragmentationMethod": "CID",
+      "ionization": "Auto",
+      "polarity": "Both",
+      "simulationMode": "General",
+      "technique": "LC-MS/MS"
+    },
+    "durationMs": 13.2,
+    "error": false,
+    "id": "bromochlorobenzene__LC-MS-MS__CEsweep_10-40_step15",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 11,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "EI",
+      "polarity": "Positive",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 7.5,
+    "error": false,
+    "id": "bromochlorobenzene__GC-MS__EI_70eV",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 10,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 20,
+      "ionization": "EI",
+      "polarity": "Positive",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 8.3,
+    "error": false,
+    "id": "bromochlorobenzene__GC-MS__EI_20eV",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 4,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "CI",
+      "polarity": "Positive",
+      "reagentGas": "Methane",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 2.6,
+    "error": false,
+    "id": "bromochlorobenzene__GC-MS__CI_methane",
+    "input": "Clc1ccc(Br)cc1"
+  },
+  {
+    "candidateCount": 4,
+    "config": {
+      "analyzer": "Quadrupole",
+      "electronEnergy": 70,
+      "ionization": "CI",
+      "polarity": "Positive",
+      "reagentGas": "Ammonia",
+      "simulationMode": "Instrument-aware",
+      "technique": "GC-MS"
+    },
+    "durationMs": 2.7,
+    "error": false,
+    "id": "bromochlorobenzene__GC-MS__CI_ammonia",
+    "input": "Clc1ccc(Br)cc1"
+  }
+]
