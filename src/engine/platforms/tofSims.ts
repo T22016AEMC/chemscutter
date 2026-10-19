@@ -289,8 +289,7 @@ export function runTofSimsFragmentation(
     }
 
     // Acetylium cation: [CH3CO]+ -> C[C+]=O (43.0178 Da)
-    // LEGACY-QUIRK(Q15): 只看 hasAcetate || hasKetone，未確認分子確實含乙醯基（GC-MS 另加 hasEster 與 isElementSubset）
-    if (fg.hasAcetate || fg.hasKetone) {
+    if (fg.hasAcetylGroup) {
       const acetyliumIon = buildVerifiedIonFromSmiles('C[C+]=O', RDKit);
       if (acetyliumIon) {
         const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 1 }, acetyliumIon.neutralExactMass);

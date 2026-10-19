@@ -2,6 +2,37 @@
   "activeRegimeDescription": "GC-MS 低能量軟電離 EI (20 eV)：大幅保留分子自由基陽離子 M⁺• 與低能障一階重排，抑制二階芳環開環 (-C₂H₂) 與深層骨架碎裂",
   "candidates": [
     {
+      "canonicalSmiles": "C[C+]=O",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 43.0178,
+      "explanation": "羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)",
+      "formula": "C2H3O+",
+      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
+      "heuristicScore": 98,
+      "id": "GCMS_Acylium_pos",
+      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
+      "ionExactMass": 43.0178,
+      "ionType": "[CH3CO]+",
+      "massBalanceError": 0,
+      "massBalanceVerified": true,
+      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)；以及 EI 醯胺 C-N 鍵異裂 (Amide C-N Bond Cleavage)：偶數電子陽離子 (C[C+]=O) (由 2 條獨立碎裂途徑共同支持)",
+      "mz": 43.0178,
+      "neutralExactMass": 43.0184,
+      "neutralFormula": "C2H3O",
+      "neutralLoss": "CH4N",
+      "neutralLossMass": 30.0344,
+      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+      "parentStructureId": "GCMS_Acylium_pos",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 73.0528,
+      "priority": "High",
+      "smiles": "C[C+]=O",
+      "sourceRule": "GCMS_AcyliumCleavage, GCMS_AlphaOrDirectCleavage",
+      "technique": "GC-MS"
+    },
+    {
       "canonicalSmiles": "CNC(C)=O",
       "charge": 1,
       "confidence": "High",
@@ -38,7 +69,7 @@
       "formula": "CH5N+.",
       "fragmentationPathway": "M+. → -C2H2O → CH5N+.",
       "heuristicScore": 96,
-      "id": "GCMS_NL_C2H2O_1_ei_rad",
+      "id": "GCMS_NL_C2H2O_2_ei_rad",
       "imageHash": "fcab7512a5d55221f152dca12d8c99c09c4e5172b8d8a3531dff063c381f5704",
       "ionExactMass": 31.0417,
       "ionType": "[M-C2H2O]+.",
@@ -51,7 +82,7 @@
       "neutralLoss": "C2H2O",
       "neutralLossMass": 42.0106,
       "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
-      "parentStructureId": "GCMS_NL_C2H2O_1",
+      "parentStructureId": "GCMS_NL_C2H2O_2",
       "pathwayStatus": "Verified Graph Product",
       "polarity": "Positive",
       "precursorMz": 73.0523,
@@ -120,37 +151,6 @@
       "priority": "High",
       "smiles": "C",
       "sourceRule": "GCMS_HomolyticCleavage",
-      "technique": "GC-MS"
-    },
-    {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exactMass": 43.0184,
-      "explanation": "單鍵均裂脫去自由基 CH4N•，形成偶數電子陽離子 C2H3O+ (C[C+]=O)",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Direct Bond Cleavage (-CH4N.) → C2H3O+",
-      "heuristicScore": 62.7,
-      "id": "GCMS_Frag_4_cat",
-      "imageHash": "07a145175916e7a3e9be876a1173b5bc1807e03253dba6b5e387140d9dee2e79",
-      "ionExactMass": 43.0178,
-      "ionType": "[C2H3O]+",
-      "massBalanceError": 0,
-      "massBalanceVerified": true,
-      "mechanism": "EI 醯胺 C-N 鍵異裂 (Amide C-N Bond Cleavage)：偶數電子陽離子 (C[C+]=O)",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "CH4N•",
-      "neutralLossMass": 30.0344,
-      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
-      "parentStructureId": "GCMS_Frag_4",
-      "pathwayStatus": "Verified Graph Product",
-      "polarity": "Positive",
-      "precursorMz": 73.0528,
-      "priority": "High",
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AlphaOrDirectCleavage",
       "technique": "GC-MS"
     },
     {
@@ -265,6 +265,33 @@
   },
   "signals": [
     {
+      "adduct": "[CH3CO]+",
+      "canonicalSmiles": "C[C+]=O",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C2H3O+",
+      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
+      "heuristicScore": 98,
+      "id": "GCMS_Acylium_pos",
+      "ionExactMass": 43.0178,
+      "massBalanceVerified": true,
+      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)；以及 EI 醯胺 C-N 鍵異裂 (Amide C-N Bond Cleavage)：偶數電子陽離子 (C[C+]=O) (由 2 條獨立碎裂途徑共同支持)",
+      "mode": "Positive",
+      "mz": 43.0178,
+      "neutralExactMass": 43.0184,
+      "neutralFormula": "C2H3O",
+      "neutralLoss": "CH4N",
+      "neutralLossMass": 30.0344,
+      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
+      "parentStructureId": "GCMS_Acylium_pos",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 98,
+      "smiles": "C[C+]=O",
+      "sourceRule": "GCMS_AcyliumCleavage, GCMS_AlphaOrDirectCleavage",
+      "type": "碎片離子 (GCMS_Acylium_pos)"
+    },
+    {
       "adduct": "M+.",
       "canonicalSmiles": "CNC(C)=O",
       "charge": 1,
@@ -297,7 +324,7 @@
       "formula": "CH5N+.",
       "fragmentationPathway": "M+. → -C2H2O → CH5N+.",
       "heuristicScore": 96,
-      "id": "GCMS_NL_C2H2O_1_ei_rad",
+      "id": "GCMS_NL_C2H2O_2_ei_rad",
       "ionExactMass": 31.0417,
       "massBalanceVerified": true,
       "mechanism": "EI (20 eV) 氣相中性脫除：脫乙烯酮重排 (Ketene Loss, -C₂H₂O)；以及 EI 醯胺 C-N 鍵異裂 (Amide C-N Bond Cleavage) 伴隨氫轉移 (由 2 條獨立碎裂途徑共同支持)",
@@ -308,13 +335,13 @@
       "neutralLoss": "C2H2O",
       "neutralLossMass": 42.0106,
       "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
-      "parentStructureId": "GCMS_NL_C2H2O_1",
+      "parentStructureId": "GCMS_NL_C2H2O_2",
       "pathwayStatus": "Verified Graph Product",
       "priority": "High",
       "relative_intensity": 96,
       "smiles": "CN",
       "sourceRule": "GCMS_EI_NeutralLoss, GCMS_HomolyticCleavage",
-      "type": "碎片離子 (GCMS_NL_C2H2O_1)"
+      "type": "碎片離子 (GCMS_NL_C2H2O_2)"
     },
     {
       "adduct": "[CH3]+",
@@ -369,33 +396,6 @@
       "smiles": "C",
       "sourceRule": "GCMS_HomolyticCleavage",
       "type": "碎片離子 (GCMS_Frag_1)"
-    },
-    {
-      "adduct": "[C2H3O]+",
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Direct Bond Cleavage (-CH4N.) → C2H3O+",
-      "heuristicScore": 62.7,
-      "id": "GCMS_Frag_4_cat",
-      "ionExactMass": 43.0178,
-      "massBalanceVerified": true,
-      "mechanism": "EI 醯胺 C-N 鍵異裂 (Amide C-N Bond Cleavage)：偶數電子陽離子 (C[C+]=O)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "CH4N•",
-      "neutralLossMass": 30.0344,
-      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
-      "parentStructureId": "GCMS_Frag_4",
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 62.7,
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AlphaOrDirectCleavage",
-      "type": "碎片離子 (GCMS_Frag_4)"
     },
     {
       "adduct": "[Frag]+.",
@@ -513,6 +513,32 @@
       "smiles": "CNC(C)=O"
     },
     {
+      "canonicalSmiles": "C[C+]=O",
+      "charge": 1,
+      "confidence": "High",
+      "exact_mass": 43.0178,
+      "formula": "C2H3O+",
+      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
+      "heuristicScore": 92,
+      "id": "GCMS_Acylium_pos",
+      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
+      "ionExactMass": 43.0178,
+      "ionType": "[CH3CO]+",
+      "massBalanceVerified": true,
+      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)",
+      "mode": "Positive",
+      "mz": 43.0178,
+      "name": "乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)",
+      "neutralExactMass": 43.0184,
+      "neutralFormula": "C2H3O",
+      "neutralLoss": "CH4N",
+      "neutralLossMass": 30.0344,
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 92,
+      "smiles": "C[C+]=O"
+    },
+    {
       "canonicalSmiles": "CN",
       "charge": 1,
       "confidence": "High",
@@ -520,7 +546,7 @@
       "formula": "CH5N+.",
       "fragmentationPathway": "M+. → -C2H2O",
       "heuristicScore": 84,
-      "id": "GCMS_NL_C2H2O_1",
+      "id": "GCMS_NL_C2H2O_2",
       "imageHash": "fcab7512a5d55221f152dca12d8c99c09c4e5172b8d8a3531dff063c381f5704",
       "ionExactMass": 31.0422,
       "massBalanceVerified": true,
@@ -653,8 +679,16 @@
           "priority": "High"
         },
         {
+          "formula": "C2H3O+",
+          "id": "GCMS_Acylium_pos",
+          "ionType": "[CH3CO]+",
+          "likelihood": "Prominent",
+          "mz": 43.0178,
+          "priority": "High"
+        },
+        {
           "formula": "CH5N+.",
-          "id": "GCMS_NL_C2H2O_1_ei_rad",
+          "id": "GCMS_NL_C2H2O_2_ei_rad",
           "ionType": "[M-C2H2O]+.",
           "likelihood": "Prominent",
           "mz": 31.0417,
@@ -666,14 +700,6 @@
           "ionType": "[CH3]+",
           "likelihood": "Trace",
           "mz": 15.0229,
-          "priority": "Medium"
-        },
-        {
-          "formula": "CH4+.",
-          "id": "GCMS_Frag_1_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Trace",
-          "mz": 16.0308,
           "priority": "Medium"
         }
       ]
@@ -684,6 +710,14 @@
       "regimeSummary": "中能過渡區：一階重排與 α-裂解逐漸增強",
       "topCandidates": [
         {
+          "formula": "C2H3O+",
+          "id": "GCMS_Acylium_pos",
+          "ionType": "[CH3CO]+",
+          "likelihood": "Dominant",
+          "mz": 43.0178,
+          "priority": "High"
+        },
+        {
           "formula": "C3H7NO+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
@@ -693,7 +727,7 @@
         },
         {
           "formula": "CH5N+.",
-          "id": "GCMS_NL_C2H2O_1_ei_rad",
+          "id": "GCMS_NL_C2H2O_2_ei_rad",
           "ionType": "[M-C2H2O]+.",
           "likelihood": "Dominant",
           "mz": 31.0417,
@@ -705,14 +739,6 @@
           "ionType": "[CH3]+",
           "likelihood": "Prominent",
           "mz": 15.0229,
-          "priority": "High"
-        },
-        {
-          "formula": "CH4+.",
-          "id": "GCMS_Frag_1_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Prominent",
-          "mz": 16.0308,
           "priority": "High"
         }
       ]
@@ -723,6 +749,14 @@
       "regimeSummary": "中能過渡區：一階重排與 α-裂解逐漸增強",
       "topCandidates": [
         {
+          "formula": "C2H3O+",
+          "id": "GCMS_Acylium_pos",
+          "ionType": "[CH3CO]+",
+          "likelihood": "Dominant",
+          "mz": 43.0178,
+          "priority": "High"
+        },
+        {
           "formula": "C3H7NO+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
@@ -732,7 +766,7 @@
         },
         {
           "formula": "CH5N+.",
-          "id": "GCMS_NL_C2H2O_1_ei_rad",
+          "id": "GCMS_NL_C2H2O_2_ei_rad",
           "ionType": "[M-C2H2O]+.",
           "likelihood": "Dominant",
           "mz": 31.0417,
@@ -744,14 +778,6 @@
           "ionType": "[CH3]+",
           "likelihood": "Prominent",
           "mz": 15.0229,
-          "priority": "High"
-        },
-        {
-          "formula": "CH4+.",
-          "id": "GCMS_Frag_1_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Prominent",
-          "mz": 16.0308,
           "priority": "High"
         }
       ]
@@ -762,8 +788,16 @@
       "regimeSummary": "NIST 70 eV 標準區：一階與二階特徵裂解完整展開",
       "topCandidates": [
         {
+          "formula": "C2H3O+",
+          "id": "GCMS_Acylium_pos",
+          "ionType": "[CH3CO]+",
+          "likelihood": "Dominant",
+          "mz": 43.0178,
+          "priority": "High"
+        },
+        {
           "formula": "CH5N+.",
-          "id": "GCMS_NL_C2H2O_1_ei_rad",
+          "id": "GCMS_NL_C2H2O_2_ei_rad",
           "ionType": "[M-C2H2O]+.",
           "likelihood": "Dominant",
           "mz": 31.0417,
@@ -783,14 +817,6 @@
           "ionType": "[Frag]+.",
           "likelihood": "Dominant",
           "mz": 16.0308,
-          "priority": "High"
-        },
-        {
-          "formula": "C3H7NO+.",
-          "id": "GCMS_Prec_Mrad_pos",
-          "ionType": "M+.",
-          "likelihood": "Prominent",
-          "mz": 73.0523,
           "priority": "High"
         }
       ]

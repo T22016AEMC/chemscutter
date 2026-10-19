@@ -12,6 +12,8 @@ export interface FunctionalGroupInfo {
   hasAliphaticOH: boolean;
   hasEster: boolean;
   hasAcetate: boolean;
+  /** 含 CH3-C=O 結構（乙醯基）：乙酸酯、甲基酮、乙醯胺、乙酸等；乙醯基鎓離子 (m/z 43) 的觸發條件 */
+  hasAcetylGroup: boolean;
   hasAmide: boolean;
   hasPrimaryAmine: boolean;
   hasSecondaryAmine: boolean;
@@ -57,7 +59,8 @@ export function detectFunctionalGroups(mol: JSMol, RDKit: RDKitModule): Function
   const hasCarboxyl = checkSmarts('[CX3](=O)[OX2H1,O-]');
   const hasPhenolicOH = checkSmarts('[OX2H][c]');
   const hasAliphaticOH = checkSmarts('[OX2H][CX4]');
-  const hasAcetate = checkSmarts('CC(=O)O[c,C]');
+  const hasAcetate = checkSmarts('[CH3][CX3](=O)[OX2][#6]');
+  const hasAcetylGroup = checkSmarts('[CH3][CX3]=O');
   const hasEster = checkSmarts('[#6][CX3](=O)[OX2H0][#6]');
   const hasAmide = checkSmarts('[#6][CX3](=O)[NX3][#6,#1]');
   const hasPrimaryAmine = checkSmarts('[NX3H2][#6]');
@@ -147,6 +150,7 @@ export function detectFunctionalGroups(mol: JSMol, RDKit: RDKitModule): Function
     hasAliphaticOH,
     hasEster,
     hasAcetate,
+    hasAcetylGroup,
     hasAmide,
     hasPrimaryAmine,
     hasSecondaryAmine,

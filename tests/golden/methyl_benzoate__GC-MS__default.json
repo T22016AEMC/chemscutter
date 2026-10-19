@@ -33,37 +33,6 @@
       "technique": "GC-MS"
     },
     {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exactMass": 43.0178,
-      "explanation": "羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceError": 0,
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C6H5O",
-      "neutralLossMass": 93.034,
-      "parameterContext": "GC-MS EI (70 eV), Quadrupole, Standard NIST 70eV Regime",
-      "parentStructureId": "GCMS_Acylium_pos",
-      "pathwayStatus": "Verified Graph Product",
-      "polarity": "Positive",
-      "precursorMz": 136.0524,
-      "priority": "High",
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AcyliumCleavage",
-      "technique": "GC-MS"
-    },
-    {
       "canonicalSmiles": "COC(=O)c1ccccc1",
       "charge": 1,
       "confidence": "High",
@@ -131,7 +100,7 @@
       "formula": "C7H6O+.",
       "fragmentationPathway": "M+. → -CH2O → C7H6O+.",
       "heuristicScore": 72,
-      "id": "GCMS_NL_CH2O_4_ei_rad",
+      "id": "GCMS_NL_CH2O_3_ei_rad",
       "imageHash": "c709e0f6e525b69456c8d8b31a83611e53cc83b0f10350d29428d566f8729972",
       "ionExactMass": 106.0414,
       "ionType": "[M-CH2O]+.",
@@ -144,7 +113,7 @@
       "neutralLoss": "CH2O",
       "neutralLossMass": 30.0106,
       "parameterContext": "GC-MS EI (70 eV), Quadrupole, Standard NIST 70eV Regime",
-      "parentStructureId": "GCMS_NL_CH2O_4",
+      "parentStructureId": "GCMS_NL_CH2O_3",
       "pathwayStatus": "Verified Graph Product",
       "polarity": "Positive",
       "precursorMz": 136.0519,
@@ -448,33 +417,6 @@
       "type": "碎片離子 (GCMS_Phenyl_pos)"
     },
     {
-      "adduct": "[CH3CO]+",
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "ionExactMass": 43.0178,
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C6H5O",
-      "neutralLossMass": 93.034,
-      "parameterContext": "GC-MS EI (70 eV), Quadrupole, Standard NIST 70eV Regime",
-      "parentStructureId": "GCMS_Acylium_pos",
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 92,
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AcyliumCleavage",
-      "type": "碎片離子 (GCMS_Acylium_pos)"
-    },
-    {
       "adduct": "M+.",
       "canonicalSmiles": "COC(=O)c1ccccc1",
       "charge": 1,
@@ -534,7 +476,7 @@
       "formula": "C7H6O+.",
       "fragmentationPathway": "M+. → -CH2O → C7H6O+.",
       "heuristicScore": 72,
-      "id": "GCMS_NL_CH2O_4_ei_rad",
+      "id": "GCMS_NL_CH2O_3_ei_rad",
       "ionExactMass": 106.0414,
       "massBalanceVerified": true,
       "mechanism": "EI (70 eV) 氣相中性脫除：甲氧基四元環重排脫甲醛 (Loss of Formaldehyde, -CH₂O)；以及 EI 酯基/羧基 C-O 醯氧單鍵異裂 (Ester/Acyl-Oxygen Cleavage) 伴隨氫轉移 (由 2 條獨立碎裂途徑共同支持)",
@@ -545,13 +487,13 @@
       "neutralLoss": "CH2O",
       "neutralLossMass": 30.0106,
       "parameterContext": "GC-MS EI (70 eV), Quadrupole, Standard NIST 70eV Regime",
-      "parentStructureId": "GCMS_NL_CH2O_4",
+      "parentStructureId": "GCMS_NL_CH2O_3",
       "pathwayStatus": "Verified Graph Product",
       "priority": "High",
       "relative_intensity": 72,
       "smiles": "O=Cc1ccccc1",
       "sourceRule": "GCMS_EI_NeutralLoss, GCMS_HomolyticCleavage",
-      "type": "碎片離子 (GCMS_NL_CH2O_4)"
+      "type": "碎片離子 (GCMS_NL_CH2O_3)"
     },
     {
       "adduct": "[Frag]+.",
@@ -804,32 +746,6 @@
       "smiles": "COC(=O)c1ccccc1"
     },
     {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exact_mass": 43.0178,
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "name": "乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)",
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C6H5O",
-      "neutralLossMass": 93.034,
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 92,
-      "smiles": "C[C+]=O"
-    },
-    {
       "canonicalSmiles": "[C+]1=CC=CC=C1",
       "charge": 1,
       "confidence": "High",
@@ -889,7 +805,7 @@
       "formula": "C7H6O+.",
       "fragmentationPathway": "M+. → -CH2O",
       "heuristicScore": 62,
-      "id": "GCMS_NL_CH2O_4",
+      "id": "GCMS_NL_CH2O_3",
       "imageHash": "c709e0f6e525b69456c8d8b31a83611e53cc83b0f10350d29428d566f8729972",
       "ionExactMass": 106.0419,
       "massBalanceVerified": true,
@@ -1055,19 +971,19 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Prominent",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "CH3+",
           "id": "GCMS_Frag_1_cat",
           "ionType": "[CH3]+",
           "likelihood": "Trace",
           "mz": 15.0229,
+          "priority": "Medium"
+        },
+        {
+          "formula": "C7H6O+.",
+          "id": "GCMS_NL_CH2O_3_ei_rad",
+          "ionType": "[M-CH2O]+.",
+          "likelihood": "Trace",
+          "mz": 106.0414,
           "priority": "Medium"
         }
       ]
@@ -1086,14 +1002,6 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "C8H8O2+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
@@ -1107,6 +1015,14 @@
           "ionType": "[CH3]+",
           "likelihood": "Prominent",
           "mz": 15.0229,
+          "priority": "High"
+        },
+        {
+          "formula": "C7H6O+.",
+          "id": "GCMS_NL_CH2O_3_ei_rad",
+          "ionType": "[M-CH2O]+.",
+          "likelihood": "Prominent",
+          "mz": 106.0414,
           "priority": "High"
         }
       ]
@@ -1125,14 +1041,6 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "C8H8O2+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
@@ -1146,6 +1054,14 @@
           "ionType": "[CH3]+",
           "likelihood": "Prominent",
           "mz": 15.0229,
+          "priority": "High"
+        },
+        {
+          "formula": "C7H6O+.",
+          "id": "GCMS_NL_CH2O_3_ei_rad",
+          "ionType": "[M-CH2O]+.",
+          "likelihood": "Prominent",
+          "mz": 106.0414,
           "priority": "High"
         }
       ]
@@ -1164,14 +1080,6 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "C8H8O2+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
@@ -1185,6 +1093,14 @@
           "ionType": "[CH3]+",
           "likelihood": "Dominant",
           "mz": 15.0229,
+          "priority": "High"
+        },
+        {
+          "formula": "CH4+.",
+          "id": "GCMS_Frag_1_rad",
+          "ionType": "[Frag]+.",
+          "likelihood": "Dominant",
+          "mz": 16.0308,
           "priority": "High"
         }
       ]

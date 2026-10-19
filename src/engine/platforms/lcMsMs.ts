@@ -387,8 +387,7 @@ export function runLcMsMsFragmentation(
     // LEGACY-QUIRK(Q19): 診斷離子的 precursorMz 為 parentMass + 1.007276 並四捨五入至 4 位（TOF-SIMS／GC-MS 用中性 parentMass）
     const diagnosticPrecursorMz = Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4));
 
-    // LEGACY-QUIRK(Q15): 只看 hasAcetate || hasKetone，未確認分子確實含乙醯基（GC-MS 另加 hasEster 與 isElementSubset）
-    if (fg.hasAcetate || fg.hasKetone) {
+    if (fg.hasAcetylGroup) {
       const acetylium = buildVerifiedIonFromSmiles('C[C+]=O', RDKit);
       if (acetylium && acetylium.mz >= lowMassCutoffMz) {
         const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 1 }, acetylium.neutralExactMass);

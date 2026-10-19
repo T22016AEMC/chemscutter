@@ -2,37 +2,6 @@
   "activeRegimeDescription": "ESI+ / QTOF CID 束流型碰撞 (無低質量截止，支援多步連續碎裂) / 高碰撞能 (40 eV)：前驅離子大幅耗盡，開啟二階連續脫除 (Sequential losses) 與低 m/z 特徵診斷陽離子",
   "candidates": [
     {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exactMass": 43.0178,
-      "explanation": "在 QTOF / Orbitrap HCD 中高碰撞能下無低質量截止限制，可清晰觀察到 m/z 43.0178 乙醯基鎓離子",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "Acyl Cleavage → [CH3CO]+",
-      "heuristicScore": 86,
-      "id": "LCMS_Diag_Acetylium",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceError": 0,
-      "massBalanceVerified": true,
-      "mechanism": "CID (40 eV) 醯基異裂：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C8H9",
-      "neutralLossMass": 105.0704,
-      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 40 eV (General)",
-      "parentStructureId": "LCMS_Diag_Acetylium",
-      "pathwayStatus": "Verified Graph Product",
-      "polarity": "Positive",
-      "precursorMz": 149.0961,
-      "priority": "High",
-      "smiles": "C[C+]=O",
-      "sourceRule": "LCMS_Diagnostic_Acetylium",
-      "technique": "LC-MS/MS"
-    },
-    {
       "canonicalSmiles": "C",
       "charge": 1,
       "confidence": "High",
@@ -357,33 +326,6 @@
   },
   "signals": [
     {
-      "adduct": "[CH3CO]+",
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "Acyl Cleavage → [CH3CO]+",
-      "heuristicScore": 86,
-      "id": "LCMS_Diag_Acetylium",
-      "ionExactMass": 43.0178,
-      "massBalanceVerified": true,
-      "mechanism": "CID (40 eV) 醯基異裂：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C8H9",
-      "neutralLossMass": 105.0704,
-      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 40 eV (General)",
-      "parentStructureId": "LCMS_Diag_Acetylium",
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 86,
-      "smiles": "C[C+]=O",
-      "sourceRule": "LCMS_Diagnostic_Acetylium",
-      "type": "產物離子 (LCMS_Diag_Acetylium)"
-    },
-    {
       "adduct": "[Frag+H]+",
       "canonicalSmiles": "C",
       "charge": 1,
@@ -685,32 +627,6 @@
       "smiles": "CCCC(=O)c1ccccc1"
     },
     {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exact_mass": 43.0178,
-      "formula": "C2H3O+",
-      "fragmentationPathway": "Acyl-Heteroatom Cleavage → [CH3CO]+",
-      "heuristicScore": 86,
-      "id": "LCMS_Diag_Acetylium",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceVerified": true,
-      "mechanism": "CID 束流型碰撞裂解產生乙醯基鎓陽離子 C[C+]=O",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "name": "乙醯基鎓診斷離子 (Acetylium Ion, [CH₃CO]⁺)",
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C8H9",
-      "neutralLossMass": 105.0704,
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 86,
-      "smiles": "C[C+]=O"
-    },
-    {
       "canonicalSmiles": "C",
       "charge": 0,
       "confidence": "High",
@@ -957,14 +873,6 @@
       "regimeSummary": "中能區：一階與二階產物離子並存",
       "topCandidates": [
         {
-          "formula": "C2H3O+",
-          "id": "LCMS_Diag_Acetylium",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "CH5+",
           "id": "LCMS_Frag_1_pos",
           "ionType": "[Frag+H]+",
@@ -986,6 +894,14 @@
           "ionType": "[Frag+H]+",
           "likelihood": "Dominant",
           "mz": 45.0699,
+          "priority": "High"
+        },
+        {
+          "formula": "C4H9O+",
+          "id": "LCMS_Frag_7_pos",
+          "ionType": "[Frag+H]+",
+          "likelihood": "Dominant",
+          "mz": 73.0648,
           "priority": "High"
         }
       ]
@@ -996,14 +912,6 @@
       "regimeSummary": "高能區：二階連續重排與小分子診斷離子為主",
       "topCandidates": [
         {
-          "formula": "C2H3O+",
-          "id": "LCMS_Diag_Acetylium",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "CH5+",
           "id": "LCMS_Frag_1_pos",
           "ionType": "[Frag+H]+",
@@ -1025,6 +933,14 @@
           "ionType": "[Frag+H]+",
           "likelihood": "Dominant",
           "mz": 45.0699,
+          "priority": "High"
+        },
+        {
+          "formula": "C4H9O+",
+          "id": "LCMS_Frag_7_pos",
+          "ionType": "[Frag+H]+",
+          "likelihood": "Dominant",
+          "mz": 73.0648,
           "priority": "High"
         }
       ]

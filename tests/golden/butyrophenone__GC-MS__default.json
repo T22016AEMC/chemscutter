@@ -64,37 +64,6 @@
       "technique": "GC-MS"
     },
     {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exactMass": 43.0178,
-      "explanation": "羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceError": 0,
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C8H9",
-      "neutralLossMass": 105.0704,
-      "parameterContext": "GC-MS EI (70 eV), Quadrupole, Standard NIST 70eV Regime",
-      "parentStructureId": "GCMS_Acylium_pos",
-      "pathwayStatus": "Verified Graph Product",
-      "polarity": "Positive",
-      "precursorMz": 148.0888,
-      "priority": "High",
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AcyliumCleavage",
-      "technique": "GC-MS"
-    },
-    {
       "canonicalSmiles": "CCCC(=O)c1ccccc1",
       "charge": 1,
       "confidence": "High",
@@ -662,33 +631,6 @@
       "type": "碎片離子 (GCMS_McLafferty_Struct)"
     },
     {
-      "adduct": "[CH3CO]+",
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "ionExactMass": 43.0178,
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C8H9",
-      "neutralLossMass": 105.0704,
-      "parameterContext": "GC-MS EI (70 eV), Quadrupole, Standard NIST 70eV Regime",
-      "parentStructureId": "GCMS_Acylium_pos",
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 92,
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AcyliumCleavage",
-      "type": "碎片離子 (GCMS_Acylium_pos)"
-    },
-    {
       "adduct": "M+.",
       "canonicalSmiles": "CCCC(=O)c1ccccc1",
       "charge": 1,
@@ -1153,32 +1095,6 @@
       "smiles": "CCCC(=O)c1ccccc1"
     },
     {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exact_mass": 43.0178,
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "name": "乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)",
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C8H9",
-      "neutralLossMass": 105.0704,
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 92,
-      "smiles": "C[C+]=O"
-    },
-    {
       "canonicalSmiles": "[C+]1=CC=CC=C1",
       "charge": 1,
       "confidence": "High",
@@ -1488,12 +1404,12 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Prominent",
-          "mz": 43.0178,
-          "priority": "High"
+          "formula": "CH3+",
+          "id": "GCMS_Frag_1_cat",
+          "ionType": "[CH3]+",
+          "likelihood": "Trace",
+          "mz": 15.0229,
+          "priority": "Medium"
         }
       ]
     },
@@ -1519,19 +1435,19 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "C10H12O+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
           "likelihood": "Dominant",
           "mz": 148.0883,
+          "priority": "High"
+        },
+        {
+          "formula": "CH3+",
+          "id": "GCMS_Frag_1_cat",
+          "ionType": "[CH3]+",
+          "likelihood": "Prominent",
+          "mz": 15.0229,
           "priority": "High"
         }
       ]
@@ -1558,19 +1474,19 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "C10H12O+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
           "likelihood": "Dominant",
           "mz": 148.0883,
+          "priority": "High"
+        },
+        {
+          "formula": "CH3+",
+          "id": "GCMS_Frag_1_cat",
+          "ionType": "[CH3]+",
+          "likelihood": "Prominent",
+          "mz": 15.0229,
           "priority": "High"
         }
       ]
@@ -1597,19 +1513,19 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "C10H12O+.",
           "id": "GCMS_Prec_Mrad_pos",
           "ionType": "M+.",
           "likelihood": "Dominant",
           "mz": 148.0883,
+          "priority": "High"
+        },
+        {
+          "formula": "CH3+",
+          "id": "GCMS_Frag_1_cat",
+          "ionType": "[CH3]+",
+          "likelihood": "Dominant",
+          "mz": 15.0229,
           "priority": "High"
         }
       ]

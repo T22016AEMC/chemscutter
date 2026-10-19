@@ -33,6 +33,37 @@
       "technique": "LC-MS/MS"
     },
     {
+      "canonicalSmiles": "C[C+]=O",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 43.0178,
+      "explanation": "前驅離子 [M+H]⁺ 脫去中性 H2O (18.0106 Da)，生成真實陽離子結構 C[C+]=O (C2H3O+, m/z 43.0178)",
+      "formula": "C2H3O+",
+      "fragmentationPathway": "[M+H]+ → -H2O → C2H3O+",
+      "heuristicScore": 88,
+      "id": "LCMS_NL_H2O_2_pos_ion",
+      "imageHash": "f9fa51894ca2f9d5aec187952b4f90d79da9681657e0f5ad777bc57dcb9e9969",
+      "ionExactMass": 43.0178,
+      "ionType": "[M+H-H2O]+",
+      "massBalanceError": 0.0001,
+      "massBalanceVerified": true,
+      "mechanism": "CID (25 eV) 碰撞誘導脫除：羧基羥基質子化後異裂脫去 H₂O (18.0106 Da)，形成共振穩定的醯基鎓陽離子 R-C≡O⁺；以及 CID (25 eV) 醯基異裂：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178) (由 2 條獨立碎裂途徑共同支持)",
+      "mz": 43.0178,
+      "neutralExactMass": 43.0184,
+      "neutralFormula": "C2H3O",
+      "neutralLoss": "H2O",
+      "neutralLossMass": 18.0106,
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 25 eV (General)",
+      "parentStructureId": "LCMS_NL_H2O_2",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 61.0284,
+      "priority": "High",
+      "smiles": "C[C+]=O",
+      "sourceRule": "LCMS_GraphReaction_ChargedIon, LCMS_Diagnostic_Acetylium",
+      "technique": "LC-MS/MS"
+    },
+    {
       "canonicalSmiles": "CC=[OH+]",
       "charge": 1,
       "confidence": "High",
@@ -89,37 +120,6 @@
       "priority": "High",
       "smiles": "CC(O)=[OH+]",
       "sourceRule": "LCMS_Protonation",
-      "technique": "LC-MS/MS"
-    },
-    {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exactMass": 43.0178,
-      "explanation": "前驅離子 [M+H]⁺ 脫去中性 H2O (18.0106 Da)，生成真實陽離子結構 C[C+]=O (C2H3O+, m/z 43.0178)",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "[M+H]+ → -H2O → C2H3O+",
-      "heuristicScore": 80,
-      "id": "LCMS_NL_H2O_2_pos_ion",
-      "imageHash": "f9fa51894ca2f9d5aec187952b4f90d79da9681657e0f5ad777bc57dcb9e9969",
-      "ionExactMass": 43.0178,
-      "ionType": "[M+H-H2O]+",
-      "massBalanceError": 0.0001,
-      "massBalanceVerified": true,
-      "mechanism": "CID (25 eV) 碰撞誘導脫除：羧基羥基質子化後異裂脫去 H₂O (18.0106 Da)，形成共振穩定的醯基鎓陽離子 R-C≡O⁺",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "H2O",
-      "neutralLossMass": 18.0106,
-      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 25 eV (General)",
-      "parentStructureId": "LCMS_NL_H2O_2",
-      "pathwayStatus": "Verified Graph Product",
-      "polarity": "Positive",
-      "precursorMz": 61.0284,
-      "priority": "High",
-      "smiles": "C[C+]=O",
-      "sourceRule": "LCMS_GraphReaction_ChargedIon",
       "technique": "LC-MS/MS"
     },
     {
@@ -230,6 +230,33 @@
       "type": "產物離子 (LCMS_NL_CO2_1)"
     },
     {
+      "adduct": "[M+H-H2O]+",
+      "canonicalSmiles": "C[C+]=O",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C2H3O+",
+      "fragmentationPathway": "[M+H]+ → -H2O → C2H3O+",
+      "heuristicScore": 88,
+      "id": "LCMS_NL_H2O_2_pos_ion",
+      "ionExactMass": 43.0178,
+      "massBalanceVerified": true,
+      "mechanism": "CID (25 eV) 碰撞誘導脫除：羧基羥基質子化後異裂脫去 H₂O (18.0106 Da)，形成共振穩定的醯基鎓陽離子 R-C≡O⁺；以及 CID (25 eV) 醯基異裂：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178) (由 2 條獨立碎裂途徑共同支持)",
+      "mode": "Positive",
+      "mz": 43.0178,
+      "neutralExactMass": 43.0184,
+      "neutralFormula": "C2H3O",
+      "neutralLoss": "H2O",
+      "neutralLossMass": 18.0106,
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 25 eV (General)",
+      "parentStructureId": "LCMS_NL_H2O_2",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "High",
+      "relative_intensity": 88,
+      "smiles": "C[C+]=O",
+      "sourceRule": "LCMS_GraphReaction_ChargedIon, LCMS_Diagnostic_Acetylium",
+      "type": "產物離子 (LCMS_NL_H2O_2)"
+    },
+    {
       "adduct": "[Frag+H]+",
       "canonicalSmiles": "CC=[OH+]",
       "charge": 1,
@@ -280,33 +307,6 @@
       "smiles": "CC(O)=[OH+]",
       "sourceRule": "LCMS_Protonation",
       "type": "准分子離子 (Precursor Adduct)"
-    },
-    {
-      "adduct": "[M+H-H2O]+",
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "[M+H]+ → -H2O → C2H3O+",
-      "heuristicScore": 80,
-      "id": "LCMS_NL_H2O_2_pos_ion",
-      "ionExactMass": 43.0178,
-      "massBalanceVerified": true,
-      "mechanism": "CID (25 eV) 碰撞誘導脫除：羧基羥基質子化後異裂脫去 H₂O (18.0106 Da)，形成共振穩定的醯基鎓陽離子 R-C≡O⁺",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "H2O",
-      "neutralLossMass": 18.0106,
-      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 25 eV (General)",
-      "parentStructureId": "LCMS_NL_H2O_2",
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 80,
-      "smiles": "C[C+]=O",
-      "sourceRule": "LCMS_GraphReaction_ChargedIon",
-      "type": "產物離子 (LCMS_NL_H2O_2)"
     },
     {
       "adduct": "[Frag+H]+",
@@ -546,20 +546,20 @@
           "priority": "High"
         },
         {
-          "formula": "C2H3O+",
-          "id": "LCMS_NL_H2O_2_pos_ion",
-          "ionType": "[M+H-H2O]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
-        {
           "formula": "CH3O2+",
           "id": "LCMS_Frag_2_pos",
           "ionType": "[Frag+H]+",
           "likelihood": "Dominant",
           "mz": 47.0128,
           "priority": "High"
+        },
+        {
+          "formula": "CH5+",
+          "id": "LCMS_NL_CO2_1_pos",
+          "ionType": "[M+H-CO2]+",
+          "likelihood": "Prominent",
+          "mz": 17.0386,
+          "priority": "Medium"
         }
       ]
     },
@@ -577,6 +577,14 @@
           "priority": "High"
         },
         {
+          "formula": "C2H3O+",
+          "id": "LCMS_NL_H2O_2_pos_ion",
+          "ionType": "[M+H-H2O]+",
+          "likelihood": "Dominant",
+          "mz": 43.0178,
+          "priority": "High"
+        },
+        {
           "formula": "C2H5O+",
           "id": "LCMS_Frag_3_pos",
           "ionType": "[Frag+H]+",
@@ -590,14 +598,6 @@
           "ionType": "[M+H]+",
           "likelihood": "Dominant",
           "mz": 61.0284,
-          "priority": "High"
-        },
-        {
-          "formula": "C2H3O+",
-          "id": "LCMS_NL_H2O_2_pos_ion",
-          "ionType": "[M+H-H2O]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
           "priority": "High"
         }
       ]
@@ -616,6 +616,14 @@
           "priority": "High"
         },
         {
+          "formula": "C2H3O+",
+          "id": "LCMS_NL_H2O_2_pos_ion",
+          "ionType": "[M+H-H2O]+",
+          "likelihood": "Dominant",
+          "mz": 43.0178,
+          "priority": "High"
+        },
+        {
           "formula": "H3O+",
           "id": "LCMS_Frag_4_pos",
           "ionType": "[Frag+H]+",
@@ -629,14 +637,6 @@
           "ionType": "[Frag+H]+",
           "likelihood": "Dominant",
           "mz": 45.0335,
-          "priority": "High"
-        },
-        {
-          "formula": "C2H3O+",
-          "id": "LCMS_NL_H2O_2_pos_ion",
-          "ionType": "[M+H-H2O]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
           "priority": "High"
         }
       ]

@@ -63,7 +63,7 @@
   "parent": {
     "detected_format": "SMILES",
     "detected_groups": [
-      "乙醯酯結構 (Acetate)",
+      "酯基 (-COO-)",
       "甲氧基 (-OCH3)",
       "McLafferty γ-H 拓樸結構"
     ],

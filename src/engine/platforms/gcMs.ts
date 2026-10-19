@@ -241,34 +241,31 @@ export function runGcMsFragmentation(
     }
 
     // 2b. Carbonyl Alpha-Cleavage -> Genuine Acetylium Cation C[C+]=O (C2H3O+, m/z 43.0178)
-    // LEGACY-QUIRK(Q15): 比 TOF-SIMS／LC-MS/MS 多了 hasEster 與 isElementSubset 兩個條件，但仍未確認分子確實含乙醯基
-    if (fg.hasAcetate || fg.hasKetone || fg.hasEster) {
+    if (fg.hasAcetylGroup) {
       const acetylium = buildVerifiedIonFromSmiles('C[C+]=O', RDKit);
       if (acetylium) {
         const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 1 }, acetylium.neutralExactMass);
-        if (mb.isElementSubset) {
-          addDiagnosticIon(out, ctx, acetylium, mb, {
-            id: 'GCMS_Acylium_pos',
-            polarity: 'Positive',
-            ionType: '[CH3CO]+',
-            precursorMz: diagnosticPrecursorMz,
-            structure: {
-              name: '乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)',
-              mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)',
-              fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
-              priority: 'High',
-              score: 92.0
-            },
-            candidate: {
-              mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)',
-              fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
-              priority: 'High',
-              sourceRule: 'GCMS_AcyliumCleavage',
-              heuristicScore: 92.0,
-              explanation: '羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)'
-            }
-          });
-        }
+        addDiagnosticIon(out, ctx, acetylium, mb, {
+          id: 'GCMS_Acylium_pos',
+          polarity: 'Positive',
+          ionType: '[CH3CO]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
+            name: '乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)',
+            mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)',
+            fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
+            priority: 'High',
+            score: 92.0
+          },
+          candidate: {
+            mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)',
+            fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
+            priority: 'High',
+            sourceRule: 'GCMS_AcyliumCleavage',
+            heuristicScore: 92.0,
+            explanation: '羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)'
+          }
+        });
       }
     }
 

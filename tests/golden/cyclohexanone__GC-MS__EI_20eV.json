@@ -28,37 +28,6 @@
       "smiles": "O=C1CCCCC1",
       "sourceRule": "GCMS_EI_MolecularIon",
       "technique": "GC-MS"
-    },
-    {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exactMass": 43.0178,
-      "explanation": "羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceError": 0,
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C4H7",
-      "neutralLossMass": 55.0548,
-      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
-      "parentStructureId": "GCMS_Acylium_pos",
-      "pathwayStatus": "Verified Graph Product",
-      "polarity": "Positive",
-      "precursorMz": 98.0732,
-      "priority": "High",
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AcyliumCleavage",
-      "technique": "GC-MS"
     }
   ],
   "disclaimer": "本工具為基於化學結構、官能基與質譜碎裂規則的候選碎片模擬器。實際 MS spectrum 會受到離子化方式、儀器結構、碰撞能量、source conditions、matrix、樣品狀態與其他實驗條件影響。模擬結果主要用於送測前的候選碎片篩選與實驗結果輔助判讀，所有數值為啟發式優先評分 (Heuristic Priority Score, 0-100)，不代表真實實驗峰強度或保證實際一定觀察到該離子。",
@@ -103,33 +72,6 @@
       "smiles": "O=C1CCCCC1",
       "sourceRule": "GCMS_EI_MolecularIon",
       "type": "分子離子 (Molecular/Precursor Ion)"
-    },
-    {
-      "adduct": "[CH3CO]+",
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "ionExactMass": 43.0178,
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C4H7",
-      "neutralLossMass": 55.0548,
-      "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
-      "parentStructureId": "GCMS_Acylium_pos",
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 92,
-      "smiles": "C[C+]=O",
-      "sourceRule": "GCMS_AcyliumCleavage",
-      "type": "碎片離子 (GCMS_Acylium_pos)"
     }
   ],
   "simulationConfig": {
@@ -164,32 +106,6 @@
       "priority": "High",
       "relative_intensity": 100,
       "smiles": "O=C1CCCCC1"
-    },
-    {
-      "canonicalSmiles": "C[C+]=O",
-      "charge": 1,
-      "confidence": "High",
-      "exact_mass": 43.0178,
-      "formula": "C2H3O+",
-      "fragmentationPathway": "M+. → Carbonyl α-Cleavage → [CH3CO]+",
-      "heuristicScore": 92,
-      "id": "GCMS_Acylium_pos",
-      "imageHash": "08f9776794a59d5b150084f12946e5da01c10527fa0d405d6485dd182e9ba236",
-      "ionExactMass": 43.0178,
-      "ionType": "[CH3CO]+",
-      "massBalanceVerified": true,
-      "mechanism": "羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)",
-      "mode": "Positive",
-      "mz": 43.0178,
-      "name": "乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)",
-      "neutralExactMass": 43.0184,
-      "neutralFormula": "C2H3O",
-      "neutralLoss": "C4H7",
-      "neutralLossMass": 55.0548,
-      "pathwayStatus": "Verified Graph Product",
-      "priority": "High",
-      "relative_intensity": 92,
-      "smiles": "C[C+]=O"
     }
   ],
   "sweepResults": [
@@ -204,14 +120,6 @@
           "ionType": "M+.",
           "likelihood": "Dominant",
           "mz": 98.0727,
-          "priority": "High"
-        },
-        {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Prominent",
-          "mz": 43.0178,
           "priority": "High"
         }
       ]
@@ -228,14 +136,6 @@
           "likelihood": "Dominant",
           "mz": 98.0727,
           "priority": "High"
-        },
-        {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
         }
       ]
     },
@@ -251,14 +151,6 @@
           "likelihood": "Dominant",
           "mz": 98.0727,
           "priority": "High"
-        },
-        {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
         }
       ]
     },
@@ -267,14 +159,6 @@
       "parameterValue": 70,
       "regimeSummary": "NIST 70 eV 標準區：一階與二階特徵裂解完整展開",
       "topCandidates": [
-        {
-          "formula": "C2H3O+",
-          "id": "GCMS_Acylium_pos",
-          "ionType": "[CH3CO]+",
-          "likelihood": "Dominant",
-          "mz": 43.0178,
-          "priority": "High"
-        },
         {
           "formula": "C6H10O+.",
           "id": "GCMS_Prec_Mrad_pos",
