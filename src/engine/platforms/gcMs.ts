@@ -1,15 +1,13 @@
 // GC-MS 平台碎裂引擎。
-// 來源：legacy gcMsFragmentation.ts（照原樣搬移，只改型別、import 與具名質量常數）
+// 來源：legacy gcMsFragmentation.ts。階段 1c 照原樣搬移；階段 1e 起，與其他平台相同的流程改用 ./shared/ 的共用函式，
+// 本檔只保留 GC-MS 特有的觸發條件、分數、precursorMz 與說明文字。
+// 標有 LEGACY-QUIRK(Qxx) 的地方是刻意保留的舊版不一致行為，修正時搜尋該標記即可找到全部位置。
 import type { SimulationConfig, FragmentCandidate, StructureItem, SignalItem, SweepResultItem } from '../types';
 import type { JSMol, RDKitModule } from '../rdkit/types';
 import type { FunctionalGroupInfo } from '../rules/functionalGroups';
-import { generateSingleBondFragments } from '../rules/singleBondCleavage';
-import { molToSvgDataUri } from '../chem/depiction';
 import { generateValidNeutralLosses } from '../rules/neutralLosses';
 import { executeMcLaffertyGraphRearrangement } from '../rules/graphReactions';
-import { generateIsotopeCandidates } from '../chem/isotopes';
 import { deduplicateAndRankCandidates } from '../scoring/deduplicate';
-import { analyzeRDKitMolStoichiometry } from '../chem/stoichiometry';
 import { formatHillFormula } from '../chem/formula';
 import { deriveProtonatedIon, deriveAdductIon, buildVerifiedIonFromSmiles } from '../chem/ionDerivation';
 import {
@@ -20,7 +18,6 @@ import {
   ACETYLENE_LOSS_MASS,
   PHENYL_CATION_MZ
 } from '../constants/masses';
-import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateGcMsRegime } from '../platform/parameterRegime';
 import {
   addStructureOnce,
@@ -32,6 +29,13 @@ import {
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
 import { addIsotopeSignals } from './shared/isotopeSignals';
+import {
+  chargedResidualCandidate,
+  neutralLossStructId,
+  neutralLossStructure,
+  residualAsRadicalIon,
+  residualIonCandidate
+} from './shared/neutralLossProducts';
 import {
   analyzeDirectCation,
   directCationCandidate,
@@ -60,7 +64,7 @@ export function runGcMsFragmentation(
   fg: FunctionalGroupInfo
 ): GcMsRunResult {
   const parent = buildParentContext(mol);
-  const { parentSmiles, parentStoich, parentFormula, parentMass, parentImg } = parent;
+  const { parentSmiles, parentStoich, parentFormula, parentMass } = parent;
 
   const regime = evaluateGcMsRegime(config, fg);
   const { isCI, electronEnergy: ee, reagentGas, analyzer } = regime;
@@ -418,143 +422,83 @@ export function runGcMsFragmentation(
       continue;
     }
 
-    const structId = `GCMS_NL_${nl.lossType}_${structures.length}`;
-    if (!seenStructureKeys.has(nl.residualSmiles)) {
-      seenStructureKeys.add(nl.residualSmiles);
-      structures.push({
-        id: structId,
+    const structId = neutralLossStructId(out, 'GCMS_NL_', nl);
+    addStructureOnce(
+      out,
+      nl.residualSmiles,
+      neutralLossStructure(nl, structId, {
         name: `氣相脫除產物 (${nl.name})`,
+        score: nl.priority === 'High' ? 84.0 : 62.0,
+        mode: 'Positive',
+        fragmentationPathway: isCI
+          ? `[M+H]+ → -${nl.neutralFormula}`
+          : `M+. → -${nl.neutralFormula}`,
+        // LEGACY-QUIRK(Q16): 中性產物的離子式以字串拼接（CI 為中性式接 "H+"、EI 為中性式接 "+."），charge 一律為 1
         formula: nl.isChargedProduct
           ? nl.residualFormula
           : isCI
           ? `${nl.residualNeutralFormula}H+`
           : `${nl.residualNeutralFormula}+.`,
-        neutralFormula: nl.residualNeutralFormula,
-        smiles: nl.residualSmiles,
-        canonicalSmiles: nl.residualSmiles,
-        exact_mass: nl.isChargedProduct ? nl.residualIonExactMass : nl.residualExactMass,
-        neutralExactMass: nl.residualExactMass,
-        ionExactMass: nl.residualIonExactMass,
-        mz: nl.residualMz,
-        charge: 1,
-        image: nl.residualImage,
-        relative_intensity: nl.priority === 'High' ? 84.0 : 62.0,
-        heuristicScore: nl.priority === 'High' ? 84.0 : 62.0,
-        priority: nl.priority,
-        confidence: nl.confidence,
-        mode: 'Positive',
-        mechanism: nl.mechanism,
-        fragmentationPathway: isCI
-          ? `[M+H]+ → -${nl.neutralFormula}`
-          : `M+. → -${nl.neutralFormula}`,
-        pathwayStatus: nl.pathwayStatus,
-        neutralLoss: nl.neutralFormula,
-        neutralLossMass: nl.neutralExactMass,
-        massBalanceVerified: nl.massBalanceVerified
-      });
-    }
+        charge: 1
+      })
+    );
 
     if (nl.isChargedProduct) {
       // Even-electron cation product (e.g., Acylium or Salicyloyl cation m/z 121.0284)
-      candidates.push({
-        id: `${structId}_ion`,
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: parentMass,
-        mz: nl.residualMz,
-        formula: nl.residualFormula,
-        neutralFormula: nl.residualNeutralFormula,
-        smiles: nl.residualSmiles,
-        canonicalSmiles: nl.residualSmiles,
-        exactMass: nl.residualIonExactMass,
-        neutralExactMass: nl.residualExactMass,
-        ionExactMass: nl.residualIonExactMass,
-        charge: 1,
-        ionType: isCI ? `[M+H-${nl.neutralFormula}]+` : `[${nl.residualNeutralFormula}]+`,
-        mechanism: nl.mechanism,
-        fragmentationPathway: `Graph Reaction (-${nl.neutralFormula}) → ${nl.residualFormula}`,
-        pathwayStatus: nl.pathwayStatus,
-        neutralLoss: nl.neutralFormula,
-        neutralLossMass: nl.neutralExactMass,
-        massBalanceError: nl.massBalanceError,
-        massBalanceVerified: nl.massBalanceVerified,
-        parentStructureId: structId,
-        priority: nl.priority,
-        confidence: nl.confidence,
-        sourceRule: 'GCMS_GraphReaction_Cation',
-        heuristicScore: nl.priority === 'High' ? 86.0 : 65.0,
-        image: nl.residualImage,
-        explanation: `生成共振穩定陽離子 ${nl.residualFormula} (${nl.residualSmiles}, m/z ${nl.residualMz.toFixed(4)})`,
-        parameterContext
-      });
+      candidates.push(
+        chargedResidualCandidate(ctx, nl, structId, {
+          // LEGACY-QUIRK(Q29): id 後綴為 _ion（TOF-SIMS 為 _ion_pos、LC-MS/MS 為 _pos_ion）
+          idSuffix: '_ion',
+          // LEGACY-QUIRK(Q19): precursorMz 使用中性母分子質量 parentMass
+          precursorMz: parentMass,
+          // LEGACY-QUIRK(Q31): charge 固定為 1（TOF-SIMS／LC-MS/MS 為 nl.charge || 1）
+          charge: 1,
+          ionType: isCI ? `[M+H-${nl.neutralFormula}]+` : `[${nl.residualNeutralFormula}]+`,
+          mechanism: nl.mechanism,
+          fragmentationPathway: `Graph Reaction (-${nl.neutralFormula}) → ${nl.residualFormula}`,
+          priority: nl.priority,
+          sourceRule: 'GCMS_GraphReaction_Cation',
+          heuristicScore: nl.priority === 'High' ? 86.0 : 65.0,
+          explanation: `生成共振穩定陽離子 ${nl.residualFormula} (${nl.residualSmiles}, m/z ${nl.residualMz.toFixed(4)})`
+        })
+      );
     } else if (isCI) {
       // In CI mode, neutral loss occurs from [M+H]+ -> [M+H-NL]+
       const protNl = deriveProtonatedIon(nl.residualMol, RDKit);
-      candidates.push({
-        id: `${structId}_ci_pos`,
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-        mz: protNl.mz,
-        formula: protNl.formula,
-        neutralFormula: protNl.neutralFormula,
-        smiles: protNl.smiles,
-        canonicalSmiles: protNl.canonicalSmiles,
-        exactMass: nl.residualExactMass,
-        neutralExactMass: nl.residualExactMass,
-        ionExactMass: protNl.ionExactMass,
-        charge: 1,
-        ionType: `[M+H-${nl.neutralFormula}]+`,
-        mechanism: `CI 質子轉移誘導脫除：${nl.name}`,
-        fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${protNl.formula}`,
-        pathwayStatus: nl.pathwayStatus,
-        neutralLoss: nl.neutralFormula,
-        neutralLossMass: nl.neutralExactMass,
-        massBalanceError: nl.massBalanceError,
-        massBalanceVerified: nl.massBalanceVerified,
-        parentStructureId: structId,
-        priority: nl.priority,
-        confidence: nl.confidence,
-        sourceRule: 'GCMS_CI_NeutralLoss',
-        heuristicScore: 76.0,
-        image: protNl.image,
-        explanation: `CI 准分子離子 [M+H]⁺ 脫去中性 ${nl.neutralFormula} 形成 ${protNl.formula}`,
-        parameterContext
-      });
+      candidates.push(
+        residualIonCandidate(ctx, nl, structId, protNl, {
+          idSuffix: '_ci_pos',
+          polarity: 'Positive',
+          // LEGACY-QUIRK(Q19): parentMass + 1.007276 並四捨五入至 4 位
+          precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
+          ionType: `[M+H-${nl.neutralFormula}]+`,
+          mechanism: `CI 質子轉移誘導脫除：${nl.name}`,
+          fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${protNl.formula}`,
+          pathwayStatus: nl.pathwayStatus,
+          priority: nl.priority,
+          sourceRule: 'GCMS_CI_NeutralLoss',
+          heuristicScore: 76.0,
+          explanation: `CI 准分子離子 [M+H]⁺ 脫去中性 ${nl.neutralFormula} 形成 ${protNl.formula}`
+        })
+      );
     } else {
       // In EI mode, neutral loss from M+. gives odd-electron radical cation [M-NL]+.
       const radMz = Number((nl.residualExactMass - ELECTRON_MASS).toFixed(4));
-      candidates.push({
-        id: `${structId}_ei_rad`,
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: Number((parentMass - ELECTRON_MASS).toFixed(4)),
-        mz: radMz,
-        formula: `${nl.residualNeutralFormula}+.`,
-        neutralFormula: nl.residualNeutralFormula,
-        smiles: nl.residualSmiles,
-        canonicalSmiles: nl.residualSmiles,
-        exactMass: nl.residualExactMass,
-        neutralExactMass: nl.residualExactMass,
-        ionExactMass: radMz,
-        charge: 1,
-        ionType: `[M-${nl.neutralFormula}]+.`,
-        mechanism: `EI (${ee} eV) 氣相中性脫除：${nl.name}`,
-        fragmentationPathway: `M+. → -${nl.neutralFormula} → ${nl.residualNeutralFormula}+.`,
-        pathwayStatus: nl.pathwayStatus,
-        neutralLoss: nl.neutralFormula,
-        neutralLossMass: nl.neutralExactMass,
-        massBalanceError: nl.massBalanceError,
-        massBalanceVerified: nl.massBalanceVerified,
-        parentStructureId: structId,
-        priority: nl.priority,
-        confidence: nl.confidence,
-        sourceRule: 'GCMS_EI_NeutralLoss',
-        heuristicScore: nl.priority === 'High' ? 88.0 : 64.0,
-        image: nl.residualImage,
-        explanation: `分子自由基陽離子 M⁺• 脫去中性小分子 ${nl.neutralFormula} (${nl.neutralExactMass.toFixed(4)} Da)，產生奇數電子自由基陽離子 ${nl.residualNeutralFormula}⁺• (m/z ${radMz.toFixed(4)})`,
-        parameterContext
-      });
+      candidates.push(
+        residualIonCandidate(ctx, nl, structId, residualAsRadicalIon(nl, `${nl.residualNeutralFormula}+.`, radMz), {
+          idSuffix: '_ei_rad',
+          polarity: 'Positive',
+          precursorMz: Number((parentMass - ELECTRON_MASS).toFixed(4)),
+          ionType: `[M-${nl.neutralFormula}]+.`,
+          mechanism: `EI (${ee} eV) 氣相中性脫除：${nl.name}`,
+          fragmentationPathway: `M+. → -${nl.neutralFormula} → ${nl.residualNeutralFormula}+.`,
+          pathwayStatus: nl.pathwayStatus,
+          priority: nl.priority,
+          sourceRule: 'GCMS_EI_NeutralLoss',
+          heuristicScore: nl.priority === 'High' ? 88.0 : 64.0,
+          explanation: `分子自由基陽離子 M⁺• 脫去中性小分子 ${nl.neutralFormula} (${nl.neutralExactMass.toFixed(4)} Da)，產生奇數電子自由基陽離子 ${nl.residualNeutralFormula}⁺• (m/z ${radMz.toFixed(4)})`
+        })
+      );
     }
   }
 

@@ -1,14 +1,12 @@
 // TOF-SIMS 平台碎裂引擎。
-// 來源：legacy tofSimsFragmentation.ts（照原樣搬移，只改型別、import 與具名質量常數）
+// 來源：legacy tofSimsFragmentation.ts。階段 1c 照原樣搬移；階段 1e 起，與其他平台相同的流程改用 ./shared/ 的共用函式，
+// 本檔只保留 TOF-SIMS 特有的觸發條件、分數、precursorMz 與說明文字。
+// 標有 LEGACY-QUIRK(Qxx) 的地方是刻意保留的舊版不一致行為，修正時搜尋該標記即可找到全部位置。
 import type { SimulationConfig, FragmentCandidate, StructureItem, SignalItem } from '../types';
 import type { JSMol, RDKitModule } from '../rdkit/types';
 import type { FunctionalGroupInfo } from '../rules/functionalGroups';
-import { generateSingleBondFragments } from '../rules/singleBondCleavage';
-import { molToSvgDataUri } from '../chem/depiction';
 import { generateValidNeutralLosses } from '../rules/neutralLosses';
-import { generateIsotopeCandidates } from '../chem/isotopes';
 import { deduplicateAndRankCandidates } from '../scoring/deduplicate';
-import { analyzeRDKitMolStoichiometry } from '../chem/stoichiometry';
 import {
   deriveProtonatedIon,
   deriveDeprotonatedIon,
@@ -33,7 +31,6 @@ import {
   CYANIDE_ANION_MZ,
   CN_NEUTRAL_MASS_ROUNDED
 } from '../constants/masses';
-import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateTofSimsRegime } from '../platform/parameterRegime';
 import {
   addStructureOnce,
@@ -45,6 +42,12 @@ import {
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
 import { addIsotopeSignals } from './shared/isotopeSignals';
+import {
+  chargedResidualCandidate,
+  neutralLossStructId,
+  neutralLossStructure,
+  residualIonCandidate
+} from './shared/neutralLossProducts';
 import {
   analyzeDirectCation,
   directCationCandidate,
@@ -71,7 +74,7 @@ export function runTofSimsFragmentation(
   fg: FunctionalGroupInfo
 ): TechniqueRunResult {
   const parent = buildParentContext(mol);
-  const { parentSmiles, parentStoich, parentFormula, parentMass, parentImg } = parent;
+  const { parentSmiles, parentFormula, parentMass } = parent;
 
   const regime = evaluateTofSimsRegime(config, fg);
   const primaryIon = config.primaryIon || 'Generic';
@@ -83,7 +86,7 @@ export function runTofSimsFragmentation(
       : 'Primary ion 未指定，使用通用 TOF-SIMS fragmentation model (General)';
 
   const out = createPlatformOutput();
-  const { candidates, structures, seenStructureKeys } = out;
+  const { candidates, structures } = out;
   const ctx: PlatformContext = { ...parent, technique: 'TOF-SIMS', parameterContext };
 
   // Add Parent Molecule to structures list
@@ -559,143 +562,82 @@ export function runTofSimsFragmentation(
   // ============================================================================
   const neutralLosses = generateValidNeutralLosses(mol, RDKit, fg);
   for (const nl of neutralLosses) {
-    const structId = `NL_${nl.lossType}_${structures.length}`;
+    const structId = neutralLossStructId(out, 'NL_', nl);
 
-    if (!seenStructureKeys.has(nl.residualSmiles)) {
-      seenStructureKeys.add(nl.residualSmiles);
-      structures.push({
-        id: structId,
+    addStructureOnce(
+      out,
+      nl.residualSmiles,
+      neutralLossStructure(nl, structId, {
         name: `重排/中性脫除產物 (${nl.name})`,
-        formula: nl.residualFormula,
-        neutralFormula: nl.residualNeutralFormula,
-        smiles: nl.residualSmiles,
-        canonicalSmiles: nl.residualSmiles,
-        exact_mass: nl.isChargedProduct ? nl.residualIonExactMass : nl.residualExactMass,
-        neutralExactMass: nl.residualExactMass,
-        ionExactMass: nl.residualIonExactMass,
-        mz: nl.residualMz,
-        charge: nl.charge,
-        image: nl.residualImage,
-        relative_intensity: nl.priority === 'High' ? 78.0 : 58.0,
-        heuristicScore: nl.priority === 'High' ? 78.0 : 58.0,
-        priority: nl.priority,
-        confidence: nl.confidence,
+        score: nl.priority === 'High' ? 78.0 : 58.0,
+        // LEGACY-QUIRK(Q24): 中性產物只看分子是否有負離子路徑，不看使用者設定的極性
         mode: nl.isChargedProduct ? 'Positive' : fg.negativePathEnabled ? 'Both' : 'Positive',
-        mechanism: nl.mechanism,
-        fragmentationPathway: `Graph Reaction (-${nl.neutralFormula})`,
-        pathwayStatus: nl.pathwayStatus,
-        neutralLoss: nl.neutralFormula,
-        neutralLossMass: nl.neutralExactMass,
-        massBalanceVerified: nl.massBalanceVerified
-      });
-    }
+        fragmentationPathway: `Graph Reaction (-${nl.neutralFormula})`
+      })
+    );
 
     if (nl.isChargedProduct) {
       // Already a genuine charged ion (e.g., acylium [M+H-H2O]+ or salicyloyl [M+H-C2H4O2]+)
       if (regime.enablePositive) {
-        candidates.push({
-          id: `${structId}_ion_pos`,
-          technique: 'TOF-SIMS',
-          polarity: 'Positive',
-          precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
-          mz: nl.residualMz,
-          formula: nl.residualFormula,
-          neutralFormula: nl.residualNeutralFormula,
-          smiles: nl.residualSmiles,
-          canonicalSmiles: nl.residualSmiles,
-          exactMass: nl.residualIonExactMass,
-          neutralExactMass: nl.residualExactMass,
-          ionExactMass: nl.residualIonExactMass,
-          charge: nl.charge || 1,
-          ionType: `[M+H-${nl.neutralFormula}]+`,
-          mechanism: nl.mechanism,
-          fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${nl.residualFormula}`,
-          pathwayStatus: nl.pathwayStatus,
-          neutralLoss: nl.neutralFormula,
-          neutralLossMass: nl.neutralExactMass,
-          massBalanceError: nl.massBalanceError,
-          massBalanceVerified: nl.massBalanceVerified,
-          parentStructureId: structId,
-          priority: nl.priority,
-          confidence: nl.confidence,
-          sourceRule: 'TOF-SIMS_GraphReaction_Pos',
-          heuristicScore: nl.priority === 'High' ? 84.0 : 65.0,
-          image: nl.residualImage,
-          explanation: `由 RDKit 分子圖反應直接生成帶正電之 ${nl.residualFormula} (${nl.residualSmiles})，脫去中性 ${nl.neutralFormula}`,
-          parameterContext
-        });
+        candidates.push(
+          chargedResidualCandidate(ctx, nl, structId, {
+            // LEGACY-QUIRK(Q29): id 後綴為 _ion_pos（LC-MS/MS 為 _pos_ion、GC-MS 為 _ion）
+            idSuffix: '_ion_pos',
+            // LEGACY-QUIRK(Q19): parentMass + 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+            precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
+            charge: nl.charge || 1,
+            ionType: `[M+H-${nl.neutralFormula}]+`,
+            mechanism: nl.mechanism,
+            fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${nl.residualFormula}`,
+            priority: nl.priority,
+            sourceRule: 'TOF-SIMS_GraphReaction_Pos',
+            heuristicScore: nl.priority === 'High' ? 84.0 : 65.0,
+            explanation: `由 RDKit 分子圖反應直接生成帶正電之 ${nl.residualFormula} (${nl.residualSmiles})，脫去中性 ${nl.neutralFormula}`
+          })
+        );
       }
     } else {
       // Neutral graph product -> derive protonated [M-NL+H]+ and deprotonated [M-NL-H]-
       if (regime.enablePositive) {
         const protNl = deriveProtonatedIon(nl.residualMol, RDKit);
-        candidates.push({
-          id: `${structId}_pos`,
-          technique: 'TOF-SIMS',
-          polarity: 'Positive',
-          precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
-          mz: protNl.mz,
-          formula: protNl.formula,
-          neutralFormula: protNl.neutralFormula,
-          smiles: protNl.smiles,
-          canonicalSmiles: protNl.canonicalSmiles,
-          exactMass: nl.residualExactMass,
-          neutralExactMass: nl.residualExactMass,
-          ionExactMass: protNl.ionExactMass,
-          charge: 1,
-          ionType: `[M-${nl.neutralFormula}+H]+`,
-          mechanism: `${nl.mechanism}；${protNl.siteDescription}`,
-          fragmentationPathway: `M → -${nl.neutralFormula} (+H+) → ${protNl.formula}`,
-          pathwayStatus: nl.pathwayStatus,
-          neutralLoss: nl.neutralFormula,
-          neutralLossMass: nl.neutralExactMass,
-          massBalanceError: nl.massBalanceError,
-          massBalanceVerified: nl.massBalanceVerified,
-          parentStructureId: structId,
-          priority: nl.priority,
-          confidence: nl.confidence,
-          sourceRule: 'TOF-SIMS_NeutralLoss_Pos',
-          heuristicScore: nl.priority === 'High' ? 80.0 : 62.0,
-          image: protNl.image,
-          explanation: `母分子於表面發生 ${nl.name} 並質子化形成 ${protNl.formula}`,
-          parameterContext
-        });
+        candidates.push(
+          residualIonCandidate(ctx, nl, structId, protNl, {
+            idSuffix: '_pos',
+            polarity: 'Positive',
+            // LEGACY-QUIRK(Q19): parentMass + 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+            precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
+            ionType: `[M-${nl.neutralFormula}+H]+`,
+            mechanism: `${nl.mechanism}；${protNl.siteDescription}`,
+            fragmentationPathway: `M → -${nl.neutralFormula} (+H+) → ${protNl.formula}`,
+            pathwayStatus: nl.pathwayStatus,
+            priority: nl.priority,
+            sourceRule: 'TOF-SIMS_NeutralLoss_Pos',
+            heuristicScore: nl.priority === 'High' ? 80.0 : 62.0,
+            explanation: `母分子於表面發生 ${nl.name} 並質子化形成 ${protNl.formula}`
+          })
+        );
       }
 
       if (regime.enableNegative && fg.negativePathEnabled) {
         const deprotNl = deriveDeprotonatedIon(nl.residualMol, RDKit);
         if (deprotNl) {
-          candidates.push({
-            id: `${structId}_neg`,
-            technique: 'TOF-SIMS',
-            polarity: 'Negative',
-            precursorMz: parentMass - PROTON_MASS_LEGACY_ROUNDED,
-            mz: deprotNl.mz,
-            formula: deprotNl.formula,
-            neutralFormula: deprotNl.neutralFormula,
-            smiles: deprotNl.smiles,
-            canonicalSmiles: deprotNl.canonicalSmiles,
-            exactMass: nl.residualExactMass,
-            neutralExactMass: nl.residualExactMass,
-            ionExactMass: deprotNl.ionExactMass,
-            charge: -1,
-            ionType: `[M-${nl.neutralFormula}-H]-`,
-            mechanism: `陰離子裂解分支：${nl.name} 後去質子化 (${deprotNl.siteDescription})`,
-            fragmentationPathway: `[M-H]- → -${nl.neutralFormula} → ${deprotNl.formula}`,
-            pathwayStatus: nl.pathwayStatus,
-            neutralLoss: nl.neutralFormula,
-            neutralLossMass: nl.neutralExactMass,
-            massBalanceError: nl.massBalanceError,
-            massBalanceVerified: nl.massBalanceVerified,
-            parentStructureId: structId,
-            priority: nl.priority,
-            confidence: nl.confidence,
-            sourceRule: 'TOF-SIMS_NeutralLoss_Neg',
-            heuristicScore: nl.priority === 'High' ? 85.0 : 65.0,
-            image: deprotNl.image,
-            explanation: `陰離子模式下誘發 ${nl.name} 形成共軛鹼負離子 ${deprotNl.formula} (${deprotNl.smiles})`,
-            parameterContext
-          });
+          candidates.push(
+            residualIonCandidate(ctx, nl, structId, deprotNl, {
+              idSuffix: '_neg',
+              polarity: 'Negative',
+              // LEGACY-QUIRK(Q19): parentMass - 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+              precursorMz: parentMass - PROTON_MASS_LEGACY_ROUNDED,
+              ionType: `[M-${nl.neutralFormula}-H]-`,
+              mechanism: `陰離子裂解分支：${nl.name} 後去質子化 (${deprotNl.siteDescription})`,
+              fragmentationPathway: `[M-H]- → -${nl.neutralFormula} → ${deprotNl.formula}`,
+              // LEGACY-QUIRK(Q9): 沿用中性產物的 pathwayStatus；去質子化退回中性結構時仍標示為 Verified（LC-MS/MS 依 isGraphVerifiedIon）
+              pathwayStatus: nl.pathwayStatus,
+              priority: nl.priority,
+              sourceRule: 'TOF-SIMS_NeutralLoss_Neg',
+              heuristicScore: nl.priority === 'High' ? 85.0 : 65.0,
+              explanation: `陰離子模式下誘發 ${nl.name} 形成共軛鹼負離子 ${deprotNl.formula} (${deprotNl.smiles})`
+            })
+          );
         }
       }
     }

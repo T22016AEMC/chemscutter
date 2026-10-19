@@ -77,7 +77,8 @@ export const ISOBUTANE_CI_C4H9_ADDUCT_MASS = 57.06988; // C4H9+
 
 // GC-MS 二階開環脫乙炔
 export const ACETYLENE_LOSS_MASS = 26.0157;            // C2H2
-export const TROPYLIUM_ION_MZ = 91.0542;               // [C7H7]+，作為 [C5H5]+ 的前驅物 m/z
+// [C7H7]+，原作為 [C5H5]+ 的前驅物 m/z。目前未使用：[C5H5]+ 規則因 SMILES 無效已移除（見 Q13），保留供重新實作
+export const TROPYLIUM_ION_MZ = 91.0542;
 export const PHENYL_CATION_MZ = 77.0386;               // [C6H5]+，作為 [C4H3]+ 的前驅物 m/z
 
 // TOF-SIMS 負離子診斷峰（舊版直接寫死、已四捨五入至小數 4 位）

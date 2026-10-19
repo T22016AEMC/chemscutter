@@ -1,15 +1,13 @@
 // LC-MS/MS 平台碎裂引擎。
-// 來源：legacy lcMsMsFragmentation.ts（照原樣搬移，只改型別、import 與具名質量常數）
+// 來源：legacy lcMsMsFragmentation.ts。階段 1c 照原樣搬移；階段 1e 起，與其他平台相同的流程改用 ./shared/ 的共用函式，
+// 本檔只保留 LC-MS/MS 特有的觸發條件、分數、precursorMz 與說明文字。
+// 標有 LEGACY-QUIRK(Qxx) 的地方是刻意保留的舊版不一致行為，修正時搜尋該標記即可找到全部位置。
 import type { SimulationConfig, FragmentCandidate, StructureItem, SignalItem, SweepResultItem } from '../types';
 import type { JSMol, RDKitModule } from '../rdkit/types';
 import type { FunctionalGroupInfo } from '../rules/functionalGroups';
-import { generateSingleBondFragments } from '../rules/singleBondCleavage';
-import { molToSvgDataUri } from '../chem/depiction';
 import { generateValidNeutralLosses } from '../rules/neutralLosses';
 import { executeGraphReactions } from '../rules/graphReactions';
-import { generateIsotopeCandidates } from '../chem/isotopes';
 import { deduplicateAndRankCandidates } from '../scoring/deduplicate';
-import { analyzeRDKitMolStoichiometry } from '../chem/stoichiometry';
 import {
   deriveProtonatedIon,
   deriveDeprotonatedIon,
@@ -17,7 +15,6 @@ import {
   buildVerifiedIonFromSmiles
 } from '../chem/ionDerivation';
 import { PROTON_MASS_LEGACY_ROUNDED } from '../constants/masses';
-import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateLcMsMsRegime } from '../platform/parameterRegime';
 import {
   addStructureOnce,
@@ -29,6 +26,12 @@ import {
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
 import { addIsotopeSignals } from './shared/isotopeSignals';
+import {
+  chargedResidualCandidate,
+  neutralLossStructId,
+  neutralLossStructure,
+  residualIonCandidate
+} from './shared/neutralLossProducts';
 import {
   forEachSingleBondFragment,
   fragmentIonCandidate,
@@ -54,7 +57,7 @@ export function runLcMsMsFragmentation(
   fg: FunctionalGroupInfo
 ): LcMsMsRunResult {
   const parent = buildParentContext(mol);
-  const { parentSmiles, parentStoich, parentFormula, parentMass, parentImg } = parent;
+  const { parentSmiles, parentMass } = parent;
 
   const regime = evaluateLcMsMsRegime(config, fg);
   const { ionization, analyzer, fragmentationMethod: fragMethod, collisionEnergy: ce } = regime;
@@ -65,7 +68,7 @@ export function runLcMsMsFragmentation(
     : `LC-MS/MS, ${ionization}, ${analyzer}, ${fragMethod}, CE ${ce} eV (Instrument-aware)`;
 
   const out = createPlatformOutput();
-  const { candidates, structures, seenStructureKeys } = out;
+  const { candidates, structures } = out;
   const ctx: PlatformContext = { ...parent, technique: 'LC-MS/MS', parameterContext };
 
   // Add Parent Molecule
@@ -210,7 +213,7 @@ export function runLcMsMsFragmentation(
       continue;
     }
 
-    const structId = `LCMS_NL_${nl.lossType}_${structures.length}`;
+    const structId = neutralLossStructId(out, 'LCMS_NL_', nl);
     const nlScore = isSequentialStep
       ? isHighCE
         ? 92.0
@@ -221,146 +224,85 @@ export function runLcMsMsFragmentation(
       ? 54.0
       : 80.0;
 
-    if (!seenStructureKeys.has(nl.residualSmiles)) {
-      seenStructureKeys.add(nl.residualSmiles);
-      structures.push({
-        id: structId,
+    addStructureOnce(
+      out,
+      nl.residualSmiles,
+      neutralLossStructure(nl, structId, {
         name: `MS/MS 重排脫除產物 (${nl.name})`,
-        formula: nl.residualFormula,
-        neutralFormula: nl.residualNeutralFormula,
-        smiles: nl.residualSmiles,
-        canonicalSmiles: nl.residualSmiles,
-        exact_mass: nl.isChargedProduct ? nl.residualIonExactMass : nl.residualExactMass,
-        neutralExactMass: nl.residualExactMass,
-        ionExactMass: nl.residualIonExactMass,
-        mz: nl.residualMz,
-        charge: nl.charge,
-        image: nl.residualImage,
-        relative_intensity: nlScore,
-        heuristicScore: nlScore,
-        priority: nl.priority,
-        confidence: nl.confidence,
+        score: nlScore,
         mode: nl.isChargedProduct ? 'Positive' : regime.enableNegative ? 'Both' : 'Positive',
-        mechanism: nl.mechanism,
-        fragmentationPathway: `${fragMethod} Neutral Loss (-${nl.neutralFormula})`,
-        pathwayStatus: nl.pathwayStatus,
-        neutralLoss: nl.neutralFormula,
-        neutralLossMass: nl.neutralExactMass,
-        massBalanceVerified: nl.massBalanceVerified
-      });
-    }
+        fragmentationPathway: `${fragMethod} Neutral Loss (-${nl.neutralFormula})`
+      })
+    );
+
+    // LEGACY-QUIRK(Q19): 本段 precursorMz 為 parentMass ± 1.007276 並四捨五入至 4 位（TOF-SIMS 未四捨五入）
+    const protonatedPrecursorMz = Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4));
+    const deprotonatedPrecursorMz = Number((parentMass - PROTON_MASS_LEGACY_ROUNDED).toFixed(4));
 
     if (nl.isChargedProduct) {
       if (regime.enablePositive && nl.residualMz >= lowMassCutoffMz) {
-        candidates.push({
-          id: `${structId}_pos_ion`,
-          technique: 'LC-MS/MS',
-          polarity: 'Positive',
-          precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-          mz: nl.residualMz,
-          formula: nl.residualFormula,
-          neutralFormula: nl.residualNeutralFormula,
-          smiles: nl.residualSmiles,
-          canonicalSmiles: nl.residualSmiles,
-          exactMass: nl.residualIonExactMass,
-          neutralExactMass: nl.residualExactMass,
-          ionExactMass: nl.residualIonExactMass,
-          charge: nl.charge || 1,
-          ionType: `[M+H-${nl.neutralFormula}]+`,
-          mechanism: `${fragMethod} (${ce} eV) 碰撞誘導脫除：${nl.mechanism}`,
-          fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${nl.residualFormula}`,
-          pathwayStatus: nl.pathwayStatus,
-          neutralLoss: nl.neutralFormula,
-          neutralLossMass: nl.neutralExactMass,
-          massBalanceError: nl.massBalanceError,
-          massBalanceVerified: nl.massBalanceVerified,
-          parentStructureId: structId,
-          priority: nlScore >= 75 ? 'High' : 'Medium',
-          confidence: nl.confidence,
-          sourceRule: 'LCMS_GraphReaction_ChargedIon',
-          heuristicScore: nlScore,
-          image: nl.residualImage,
-          explanation: `前驅離子 [M+H]⁺ 脫去中性 ${nl.neutralFormula} (${nl.neutralExactMass.toFixed(4)} Da)，生成真實陽離子結構 ${nl.residualSmiles} (${nl.residualFormula}, m/z ${nl.residualMz.toFixed(4)})`,
-          parameterContext
-        });
+        candidates.push(
+          chargedResidualCandidate(ctx, nl, structId, {
+            // LEGACY-QUIRK(Q29): id 後綴為 _pos_ion（TOF-SIMS 為 _ion_pos、GC-MS 為 _ion）
+            idSuffix: '_pos_ion',
+            precursorMz: protonatedPrecursorMz,
+            charge: nl.charge || 1,
+            ionType: `[M+H-${nl.neutralFormula}]+`,
+            mechanism: `${fragMethod} (${ce} eV) 碰撞誘導脫除：${nl.mechanism}`,
+            fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${nl.residualFormula}`,
+            priority: nlScore >= 75 ? 'High' : 'Medium',
+            sourceRule: 'LCMS_GraphReaction_ChargedIon',
+            heuristicScore: nlScore,
+            explanation: `前驅離子 [M+H]⁺ 脫去中性 ${nl.neutralFormula} (${nl.neutralExactMass.toFixed(4)} Da)，生成真實陽離子結構 ${nl.residualSmiles} (${nl.residualFormula}, m/z ${nl.residualMz.toFixed(4)})`
+          })
+        );
       }
     } else {
       // Neutral graph product -> Protonate for Positive mode, Deprotonate for Negative mode
       if (regime.enablePositive) {
         const protNl = deriveProtonatedIon(nl.residualMol, RDKit);
         if (protNl.mz >= lowMassCutoffMz) {
-          candidates.push({
-            id: `${structId}_pos`,
-            technique: 'LC-MS/MS',
-            polarity: 'Positive',
-            precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-            mz: protNl.mz,
-            formula: protNl.formula,
-            neutralFormula: protNl.neutralFormula,
-            smiles: protNl.smiles,
-            canonicalSmiles: protNl.canonicalSmiles,
-            exactMass: nl.residualExactMass,
-            neutralExactMass: nl.residualExactMass,
-            ionExactMass: protNl.ionExactMass,
-            charge: 1,
-            ionType: `[M+H-${nl.neutralFormula}]+`,
-            mechanism: `${fragMethod} (${ce} eV) 碰撞誘導脫除：${nl.name}`,
-            fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${protNl.formula}`,
-            pathwayStatus: nl.pathwayStatus,
-            neutralLoss: nl.neutralFormula,
-            neutralLossMass: nl.neutralExactMass,
-            massBalanceError: nl.massBalanceError,
-            massBalanceVerified: nl.massBalanceVerified,
-            parentStructureId: structId,
-            priority: nlScore >= 75 ? 'High' : nl.priority,
-            confidence: nl.confidence,
-            sourceRule: 'LCMS_CID_NeutralLoss_Pos',
-            heuristicScore: nlScore,
-            image: protNl.image,
-            explanation: `前驅離子 [M+H]⁺ 在碰撞室中脫去中性 ${nl.neutralFormula} (${nl.neutralExactMass.toFixed(4)} Da) 生成 ${protNl.formula}`,
-            parameterContext
-          });
+          candidates.push(
+            residualIonCandidate(ctx, nl, structId, protNl, {
+              idSuffix: '_pos',
+              polarity: 'Positive',
+              precursorMz: protonatedPrecursorMz,
+              ionType: `[M+H-${nl.neutralFormula}]+`,
+              mechanism: `${fragMethod} (${ce} eV) 碰撞誘導脫除：${nl.name}`,
+              fragmentationPathway: `[M+H]+ → -${nl.neutralFormula} → ${protNl.formula}`,
+              pathwayStatus: nl.pathwayStatus,
+              priority: nlScore >= 75 ? 'High' : nl.priority,
+              sourceRule: 'LCMS_CID_NeutralLoss_Pos',
+              heuristicScore: nlScore,
+              explanation: `前驅離子 [M+H]⁺ 在碰撞室中脫去中性 ${nl.neutralFormula} (${nl.neutralExactMass.toFixed(4)} Da) 生成 ${protNl.formula}`
+            })
+          );
         }
       }
 
       if (regime.enableNegative && (fg.negativePathEnabled || nl.lossType === 'CO2' || nl.lossType === 'C2H2O')) {
         const deprotNl = deriveDeprotonatedIon(nl.residualMol, RDKit);
         if (deprotNl && deprotNl.mz >= lowMassCutoffMz) {
-          candidates.push({
-            id: `${structId}_neg`,
-            technique: 'LC-MS/MS',
-            polarity: 'Negative',
-            precursorMz: Number((parentMass - PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-            mz: deprotNl.mz,
-            formula: deprotNl.formula,
-            neutralFormula: deprotNl.neutralFormula,
-            smiles: deprotNl.smiles,
-            canonicalSmiles: deprotNl.canonicalSmiles,
-            exactMass: nl.residualExactMass,
-            neutralExactMass: nl.residualExactMass,
-            ionExactMass: deprotNl.ionExactMass,
-            charge: -1,
-            ionType: `[M-H-${nl.neutralFormula}]-`,
-            mechanism: `${fragMethod} (${ce} eV) 負離子碰撞誘導脫除：${nl.name} (${deprotNl.siteDescription})`,
-            fragmentationPathway: `[M-H]- → -${nl.neutralFormula} → ${deprotNl.formula}`,
-            pathwayStatus: deprotNl.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
-            neutralLoss: nl.neutralFormula,
-            neutralLossMass: nl.neutralExactMass,
-            massBalanceError: nl.massBalanceError,
-            massBalanceVerified: nl.massBalanceVerified,
-            parentStructureId: structId,
-            priority: 'High',
-            confidence: nl.confidence,
-            sourceRule: 'LCMS_CID_NeutralLoss_Neg',
-            heuristicScore: Math.min(95, nlScore + 5),
-            image: deprotNl.image,
-            explanation: `去質子化前驅陰離子 [M-H]⁻ 脫去中性 ${nl.neutralFormula} 生成共軛鹼陰離子 ${deprotNl.formula} (${deprotNl.smiles}, m/z ${deprotNl.mz.toFixed(4)})`,
-            parameterContext
-          });
+          candidates.push(
+            residualIonCandidate(ctx, nl, structId, deprotNl, {
+              idSuffix: '_neg',
+              polarity: 'Negative',
+              precursorMz: deprotonatedPrecursorMz,
+              ionType: `[M-H-${nl.neutralFormula}]-`,
+              mechanism: `${fragMethod} (${ce} eV) 負離子碰撞誘導脫除：${nl.name} (${deprotNl.siteDescription})`,
+              fragmentationPathway: `[M-H]- → -${nl.neutralFormula} → ${deprotNl.formula}`,
+              pathwayStatus: deprotNl.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
+              priority: 'High',
+              sourceRule: 'LCMS_CID_NeutralLoss_Neg',
+              heuristicScore: Math.min(95, nlScore + 5),
+              explanation: `去質子化前驅陰離子 [M-H]⁻ 脫去中性 ${nl.neutralFormula} 生成共軛鹼陰離子 ${deprotNl.formula} (${deprotNl.smiles}, m/z ${deprotNl.mz.toFixed(4)})`
+            })
+          );
         }
 
         // Sequential Second-Step Loss on the residual molecule when enableSequentialFragmentation is true!
         // E.g. Aspirin [M-H]- (179) -> -C2H2O -> Salicylate [C7H5O3]- (137) -> -CO2 -> Phenolate [C6H5O]- (93.0346)!
+        // （LC-MS/MS 特有，未合併）
         if (regime.enableSequentialFragmentation && nl.lossType === 'C2H2O') {
           const secondStepReactions = executeGraphReactions(nl.residualMol, RDKit);
           for (const sec of secondStepReactions) {
@@ -371,41 +313,38 @@ export function runLcMsMsFragmentation(
                 const combinedLossMass = Number((nl.neutralExactMass + sec.neutralLossMass).toFixed(4));
                 const seqStructId = `LCMS_Seq_${nl.lossType}_${sec.lossType}`;
 
-                if (!seenStructureKeys.has(deprotSec.canonicalSmiles)) {
-                  seenStructureKeys.add(deprotSec.canonicalSmiles);
-                  structures.push({
-                    id: seqStructId,
-                    name: `二階連續裂解產物 (-${nl.neutralFormula} 再 -${sec.neutralLossFormula})`,
-                    formula: deprotSec.formula,
-                    neutralFormula: deprotSec.neutralFormula,
-                    smiles: deprotSec.smiles,
-                    canonicalSmiles: deprotSec.canonicalSmiles,
-                    exact_mass: deprotSec.ionExactMass,
-                    neutralExactMass: deprotSec.neutralExactMass,
-                    ionExactMass: deprotSec.ionExactMass,
-                    mz: deprotSec.mz,
-                    charge: -1,
-                    ionType: `[M-H-${nl.neutralFormula}-${sec.neutralLossFormula}]-`,
-                    image: deprotSec.image,
-                    relative_intensity: isHighCE ? 88.0 : 72.0,
-                    heuristicScore: isHighCE ? 88.0 : 72.0,
-                    priority: 'High',
-                    confidence: 'High',
-                    mode: 'Negative',
-                    mechanism: `二階連續碎裂：先脫去 ${nl.neutralFormula} 再發生脫羧 (-${sec.neutralLossFormula}) 生成 ${deprotSec.formula}`,
-                    fragmentationPathway: `[M-H]- → -${nl.neutralFormula} → -${sec.neutralLossFormula} → ${deprotSec.formula}`,
-                    pathwayStatus: 'Verified Graph Product',
-                    neutralLoss: combinedLossFormula,
-                    neutralLossMass: combinedLossMass,
-                    massBalanceVerified: true
-                  });
-                }
+                addStructureOnce(out, deprotSec.canonicalSmiles, {
+                  id: seqStructId,
+                  name: `二階連續裂解產物 (-${nl.neutralFormula} 再 -${sec.neutralLossFormula})`,
+                  formula: deprotSec.formula,
+                  neutralFormula: deprotSec.neutralFormula,
+                  smiles: deprotSec.smiles,
+                  canonicalSmiles: deprotSec.canonicalSmiles,
+                  exact_mass: deprotSec.ionExactMass,
+                  neutralExactMass: deprotSec.neutralExactMass,
+                  ionExactMass: deprotSec.ionExactMass,
+                  mz: deprotSec.mz,
+                  charge: -1,
+                  ionType: `[M-H-${nl.neutralFormula}-${sec.neutralLossFormula}]-`,
+                  image: deprotSec.image,
+                  relative_intensity: isHighCE ? 88.0 : 72.0,
+                  heuristicScore: isHighCE ? 88.0 : 72.0,
+                  priority: 'High',
+                  confidence: 'High',
+                  mode: 'Negative',
+                  mechanism: `二階連續碎裂：先脫去 ${nl.neutralFormula} 再發生脫羧 (-${sec.neutralLossFormula}) 生成 ${deprotSec.formula}`,
+                  fragmentationPathway: `[M-H]- → -${nl.neutralFormula} → -${sec.neutralLossFormula} → ${deprotSec.formula}`,
+                  pathwayStatus: 'Verified Graph Product',
+                  neutralLoss: combinedLossFormula,
+                  neutralLossMass: combinedLossMass,
+                  massBalanceVerified: true
+                });
 
                 candidates.push({
                   id: `${seqStructId}_neg`,
                   technique: 'LC-MS/MS',
                   polarity: 'Negative',
-                  precursorMz: Number((parentMass - PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
+                  precursorMz: deprotonatedPrecursorMz,
                   mz: deprotSec.mz,
                   formula: deprotSec.formula,
                   neutralFormula: deprotSec.neutralFormula,
@@ -421,6 +360,7 @@ export function runLcMsMsFragmentation(
                   pathwayStatus: 'Verified Graph Product',
                   neutralLoss: combinedLossFormula,
                   neutralLossMass: combinedLossMass,
+                  // LEGACY-QUIRK(Q30): 質量平衡為寫死值（誤差 0.0005、驗證通過），並未實際計算
                   massBalanceError: 0.0005,
                   massBalanceVerified: true,
                   parentStructureId: seqStructId,
