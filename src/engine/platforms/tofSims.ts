@@ -40,8 +40,10 @@ import {
   buildParentContext,
   buildParentStructure,
   createPlatformOutput,
-  type PlatformContext
+  type PlatformContext,
+  verifyAgainstParent
 } from './shared/context';
+import { addDiagnosticIon } from './shared/diagnosticIons';
 import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -212,77 +214,35 @@ export function runTofSimsFragmentation(
   // ============================================================================
   // 2. Characteristic Functional-Group Diagnostic Ions (with REAL Charged Ion SMILES!)
   // ============================================================================
+  // LEGACY-QUIRK(Q19): 診斷離子的 precursorMz 使用中性母分子質量 parentMass，而非前驅離子的 m/z
+  const diagnosticPrecursorMz = parentMass;
+
   if (regime.enablePositive) {
     // Phenyl cation: [C6H5]+ -> c1cc[c+]cc1 (77.0386 Da)
     if (fg.hasAromaticRing && regime.enableDeepAromaticCracking) {
       const phenylIon = buildVerifiedIonFromSmiles('c1cc[c+]cc1', RDKit);
       if (phenylIon) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 6, H: 5 },
-          phenylIon.neutralExactMass
-        );
-        const structId = 'Diag_C6H5_pos';
-        if (!seenStructureKeys.has(phenylIon.canonicalSmiles)) {
-          seenStructureKeys.add(phenylIon.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 6, H: 5 }, phenylIon.neutralExactMass);
+        addDiagnosticIon(out, ctx, phenylIon, mb, {
+          id: 'Diag_C6H5_pos',
+          polarity: 'Positive',
+          ionType: '[C6H5]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '苯基陽離子 (Phenyl Cation, [C₆H₅]⁺)',
-            formula: phenylIon.formula,
-            neutralFormula: phenylIon.neutralFormula,
-            smiles: phenylIon.smiles,
-            canonicalSmiles: phenylIon.canonicalSmiles,
-            exact_mass: phenylIon.ionExactMass,
-            neutralExactMass: phenylIon.neutralExactMass,
-            ionExactMass: phenylIon.ionExactMass,
-            mz: phenylIon.mz,
-            charge: 1,
-            ionType: '[C6H5]+',
-            image: phenylIon.image,
-            relative_intensity: 85.0,
-            heuristicScore: 85.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: '芳香環取代基表面碰撞斷裂形成苯基陽離子 c1cc[c+]cc1',
             fragmentationPathway: 'Aromatic Substituent Cleavage → [C6H5]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'TOF-SIMS',
-          polarity: 'Positive',
-          precursorMz: parentMass,
-          mz: phenylIon.mz,
-          formula: phenylIon.formula,
-          neutralFormula: phenylIon.neutralFormula,
-          smiles: phenylIon.smiles,
-          canonicalSmiles: phenylIon.canonicalSmiles,
-          exactMass: phenylIon.ionExactMass,
-          neutralExactMass: phenylIon.neutralExactMass,
-          ionExactMass: phenylIon.ionExactMass,
-          charge: 1,
-          ionType: '[C6H5]+',
-          mechanism: '芳香環特徵診斷二次陽離子 (Phenyl Cation, c1cc[c+]cc1)',
-          fragmentationPathway: 'Aromatic Ring Cleavage → [C6H5]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'TOF-SIMS_AromaticDiagnostic',
-          heuristicScore: Math.min(95, 84 + regime.smallFragmentModifier),
-          image: phenylIon.image,
-          explanation: '芳香環結構在表面轟擊時的指標性正離子特徵峰 (m/z 77.0386)，結構為帶正電之 c1cc[c+]cc1',
-          parameterContext
+            priority: 'High',
+            score: 85.0
+          },
+          candidate: {
+            mechanism: '芳香環特徵診斷二次陽離子 (Phenyl Cation, c1cc[c+]cc1)',
+            fragmentationPathway: 'Aromatic Ring Cleavage → [C6H5]+',
+            priority: 'High',
+            sourceRule: 'TOF-SIMS_AromaticDiagnostic',
+            heuristicScore: Math.min(95, 84 + regime.smallFragmentModifier),
+            explanation: '芳香環結構在表面轟擊時的指標性正離子特徵峰 (m/z 77.0386)，結構為帶正電之 c1cc[c+]cc1'
+          }
         });
       }
     }
@@ -291,146 +251,57 @@ export function runTofSimsFragmentation(
     if (fg.hasBenzylicPosition) {
       const tropyliumIon = buildVerifiedIonFromSmiles('[cH+]1cccccc1', RDKit);
       if (tropyliumIon) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 7, H: 7 },
-          tropyliumIon.neutralExactMass
-        );
-        const structId = 'Diag_C7H7_pos';
-        if (!seenStructureKeys.has(tropyliumIon.canonicalSmiles)) {
-          seenStructureKeys.add(tropyliumIon.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 7, H: 7 }, tropyliumIon.neutralExactMass);
+        addDiagnosticIon(out, ctx, tropyliumIon, mb, {
+          id: 'Diag_C7H7_pos',
+          polarity: 'Positive',
+          ionType: '[C7H7]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '七芳鎓陽離子 (Tropylium Cation, [C₇H₇]⁺)',
-            formula: tropyliumIon.formula,
-            neutralFormula: tropyliumIon.neutralFormula,
-            smiles: tropyliumIon.smiles,
-            canonicalSmiles: tropyliumIon.canonicalSmiles,
-            exact_mass: tropyliumIon.ionExactMass,
-            neutralExactMass: tropyliumIon.neutralExactMass,
-            ionExactMass: tropyliumIon.ionExactMass,
-            mz: tropyliumIon.mz,
-            charge: 1,
-            ionType: '[C7H7]+',
-            image: tropyliumIon.image,
-            relative_intensity: 92.0,
-            heuristicScore: 92.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: '苄位斷裂並擴環重排形成芳香穩定七元環 Tropylium 鎓陽離子 ([cH+]1cccccc1)',
             fragmentationPathway: 'Benzylic Cleavage & Ring Expansion → [C7H7]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'TOF-SIMS',
-          polarity: 'Positive',
-          precursorMz: parentMass,
-          mz: tropyliumIon.mz,
-          formula: tropyliumIon.formula,
-          neutralFormula: tropyliumIon.neutralFormula,
-          smiles: tropyliumIon.smiles,
-          canonicalSmiles: tropyliumIon.canonicalSmiles,
-          exactMass: tropyliumIon.ionExactMass,
-          neutralExactMass: tropyliumIon.neutralExactMass,
-          ionExactMass: tropyliumIon.ionExactMass,
-          charge: 1,
-          ionType: '[C7H7]+',
-          mechanism: '苄基斷裂擴環重排：七元環芳香共振穩定 Tropylium 鎓陽離子 ([cH+]1cccccc1)',
-          fragmentationPathway: 'Benzylic Cleavage & Ring Expansion → [C7H7]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'TOF-SIMS_Tropylium',
-          heuristicScore: Math.min(96, 90 + Math.round(regime.smallFragmentModifier * 0.5)),
-          image: tropyliumIon.image,
-          explanation: '苄基碳發生斷裂並擴環為 6π 芳香穩定的七元環 Tropylium 陽離子 [cH+]1cccccc1 (m/z 91.0542)',
-          parameterContext
+            priority: 'High',
+            score: 92.0
+          },
+          candidate: {
+            mechanism: '苄基斷裂擴環重排：七元環芳香共振穩定 Tropylium 鎓陽離子 ([cH+]1cccccc1)',
+            fragmentationPathway: 'Benzylic Cleavage & Ring Expansion → [C7H7]+',
+            priority: 'High',
+            sourceRule: 'TOF-SIMS_Tropylium',
+            heuristicScore: Math.min(96, 90 + Math.round(regime.smallFragmentModifier * 0.5)),
+            explanation: '苄基碳發生斷裂並擴環為 6π 芳香穩定的七元環 Tropylium 陽離子 [cH+]1cccccc1 (m/z 91.0542)'
+          }
         });
       }
     }
 
     // Acetylium cation: [CH3CO]+ -> C[C+]=O (43.0178 Da)
+    // LEGACY-QUIRK(Q15): 只看 hasAcetate || hasKetone，未確認分子確實含乙醯基（GC-MS 另加 hasEster 與 isElementSubset）
     if (fg.hasAcetate || fg.hasKetone) {
       const acetyliumIon = buildVerifiedIonFromSmiles('C[C+]=O', RDKit);
       if (acetyliumIon) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 2, H: 3, O: 1 },
-          acetyliumIon.neutralExactMass
-        );
-        const structId = 'Diag_C2H3O_pos';
-        if (!seenStructureKeys.has(acetyliumIon.canonicalSmiles)) {
-          seenStructureKeys.add(acetyliumIon.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 1 }, acetyliumIon.neutralExactMass);
+        addDiagnosticIon(out, ctx, acetyliumIon, mb, {
+          id: 'Diag_C2H3O_pos',
+          polarity: 'Positive',
+          ionType: '[CH3CO]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)',
-            formula: acetyliumIon.formula,
-            neutralFormula: acetyliumIon.neutralFormula,
-            smiles: acetyliumIon.smiles,
-            canonicalSmiles: acetyliumIon.canonicalSmiles,
-            exact_mass: acetyliumIon.ionExactMass,
-            neutralExactMass: acetyliumIon.neutralExactMass,
-            ionExactMass: acetyliumIon.ionExactMass,
-            mz: acetyliumIon.mz,
-            charge: 1,
-            ionType: '[CH3CO]+',
-            image: acetyliumIon.image,
-            relative_intensity: 88.0,
-            heuristicScore: 88.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: '乙醯酯/甲基酮 α-醯氧鍵斷裂形成乙醯基鎓陽離子 C[C+]=O',
             fragmentationPathway: 'Acyl-Oxygen Heterolysis → [CH3CO]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'TOF-SIMS',
-          polarity: 'Positive',
-          precursorMz: parentMass,
-          mz: acetyliumIon.mz,
-          formula: acetyliumIon.formula,
-          neutralFormula: acetyliumIon.neutralFormula,
-          smiles: acetyliumIon.smiles,
-          canonicalSmiles: acetyliumIon.canonicalSmiles,
-          exactMass: acetyliumIon.ionExactMass,
-          neutralExactMass: acetyliumIon.neutralExactMass,
-          ionExactMass: acetyliumIon.ionExactMass,
-          charge: 1,
-          ionType: '[CH3CO]+',
-          mechanism: '乙醯基 α-裂解：共振穩定乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)',
-          fragmentationPathway: 'Acyl Cleavage → [CH3CO]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'TOF-SIMS_Acetylium',
-          heuristicScore: Math.min(95, 86 + regime.smallFragmentModifier),
-          image: acetyliumIon.image,
-          explanation: '乙醯基 C-O 鍵斷裂產生帶正電之乙醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)',
-          parameterContext
+            priority: 'High',
+            score: 88.0
+          },
+          candidate: {
+            mechanism: '乙醯基 α-裂解：共振穩定乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)',
+            fragmentationPathway: 'Acyl Cleavage → [CH3CO]+',
+            priority: 'High',
+            sourceRule: 'TOF-SIMS_Acetylium',
+            heuristicScore: Math.min(95, 86 + regime.smallFragmentModifier),
+            explanation: '乙醯基 C-O 鍵斷裂產生帶正電之乙醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)'
+          }
         });
       }
     }
@@ -442,115 +313,49 @@ export function runTofSimsFragmentation(
     if (fg.hasAcetate) {
       const acetateIon = buildVerifiedIonFromSmiles('CC(=O)[O-]', RDKit);
       if (acetateIon) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 2, H: 3, O: 2 },
-          acetateIon.neutralExactMass
-        );
-        const structId = 'Diag_Acetate_neg';
-        if (!seenStructureKeys.has(acetateIon.canonicalSmiles)) {
-          seenStructureKeys.add(acetateIon.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 2 }, acetateIon.neutralExactMass);
+        addDiagnosticIon(out, ctx, acetateIon, mb, {
+          id: 'Diag_Acetate_neg',
+          polarity: 'Negative',
+          ionType: '[CH3COO]-',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '乙酸根陰離子 (Acetate Anion, [CH₃COO]⁻)',
-            formula: acetateIon.formula,
-            neutralFormula: acetateIon.neutralFormula,
-            smiles: acetateIon.smiles,
-            canonicalSmiles: acetateIon.canonicalSmiles,
-            exact_mass: acetateIon.ionExactMass,
-            neutralExactMass: acetateIon.neutralExactMass,
-            ionExactMass: acetateIon.ionExactMass,
-            mz: acetateIon.mz,
-            charge: -1,
-            ionType: '[CH3COO]-',
-            image: acetateIon.image,
-            relative_intensity: 90.0,
-            heuristicScore: 90.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Negative',
             mechanism: '乙醯酯鍵表面異裂釋出共振穩定乙酸根陰離子 CC(=O)[O-]',
             fragmentationPathway: 'Ester Heterolysis → [CH3COO]-',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'TOF-SIMS',
-          polarity: 'Negative',
-          precursorMz: parentMass,
-          mz: acetateIon.mz,
-          formula: acetateIon.formula,
-          neutralFormula: acetateIon.neutralFormula,
-          smiles: acetateIon.smiles,
-          canonicalSmiles: acetateIon.canonicalSmiles,
-          exactMass: acetateIon.ionExactMass,
-          neutralExactMass: acetateIon.neutralExactMass,
-          ionExactMass: acetateIon.ionExactMass,
-          charge: -1,
-          ionType: '[CH3COO]-',
-          mechanism: '乙醯酯鍵表面異裂：乙酸根二次陰離子 (CC(=O)[O-], m/z 59.0139)',
-          fragmentationPathway: 'Ester Heterolysis → [CH3COO]-',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'TOF-SIMS_AcetateAnion',
-          heuristicScore: 90.0,
-          image: acetateIon.image,
-          explanation: '乙醯氧基酯鍵異裂直接釋出共振穩定的乙酸根陰離子 CC(=O)[O-]',
-          parameterContext
+            priority: 'High',
+            score: 90.0
+          },
+          candidate: {
+            mechanism: '乙醯酯鍵表面異裂：乙酸根二次陰離子 (CC(=O)[O-], m/z 59.0139)',
+            fragmentationPathway: 'Ester Heterolysis → [CH3COO]-',
+            priority: 'High',
+            sourceRule: 'TOF-SIMS_AcetateAnion',
+            heuristicScore: 90.0,
+            explanation: '乙醯氧基酯鍵異裂直接釋出共振穩定的乙酸根陰離子 CC(=O)[O-]'
+          }
         });
       }
     }
 
-    // Carboxyl -> Formate O=C[O-] (44.9982 Da)
+    // Carboxyl -> Formate O=C[O-] (44.9982 Da)（舊版只建立 candidate，不加入 structures）
     if (fg.hasCarboxyl) {
       const formateIon = buildVerifiedIonFromSmiles('O=C[O-]', RDKit);
       if (formateIon) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 1, H: 1, O: 2 },
-          formateIon.neutralExactMass
-        );
-        candidates.push({
+        const mb = verifyAgainstParent(ctx, { C: 1, H: 1, O: 2 }, formateIon.neutralExactMass);
+        addDiagnosticIon(out, ctx, formateIon, mb, {
           id: 'Diag_Formate_neg',
-          technique: 'TOF-SIMS',
           polarity: 'Negative',
-          precursorMz: parentMass,
-          mz: formateIon.mz,
-          formula: formateIon.formula,
-          neutralFormula: formateIon.neutralFormula,
-          smiles: formateIon.smiles,
-          canonicalSmiles: formateIon.canonicalSmiles,
-          exactMass: formateIon.ionExactMass,
-          neutralExactMass: formateIon.neutralExactMass,
-          ionExactMass: formateIon.ionExactMass,
-          charge: -1,
           ionType: '[HCOO]-',
-          mechanism: '羧酸微裂解產生甲酸根特徵二次陰離子 (O=C[O-], m/z 44.9982)',
-          fragmentationPathway: 'Carboxyl Cleavage → [HCOO]-',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          priority: 'Medium',
-          confidence: 'High',
-          sourceRule: 'TOF-SIMS_FormateAnion',
-          heuristicScore: 68.0,
-          image: formateIon.image,
-          explanation: '表面羧基官能基碎裂解離出的指標性小分子陰離子 O=C[O-]',
-          parameterContext
+          precursorMz: diagnosticPrecursorMz,
+          candidate: {
+            mechanism: '羧酸微裂解產生甲酸根特徵二次陰離子 (O=C[O-], m/z 44.9982)',
+            fragmentationPathway: 'Carboxyl Cleavage → [HCOO]-',
+            priority: 'Medium',
+            sourceRule: 'TOF-SIMS_FormateAnion',
+            heuristicScore: 68.0,
+            explanation: '表面羧基官能基碎裂解離出的指標性小分子陰離子 O=C[O-]'
+          }
         });
       }
     }

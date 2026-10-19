@@ -1,5 +1,6 @@
 // 三個平台引擎共用的母分子資訊、輸出容器與母分子 structures 項目。
 import { molToSvgDataUri } from '../../chem/depiction';
+import { verifyFragmentMassBalance, type MassBalanceVerification } from '../../chem/massBalance';
 import { analyzeRDKitMolStoichiometry, type MolGraphStoichiometry } from '../../chem/stoichiometry';
 import type { JSMol } from '../../rdkit/types';
 import type { FragmentCandidate, MassTechnique, StructureItem } from '../../types';
@@ -82,4 +83,13 @@ export function buildParentStructure(parent: ParentContext, spec: ParentStructur
     pathwayStatus: 'Verified Graph Product',
     massBalanceVerified: true
   };
+}
+
+/** 碎片（或診斷離子）相對於中性母分子的質量平衡驗證 */
+export function verifyAgainstParent(
+  parent: ParentContext,
+  fragmentCounts: Record<string, number>,
+  fragmentNeutralMass: number
+): MassBalanceVerification {
+  return verifyFragmentMassBalance(parent.parentStoich.atomCounts, parent.parentMass, fragmentCounts, fragmentNeutralMass);
 }

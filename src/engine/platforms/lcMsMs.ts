@@ -24,8 +24,10 @@ import {
   buildParentContext,
   buildParentStructure,
   createPlatformOutput,
-  type PlatformContext
+  type PlatformContext,
+  verifyAgainstParent
 } from './shared/context';
+import { addDiagnosticIon } from './shared/diagnosticIons';
 import { precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -435,75 +437,34 @@ export function runLcMsMsFragmentation(
   // 3. Low-m/z Diagnostic Carbocations (Only when regime.enableLowMzDiagnosticIons is true!)
   // ============================================================================
   if (regime.enablePositive && regime.enableLowMzDiagnosticIons) {
+    // LEGACY-QUIRK(Q19): 診斷離子的 precursorMz 為 parentMass + 1.007276 並四捨五入至 4 位（TOF-SIMS／GC-MS 用中性 parentMass）
+    const diagnosticPrecursorMz = Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4));
+
+    // LEGACY-QUIRK(Q15): 只看 hasAcetate || hasKetone，未確認分子確實含乙醯基（GC-MS 另加 hasEster 與 isElementSubset）
     if (fg.hasAcetate || fg.hasKetone) {
       const acetylium = buildVerifiedIonFromSmiles('C[C+]=O', RDKit);
       if (acetylium && acetylium.mz >= lowMassCutoffMz) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 2, H: 3, O: 1 },
-          acetylium.neutralExactMass
-        );
-        const structId = 'LCMS_Diag_Acetylium';
-        if (!seenStructureKeys.has(acetylium.canonicalSmiles)) {
-          seenStructureKeys.add(acetylium.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 1 }, acetylium.neutralExactMass);
+        addDiagnosticIon(out, ctx, acetylium, mb, {
+          id: 'LCMS_Diag_Acetylium',
+          polarity: 'Positive',
+          ionType: '[CH3CO]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '乙醯基鎓診斷離子 (Acetylium Ion, [CH₃CO]⁺)',
-            formula: acetylium.formula,
-            neutralFormula: acetylium.neutralFormula,
-            smiles: acetylium.smiles,
-            canonicalSmiles: acetylium.canonicalSmiles,
-            exact_mass: acetylium.ionExactMass,
-            neutralExactMass: acetylium.neutralExactMass,
-            ionExactMass: acetylium.ionExactMass,
-            mz: acetylium.mz,
-            charge: 1,
-            ionType: '[CH3CO]+',
-            image: acetylium.image,
-            relative_intensity: isHighCE ? 86.0 : 68.0,
-            heuristicScore: isHighCE ? 86.0 : 68.0,
-            priority: isHighCE ? 'High' : 'Medium',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: `${fragMethod} 束流型碰撞裂解產生乙醯基鎓陽離子 C[C+]=O`,
             fragmentationPathway: 'Acyl-Heteroatom Cleavage → [CH3CO]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'LC-MS/MS',
-          polarity: 'Positive',
-          precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-          mz: acetylium.mz,
-          formula: acetylium.formula,
-          neutralFormula: acetylium.neutralFormula,
-          smiles: acetylium.smiles,
-          canonicalSmiles: acetylium.canonicalSmiles,
-          exactMass: acetylium.ionExactMass,
-          neutralExactMass: acetylium.neutralExactMass,
-          ionExactMass: acetylium.ionExactMass,
-          charge: 1,
-          ionType: '[CH3CO]+',
-          mechanism: `${fragMethod} (${ce} eV) 醯基異裂：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)`,
-          fragmentationPathway: 'Acyl Cleavage → [CH3CO]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: isHighCE ? 'High' : 'Medium',
-          confidence: 'High',
-          sourceRule: 'LCMS_Diagnostic_Acetylium',
-          heuristicScore: isHighCE ? 86.0 : 68.0,
-          image: acetylium.image,
-          explanation: '在 QTOF / Orbitrap HCD 中高碰撞能下無低質量截止限制，可清晰觀察到 m/z 43.0178 乙醯基鎓離子',
-          parameterContext
+            priority: isHighCE ? 'High' : 'Medium',
+            score: isHighCE ? 86.0 : 68.0
+          },
+          candidate: {
+            mechanism: `${fragMethod} (${ce} eV) 醯基異裂：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)`,
+            fragmentationPathway: 'Acyl Cleavage → [CH3CO]+',
+            priority: isHighCE ? 'High' : 'Medium',
+            sourceRule: 'LCMS_Diagnostic_Acetylium',
+            heuristicScore: isHighCE ? 86.0 : 68.0,
+            explanation: '在 QTOF / Orbitrap HCD 中高碰撞能下無低質量截止限制，可清晰觀察到 m/z 43.0178 乙醯基鎓離子'
+          }
         });
       }
     }
@@ -511,72 +472,27 @@ export function runLcMsMsFragmentation(
     if (fg.hasBenzylicPosition) {
       const tropylium = buildVerifiedIonFromSmiles('[cH+]1cccccc1', RDKit);
       if (tropylium && tropylium.mz >= lowMassCutoffMz) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 7, H: 7 },
-          tropylium.neutralExactMass
-        );
-        const structId = 'LCMS_Diag_Tropylium';
-        if (!seenStructureKeys.has(tropylium.canonicalSmiles)) {
-          seenStructureKeys.add(tropylium.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 7, H: 7 }, tropylium.neutralExactMass);
+        addDiagnosticIon(out, ctx, tropylium, mb, {
+          id: 'LCMS_Diag_Tropylium',
+          polarity: 'Positive',
+          ionType: '[C7H7]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '七芳鎓診斷離子 (Tropylium Ion, [C₇H₇]⁺)',
-            formula: tropylium.formula,
-            neutralFormula: tropylium.neutralFormula,
-            smiles: tropylium.smiles,
-            canonicalSmiles: tropylium.canonicalSmiles,
-            exact_mass: tropylium.ionExactMass,
-            neutralExactMass: tropylium.neutralExactMass,
-            ionExactMass: tropylium.ionExactMass,
-            mz: tropylium.mz,
-            charge: 1,
-            ionType: '[C7H7]+',
-            image: tropylium.image,
-            relative_intensity: isHighCE ? 90.0 : 75.0,
-            heuristicScore: isHighCE ? 90.0 : 75.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: '苄位斷裂與擴環重排形成 Tropylium 鎓陽離子 ([cH+]1cccccc1)',
             fragmentationPathway: 'Benzylic Cleavage → [C7H7]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'LC-MS/MS',
-          polarity: 'Positive',
-          precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-          mz: tropylium.mz,
-          formula: tropylium.formula,
-          neutralFormula: tropylium.neutralFormula,
-          smiles: tropylium.smiles,
-          canonicalSmiles: tropylium.canonicalSmiles,
-          exactMass: tropylium.ionExactMass,
-          neutralExactMass: tropylium.neutralExactMass,
-          ionExactMass: tropylium.ionExactMass,
-          charge: 1,
-          ionType: '[C7H7]+',
-          mechanism: `${fragMethod} (${ce} eV) 苄基斷裂：七芳鎓陽離子 ([cH+]1cccccc1, m/z 91.0542)`,
-          fragmentationPathway: 'Benzylic Cleavage → [C7H7]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'LCMS_Diagnostic_Tropylium',
-          heuristicScore: isHighCE ? 90.0 : 75.0,
-          image: tropylium.image,
-          explanation: '含苄基結構在碰撞誘導解離下極易生成 m/z 91.0542 [C7H7]+ 特徵診斷離子',
-          parameterContext
+            priority: 'High',
+            score: isHighCE ? 90.0 : 75.0
+          },
+          candidate: {
+            mechanism: `${fragMethod} (${ce} eV) 苄基斷裂：七芳鎓陽離子 ([cH+]1cccccc1, m/z 91.0542)`,
+            fragmentationPathway: 'Benzylic Cleavage → [C7H7]+',
+            priority: 'High',
+            sourceRule: 'LCMS_Diagnostic_Tropylium',
+            heuristicScore: isHighCE ? 90.0 : 75.0,
+            explanation: '含苄基結構在碰撞誘導解離下極易生成 m/z 91.0542 [C7H7]+ 特徵診斷離子'
+          }
         });
       }
     }

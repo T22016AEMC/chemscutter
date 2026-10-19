@@ -18,7 +18,6 @@ import {
   METHANE_CI_C2H5_ADDUCT_MASS,
   ISOBUTANE_CI_C4H9_ADDUCT_MASS,
   ACETYLENE_LOSS_MASS,
-  TROPYLIUM_ION_MZ,
   PHENYL_CATION_MZ
 } from '../constants/masses';
 import { verifyFragmentMassBalance } from '../chem/massBalance';
@@ -28,8 +27,10 @@ import {
   buildParentContext,
   buildParentStructure,
   createPlatformOutput,
-  type PlatformContext
+  type PlatformContext,
+  verifyAgainstParent
 } from './shared/context';
+import { addDiagnosticIon } from './shared/diagnosticIons';
 import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -190,220 +191,68 @@ export function runGcMsFragmentation(
   // 2. Characteristic EI Fragmentation Pathways (Only in EI Mode!)
   // ============================================================================
   if (regime.enableOddElectronRadicals) {
+    // LEGACY-QUIRK(Q19): 診斷離子的 precursorMz 使用中性母分子質量 parentMass，而非 M+. 的 m/z
+    const diagnosticPrecursorMz = parentMass;
+
     // 2a. Benzylic Cleavage -> Genuine Tropylium Cation [cH+]1cccccc1 (C7H7+, m/z 91.0542)
     if (fg.hasBenzylicPosition) {
       const tropylium = buildVerifiedIonFromSmiles('[cH+]1cccccc1', RDKit);
       if (tropylium) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 7, H: 7 },
-          tropylium.neutralExactMass
-        );
-        const structId = 'GCMS_Tropylium_pos';
-        if (!seenStructureKeys.has(tropylium.canonicalSmiles)) {
-          seenStructureKeys.add(tropylium.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 7, H: 7 }, tropylium.neutralExactMass);
+        addDiagnosticIon(out, ctx, tropylium, mb, {
+          id: 'GCMS_Tropylium_pos',
+          polarity: 'Positive',
+          ionType: '[C7H7]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '七芳鎓陽離子 (Tropylium Cation, [C₇H₇]⁺)',
-            formula: tropylium.formula,
-            neutralFormula: tropylium.neutralFormula,
-            smiles: tropylium.smiles,
-            canonicalSmiles: tropylium.canonicalSmiles,
-            exact_mass: tropylium.ionExactMass,
-            neutralExactMass: tropylium.neutralExactMass,
-            ionExactMass: tropylium.ionExactMass,
-            mz: tropylium.mz,
-            charge: 1,
-            ionType: '[C7H7]+',
-            image: tropylium.image,
-            relative_intensity: 95.0,
-            heuristicScore: 95.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: '苄位 β-均裂並擴環重排為七元環芳香 Tropylium 鎓陽離子 ([cH+]1cccccc1)',
             fragmentationPathway: 'M+. → Benzylic β-Cleavage & Ring Expansion → [C7H7]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-
-        candidates.push({
-          id: structId,
-          technique: 'GC-MS',
-          polarity: 'Positive',
-          precursorMz: parentMass,
-          mz: tropylium.mz,
-          formula: tropylium.formula,
-          neutralFormula: tropylium.neutralFormula,
-          smiles: tropylium.smiles,
-          canonicalSmiles: tropylium.canonicalSmiles,
-          exactMass: tropylium.ionExactMass,
-          neutralExactMass: tropylium.neutralExactMass,
-          ionExactMass: tropylium.ionExactMass,
-          charge: 1,
-          ionType: '[C7H7]+',
-          mechanism: '苄位 β-裂解與擴環重排：七芳鎓陽離子 ([cH+]1cccccc1, m/z 91.0542)',
-          fragmentationPathway: 'M+. → Benzylic Cleavage → [C7H7]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'GCMS_TropyliumFormation',
-          heuristicScore: 95.0,
-          image: tropylium.image,
-          explanation: '含苄基結構在 EI 下發生 β-鍵斷裂並擴環為 6π 芳香穩定的七員環 Tropylium 陽離子 [cH+]1cccccc1 (m/z 91.0542)',
-          parameterContext
+            priority: 'High',
+            score: 95.0
+          },
+          candidate: {
+            mechanism: '苄位 β-裂解與擴環重排：七芳鎓陽離子 ([cH+]1cccccc1, m/z 91.0542)',
+            fragmentationPathway: 'M+. → Benzylic Cleavage → [C7H7]+',
+            priority: 'High',
+            sourceRule: 'GCMS_TropyliumFormation',
+            heuristicScore: 95.0,
+            explanation: '含苄基結構在 EI 下發生 β-鍵斷裂並擴環為 6π 芳香穩定的七員環 Tropylium 陽離子 [cH+]1cccccc1 (m/z 91.0542)'
+          }
         });
 
-        // Secondary ring contraction (-C2H2, m/z 91 -> 65.0386 [C5H5]+): ONLY enabled when EE >= 30 eV!
-        if (regime.enableSecondaryRingCracking) {
-          const c5h5Ion = buildVerifiedIonFromSmiles('C1=CC=[CH+]C=1', RDKit);
-          if (c5h5Ion) {
-            const c5StructId = 'GCMS_C5H5_pos';
-            if (!seenStructureKeys.has(c5h5Ion.canonicalSmiles)) {
-              seenStructureKeys.add(c5h5Ion.canonicalSmiles);
-              structures.push({
-                id: c5StructId,
-                name: '環戊二烯基陽離子 ([C₅H₅]⁺, m/z 65)',
-                formula: c5h5Ion.formula,
-                neutralFormula: c5h5Ion.neutralFormula,
-                smiles: c5h5Ion.smiles,
-                canonicalSmiles: c5h5Ion.canonicalSmiles,
-                exact_mass: c5h5Ion.ionExactMass,
-                neutralExactMass: c5h5Ion.neutralExactMass,
-                ionExactMass: c5h5Ion.ionExactMass,
-                mz: c5h5Ion.mz,
-                charge: 1,
-                ionType: '[C5H5]+',
-                image: c5h5Ion.image,
-                relative_intensity: 70.0,
-                heuristicScore: 70.0,
-                priority: 'Medium',
-                confidence: 'High',
-                mode: 'Positive',
-                mechanism: 'Tropylium 陽離子二階脫去中性乙炔 (-C₂H₂, m/z 91 → 65)',
-                fragmentationPathway: '[C7H7]+ → -C2H2 → [C5H5]+',
-                pathwayStatus: 'Verified Graph Product',
-                neutralLoss: 'C2H2',
-                neutralLossMass: ACETYLENE_LOSS_MASS,
-                massBalanceVerified: true
-              });
-            }
-            candidates.push({
-              id: c5StructId,
-              technique: 'GC-MS',
-              polarity: 'Positive',
-              precursorMz: TROPYLIUM_ION_MZ,
-              mz: c5h5Ion.mz,
-              formula: c5h5Ion.formula,
-              neutralFormula: c5h5Ion.neutralFormula,
-              smiles: c5h5Ion.smiles,
-              canonicalSmiles: c5h5Ion.canonicalSmiles,
-              exactMass: c5h5Ion.ionExactMass,
-              neutralExactMass: c5h5Ion.neutralExactMass,
-              ionExactMass: c5h5Ion.ionExactMass,
-              charge: 1,
-              ionType: '[C5H5]+',
-              mechanism: 'Tropylium 陽離子二階脫去中性乙炔 (Loss of C₂H₂, m/z 91.0542 → 65.0386)',
-              fragmentationPathway: '[C7H7]+ → -C2H2 → [C5H5]+',
-              pathwayStatus: 'Verified Graph Product',
-              neutralLoss: 'C2H2',
-              neutralLossMass: ACETYLENE_LOSS_MASS,
-              massBalanceError: 0.0001,
-              massBalanceVerified: true,
-              parentStructureId: c5StructId,
-              priority: 'Medium',
-              confidence: 'High',
-              sourceRule: 'GCMS_AcetyleneLoss',
-              heuristicScore: 70.0,
-              image: c5h5Ion.image,
-              explanation: '高能 EI 下 [C₇H₇]⁺ 進一步縮環脫除 C₂H₂ (26.0157 Da) 生成 [C₅H₅]⁺',
-              parameterContext
-            });
-          }
-        }
+        // 已移除：SMILES 無效從未產生結果，見 Q13，待以正確結構重新實作
+        // （原為 Tropylium 二階縮環脫乙炔 [C5H5]+，m/z 91 → 65，SMILES 'C1=CC=[CH+]C=1'）
       }
     }
 
     // 2b. Carbonyl Alpha-Cleavage -> Genuine Acetylium Cation C[C+]=O (C2H3O+, m/z 43.0178)
+    // LEGACY-QUIRK(Q15): 比 TOF-SIMS／LC-MS/MS 多了 hasEster 與 isElementSubset 兩個條件，但仍未確認分子確實含乙醯基
     if (fg.hasAcetate || fg.hasKetone || fg.hasEster) {
       const acetylium = buildVerifiedIonFromSmiles('C[C+]=O', RDKit);
       if (acetylium) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 2, H: 3, O: 1 },
-          acetylium.neutralExactMass
-        );
+        const mb = verifyAgainstParent(ctx, { C: 2, H: 3, O: 1 }, acetylium.neutralExactMass);
         if (mb.isElementSubset) {
-          const structId = 'GCMS_Acylium_pos';
-          if (!seenStructureKeys.has(acetylium.canonicalSmiles)) {
-            seenStructureKeys.add(acetylium.canonicalSmiles);
-            structures.push({
-              id: structId,
+          addDiagnosticIon(out, ctx, acetylium, mb, {
+            id: 'GCMS_Acylium_pos',
+            polarity: 'Positive',
+            ionType: '[CH3CO]+',
+            precursorMz: diagnosticPrecursorMz,
+            structure: {
               name: '乙醯基鎓陽離子 (Acetylium Cation, [CH₃CO]⁺)',
-              formula: acetylium.formula,
-              neutralFormula: acetylium.neutralFormula,
-              smiles: acetylium.smiles,
-              canonicalSmiles: acetylium.canonicalSmiles,
-              exact_mass: acetylium.ionExactMass,
-              neutralExactMass: acetylium.neutralExactMass,
-              ionExactMass: acetylium.ionExactMass,
-              mz: acetylium.mz,
-              charge: 1,
-              ionType: '[CH3CO]+',
-              image: acetylium.image,
-              relative_intensity: 92.0,
-              heuristicScore: 92.0,
-              priority: 'High',
-              confidence: 'High',
-              mode: 'Positive',
               mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 C[C+]=O (m/z 43.0178)',
               fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
-              pathwayStatus: 'Verified Graph Product',
-              neutralLoss: mb.neutralLossFormula,
-              neutralLossMass: mb.neutralLossMass,
-              massBalanceVerified: mb.verified
-            });
-          }
-          candidates.push({
-            id: structId,
-            technique: 'GC-MS',
-            polarity: 'Positive',
-            precursorMz: parentMass,
-            mz: acetylium.mz,
-            formula: acetylium.formula,
-            neutralFormula: acetylium.neutralFormula,
-            smiles: acetylium.smiles,
-            canonicalSmiles: acetylium.canonicalSmiles,
-            exactMass: acetylium.ionExactMass,
-            neutralExactMass: acetylium.neutralExactMass,
-            ionExactMass: acetylium.ionExactMass,
-            charge: 1,
-            ionType: '[CH3CO]+',
-            mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)',
-            fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceError: mb.deltaMass,
-            massBalanceVerified: mb.verified,
-            parentStructureId: structId,
-            priority: 'High',
-            confidence: 'High',
-            sourceRule: 'GCMS_AcyliumCleavage',
-            heuristicScore: 92.0,
-            image: acetylium.image,
-            explanation: '羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)',
-            parameterContext
+              priority: 'High',
+              score: 92.0
+            },
+            candidate: {
+              mechanism: '羰基 α-均裂產物：乙醯基鎓陽離子 (C[C+]=O, m/z 43.0178)',
+              fragmentationPathway: 'M+. → Carbonyl α-Cleavage → [CH3CO]+',
+              priority: 'High',
+              sourceRule: 'GCMS_AcyliumCleavage',
+              heuristicScore: 92.0,
+              explanation: '羰基鄰位單鍵在電子撞擊下發生 α-均裂，保留三重鍵共振穩定醯基鎓離子 C[C+]=O (C2H3O+, m/z 43.0178)'
+            }
           });
         }
       }
@@ -413,139 +262,62 @@ export function runGcMsFragmentation(
     if (fg.hasAromaticRing) {
       const phenylIon = buildVerifiedIonFromSmiles('c1cc[c+]cc1', RDKit);
       if (phenylIon) {
-        const mb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          { C: 6, H: 5 },
-          phenylIon.neutralExactMass
-        );
-        const structId = 'GCMS_Phenyl_pos';
-        if (!seenStructureKeys.has(phenylIon.canonicalSmiles)) {
-          seenStructureKeys.add(phenylIon.canonicalSmiles);
-          structures.push({
-            id: structId,
+        const mb = verifyAgainstParent(ctx, { C: 6, H: 5 }, phenylIon.neutralExactMass);
+        addDiagnosticIon(out, ctx, phenylIon, mb, {
+          id: 'GCMS_Phenyl_pos',
+          polarity: 'Positive',
+          ionType: '[C6H5]+',
+          precursorMz: diagnosticPrecursorMz,
+          structure: {
             name: '苯基陽離子 (Phenyl Cation, [C₆H₅]⁺)',
-            formula: phenylIon.formula,
-            neutralFormula: phenylIon.neutralFormula,
-            smiles: phenylIon.smiles,
-            canonicalSmiles: phenylIon.canonicalSmiles,
-            exact_mass: phenylIon.ionExactMass,
-            neutralExactMass: phenylIon.neutralExactMass,
-            ionExactMass: phenylIon.ionExactMass,
-            mz: phenylIon.mz,
-            charge: 1,
-            ionType: '[C6H5]+',
-            image: phenylIon.image,
-            relative_intensity: 88.0,
-            heuristicScore: 88.0,
-            priority: 'High',
-            confidence: 'High',
-            mode: 'Positive',
             mechanism: '芳環取代基 α-斷裂形成苯基陽離子 c1cc[c+]cc1 (m/z 77.0386)',
             fragmentationPathway: 'M+. → Arylic Cleavage → [C6H5]+',
-            pathwayStatus: 'Verified Graph Product',
-            neutralLoss: mb.neutralLossFormula,
-            neutralLossMass: mb.neutralLossMass,
-            massBalanceVerified: mb.verified
-          });
-        }
-        candidates.push({
-          id: structId,
-          technique: 'GC-MS',
-          polarity: 'Positive',
-          precursorMz: parentMass,
-          mz: phenylIon.mz,
-          formula: phenylIon.formula,
-          neutralFormula: phenylIon.neutralFormula,
-          smiles: phenylIon.smiles,
-          canonicalSmiles: phenylIon.canonicalSmiles,
-          exactMass: phenylIon.ionExactMass,
-          neutralExactMass: phenylIon.neutralExactMass,
-          ionExactMass: phenylIon.ionExactMass,
-          charge: 1,
-          ionType: '[C6H5]+',
-          mechanism: '苯環取代基均裂解離苯基陽離子 (c1cc[c+]cc1, m/z 77.0386)',
-          fragmentationPathway: 'M+. → Arylic Cleavage → [C6H5]+',
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: structId,
-          priority: 'High',
-          confidence: 'High',
-          sourceRule: 'GCMS_PhenylCleavage',
-          heuristicScore: 88.0,
-          image: phenylIon.image,
-          explanation: '芳香化合物在 EI 質譜中的經典指紋碎片峰 c1cc[c+]cc1 (C6H5+, m/z 77.0386)',
-          parameterContext
+            priority: 'High',
+            score: 88.0
+          },
+          candidate: {
+            mechanism: '苯環取代基均裂解離苯基陽離子 (c1cc[c+]cc1, m/z 77.0386)',
+            fragmentationPathway: 'M+. → Arylic Cleavage → [C6H5]+',
+            priority: 'High',
+            sourceRule: 'GCMS_PhenylCleavage',
+            heuristicScore: 88.0,
+            explanation: '芳香化合物在 EI 質譜中的經典指紋碎片峰 c1cc[c+]cc1 (C6H5+, m/z 77.0386)'
+          }
         });
 
         // Secondary ring opening of Phenyl cation (-C2H2, m/z 77 -> 51.0229 [C4H3]+): ONLY enabled when EE >= 30 eV!
         if (regime.enableSecondaryRingCracking) {
           const c4h3Ion = buildVerifiedIonFromSmiles('C#CC=[CH+]', RDKit);
           if (c4h3Ion) {
-            const c4StructId = 'GCMS_C4H3_pos';
-            if (!seenStructureKeys.has(c4h3Ion.canonicalSmiles)) {
-              seenStructureKeys.add(c4h3Ion.canonicalSmiles);
-              structures.push({
-                id: c4StructId,
-                name: '丁烯炔基陽離子 ([C₄H₃]⁺, m/z 51)',
-                formula: c4h3Ion.formula,
-                neutralFormula: c4h3Ion.neutralFormula,
-                smiles: c4h3Ion.smiles,
-                canonicalSmiles: c4h3Ion.canonicalSmiles,
-                exact_mass: c4h3Ion.ionExactMass,
-                neutralExactMass: c4h3Ion.neutralExactMass,
-                ionExactMass: c4h3Ion.ionExactMass,
-                mz: c4h3Ion.mz,
-                charge: 1,
+            addDiagnosticIon(
+              out,
+              ctx,
+              c4h3Ion,
+              // LEGACY-QUIRK(Q30): 質量平衡為寫死值（丟失 C2H2、誤差 0.0001、驗證通過），並未實際計算
+              { neutralLossFormula: 'C2H2', neutralLossMass: ACETYLENE_LOSS_MASS, deltaMass: 0.0001, verified: true },
+              {
+                id: 'GCMS_C4H3_pos',
+                polarity: 'Positive',
                 ionType: '[C4H3]+',
-                image: c4h3Ion.image,
-                relative_intensity: 66.0,
-                heuristicScore: 66.0,
-                priority: 'Medium',
-                confidence: 'High',
-                mode: 'Positive',
-                mechanism: '苯基陽離子二階開環脫去乙炔 (-C₂H₂, m/z 77 → 51)',
-                fragmentationPathway: '[C6H5]+ → -C2H2 → [C4H3]+',
-                pathwayStatus: 'Verified Graph Product',
-                neutralLoss: 'C2H2',
-                neutralLossMass: ACETYLENE_LOSS_MASS,
-                massBalanceVerified: true
-              });
-            }
-            candidates.push({
-              id: c4StructId,
-              technique: 'GC-MS',
-              polarity: 'Positive',
-              precursorMz: PHENYL_CATION_MZ,
-              mz: c4h3Ion.mz,
-              formula: c4h3Ion.formula,
-              neutralFormula: c4h3Ion.neutralFormula,
-              smiles: c4h3Ion.smiles,
-              canonicalSmiles: c4h3Ion.canonicalSmiles,
-              exactMass: c4h3Ion.ionExactMass,
-              neutralExactMass: c4h3Ion.neutralExactMass,
-              ionExactMass: c4h3Ion.ionExactMass,
-              charge: 1,
-              ionType: '[C4H3]+',
-              mechanism: '苯基陽離子二階開環脫去乙炔 (Loss of C₂H₂, m/z 77.0386 → 51.0229)',
-              fragmentationPathway: '[C6H5]+ → -C2H2 → [C4H3]+',
-              pathwayStatus: 'Verified Graph Product',
-              neutralLoss: 'C2H2',
-              neutralLossMass: ACETYLENE_LOSS_MASS,
-              massBalanceError: 0.0001,
-              massBalanceVerified: true,
-              parentStructureId: c4StructId,
-              priority: 'Medium',
-              confidence: 'High',
-              sourceRule: 'GCMS_PhenylRingOpening',
-              heuristicScore: 66.0,
-              image: c4h3Ion.image,
-              explanation: '高能 EI 下 [C₆H₅]⁺ 進一步開環脫去 C₂H₂ 生成 [C₄H₃]⁺ (C#CC=[CH+], m/z 51.0229)',
-              parameterContext
-            });
+                // 二階產物的前驅物為 [C6H5]+
+                precursorMz: PHENYL_CATION_MZ,
+                structure: {
+                  name: '丁烯炔基陽離子 ([C₄H₃]⁺, m/z 51)',
+                  mechanism: '苯基陽離子二階開環脫去乙炔 (-C₂H₂, m/z 77 → 51)',
+                  fragmentationPathway: '[C6H5]+ → -C2H2 → [C4H3]+',
+                  priority: 'Medium',
+                  score: 66.0
+                },
+                candidate: {
+                  mechanism: '苯基陽離子二階開環脫去乙炔 (Loss of C₂H₂, m/z 77.0386 → 51.0229)',
+                  fragmentationPathway: '[C6H5]+ → -C2H2 → [C4H3]+',
+                  priority: 'Medium',
+                  sourceRule: 'GCMS_PhenylRingOpening',
+                  heuristicScore: 66.0,
+                  explanation: '高能 EI 下 [C₆H₅]⁺ 進一步開環脫去 C₂H₂ 生成 [C₄H₃]⁺ (C#CC=[CH+], m/z 51.0229)'
+                }
+              }
+            );
           }
         }
       }
