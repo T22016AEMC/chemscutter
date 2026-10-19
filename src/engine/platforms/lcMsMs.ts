@@ -29,6 +29,11 @@ import {
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
 import { addIsotopeSignals } from './shared/isotopeSignals';
+import {
+  forEachSingleBondFragment,
+  fragmentIonCandidate,
+  fragmentStructure
+} from './shared/singleBondProducts';
 import { buildParameterSweep } from './shared/parameterSweep';
 import { precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
@@ -503,157 +508,104 @@ export function runLcMsMsFragmentation(
   // ============================================================================
   // 4. Charge-Directed Heterolytic Single-Bond Cleavages (Governed by CE Regime & LMCO)
   // ============================================================================
-  const singleBondFragments = generateSingleBondFragments(mol, RDKit);
-  let fragCounter = 1;
+  forEachSingleBondFragment(
+    ctx,
+    mol,
+    RDKit,
+    {
+      idPrefix: 'LCMS_Frag_',
+      // At low CE (<18 eV), unactivated carbon-carbon bonds do NOT cleave!
+      skip: (frag) => !regime.enableStrongCarbonBondCleavage && !frag.isLabileHeteroatomBond
+    },
+    (visit) => {
+      const { frag, counter, mb } = visit;
+      const massFrac = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
 
-  for (const frag of singleBondFragments) {
-    // At low CE (<18 eV), unactivated carbon-carbon bonds do NOT cleave!
-    if (!regime.enableStrongCarbonBondCleavage && !frag.isLabileHeteroatomBond) {
-      continue;
-    }
+      let priority: 'High' | 'Medium' | 'Low' = 'Medium';
+      let baseScore = 58.0;
 
-    const fragId = `LCMS_Frag_${fragCounter}`;
-    const fragStoich = analyzeRDKitMolStoichiometry(frag.mol, false);
-    const mb = verifyFragmentMassBalance(
-      parentStoich.atomCounts,
-      parentMass,
-      fragStoich.atomCounts,
-      frag.exactMass
-    );
-
-    const massFrac = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
-
-    let priority: 'High' | 'Medium' | 'Low' = 'Medium';
-    let baseScore = 58.0;
-
-    if (isHighCE) {
-      if (massFrac < 0.55) {
-        priority = 'High';
-        baseScore = 82.0;
+      if (isHighCE) {
+        if (massFrac < 0.55) {
+          priority = 'High';
+          baseScore = 82.0;
+        } else {
+          priority = 'Low';
+          baseScore = 38.0;
+        }
+      } else if (isLowCE) {
+        if (frag.isLabileHeteroatomBond && massFrac > 0.4) {
+          priority = 'High';
+          baseScore = 76.0;
+        } else {
+          priority = 'Low';
+          baseScore = 42.0;
+        }
       } else {
-        priority = 'Low';
-        baseScore = 38.0;
+        priority = frag.isLabileHeteroatomBond || (massFrac >= 0.25 && massFrac <= 0.8) ? 'High' : 'Medium';
+        baseScore = 64.0 + massFrac * 14 + (frag.isLabileHeteroatomBond ? 6 : 0);
       }
-    } else if (isLowCE) {
-      if (frag.isLabileHeteroatomBond && massFrac > 0.4) {
-        priority = 'High';
-        baseScore = 76.0;
-      } else {
-        priority = 'Low';
-        baseScore = 42.0;
-      }
-    } else {
-      priority = frag.isLabileHeteroatomBond || (massFrac >= 0.25 && massFrac <= 0.8) ? 'High' : 'Medium';
-      baseScore = 64.0 + massFrac * 14 + (frag.isLabileHeteroatomBond ? 6 : 0);
-    }
 
-    if (!seenStructureKeys.has(frag.smiles)) {
-      seenStructureKeys.add(frag.smiles);
-      structures.push({
-        id: fragId,
-        name: `MS/MS 碎片 ${fragCounter} (${frag.bondDescription.split(' ')[0]})`,
-        formula: frag.formula,
-        neutralFormula: frag.formula,
-        smiles: frag.smiles,
-        canonicalSmiles: frag.smiles,
-        exact_mass: frag.exactMass,
-        neutralExactMass: frag.exactMass,
-        ionExactMass: frag.exactMass,
-        mz: frag.exactMass,
-        charge: 0,
-        image: frag.image,
-        relative_intensity: Number(baseScore.toFixed(1)),
-        heuristicScore: Number(baseScore.toFixed(1)),
-        priority,
-        confidence: 'High',
-        mode: regime.enableNegative ? 'Both' : 'Positive',
-        mechanism: `${fragMethod} 碰撞誘導異裂：${frag.bondDescription}`,
-        fragmentationPathway: frag.bondDescription,
-        pathwayStatus: 'Verified Graph Product',
-        neutralLoss: mb.neutralLossFormula,
-        neutralLossMass: mb.neutralLossMass,
-        massBalanceVerified: mb.verified
-      });
-    }
-
-    // Positive: Protonated H-transfer product ion [Frag+H]+
-    if (regime.enablePositive) {
-      const protFrag = deriveProtonatedIon(frag.mol, RDKit);
-      if (protFrag.mz >= lowMassCutoffMz) {
-        candidates.push({
-          id: `${fragId}_pos`,
-          technique: 'LC-MS/MS',
-          polarity: 'Positive',
-          precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-          mz: protFrag.mz,
-          formula: protFrag.formula,
-          neutralFormula: protFrag.neutralFormula,
-          smiles: protFrag.smiles,
-          canonicalSmiles: protFrag.canonicalSmiles,
-          exactMass: frag.exactMass,
-          neutralExactMass: frag.exactMass,
-          ionExactMass: protFrag.ionExactMass,
-          charge: 1,
-          ionType: '[Frag+H]+',
-          mechanism: `${fragMethod} 電荷導向異裂 (${frag.bondDescription})：${protFrag.siteDescription}`,
-          fragmentationPathway: `[M+H]+ → -${mb.neutralLossFormula} → ${protFrag.formula}`,
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: fragId,
+      addStructureOnce(
+        out,
+        frag.smiles,
+        fragmentStructure(visit, {
+          name: `MS/MS 碎片 ${counter} (${frag.bondDescription.split(' ')[0]})`,
+          score: Number(baseScore.toFixed(1)),
           priority,
-          confidence: 'High',
-          sourceRule: 'LCMS_CID_BackboneCleavage',
-          heuristicScore: Number(baseScore.toFixed(1)),
-          image: protFrag.image,
-          explanation: `前驅離子移動質子 (Mobile Proton) 引發單鍵異裂，脫去中性 ${mb.neutralLossFormula} (${mb.neutralLossMass.toFixed(4)} Da)，生成 ${protFrag.formula}`,
-          parameterContext
-        });
+          mode: regime.enableNegative ? 'Both' : 'Positive',
+          mechanism: `${fragMethod} 碰撞誘導異裂：${frag.bondDescription}`
+        })
+      );
+
+      // Positive: Protonated H-transfer product ion [Frag+H]+
+      if (regime.enablePositive) {
+        const protFrag = deriveProtonatedIon(frag.mol, RDKit);
+        if (protFrag.mz >= lowMassCutoffMz) {
+          candidates.push(
+            fragmentIonCandidate(ctx, visit, protFrag, {
+              idSuffix: '_pos',
+              polarity: 'Positive',
+              ionType: '[Frag+H]+',
+              // LEGACY-QUIRK(Q19): parentMass + 1.007276 並四捨五入至 4 位（TOF-SIMS 未四捨五入）
+              precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
+              mechanism: `${fragMethod} 電荷導向異裂 (${frag.bondDescription})：${protFrag.siteDescription}`,
+              fragmentationPathway: `[M+H]+ → -${mb.neutralLossFormula} → ${protFrag.formula}`,
+              priority,
+              confidence: 'High',
+              sourceRule: 'LCMS_CID_BackboneCleavage',
+              heuristicScore: Number(baseScore.toFixed(1)),
+              explanation: `前驅離子移動質子 (Mobile Proton) 引發單鍵異裂，脫去中性 ${mb.neutralLossFormula} (${mb.neutralLossMass.toFixed(4)} Da)，生成 ${protFrag.formula}`
+            })
+          );
+        }
+      }
+
+      // Negative: Deprotonated conjugate base product ion [Frag-H]-
+      if (regime.enableNegative && (fg.negativePathEnabled || frag.exactMass > 55)) {
+        const deprotFrag = deriveDeprotonatedIon(frag.mol, RDKit);
+        if (deprotFrag && deprotFrag.mz >= lowMassCutoffMz) {
+          candidates.push(
+            fragmentIonCandidate(ctx, visit, deprotFrag, {
+              idSuffix: '_neg',
+              polarity: 'Negative',
+              ionType: '[Frag-H]-',
+              // LEGACY-QUIRK(Q19): parentMass - 1.007276 並四捨五入至 4 位（TOF-SIMS 未四捨五入）
+              precursorMz: Number((parentMass - PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
+              mechanism: `${fragMethod} 負離子骨架異裂 (${frag.bondDescription})：${deprotFrag.siteDescription}`,
+              fragmentationPathway: `[M-H]- → -${mb.neutralLossFormula} → ${deprotFrag.formula}`,
+              pathwayStatus: deprotFrag.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
+              priority,
+              // LEGACY-QUIRK(Q26): [Frag-H]- 的 confidence 為 Medium（TOF-SIMS 為 High）
+              confidence: 'Medium',
+              sourceRule: 'LCMS_CID_NegativeCleavage',
+              heuristicScore: Number((baseScore * 0.9).toFixed(1)),
+              explanation: `負離子碰撞活化下脫去中性 ${mb.neutralLossFormula}，負電荷保留於共軛鹼碎片 ${deprotFrag.formula} (${deprotFrag.smiles})`
+            })
+          );
+        }
       }
     }
-
-    // Negative: Deprotonated conjugate base product ion [Frag-H]-
-    if (regime.enableNegative && (fg.negativePathEnabled || frag.exactMass > 55)) {
-      const deprotFrag = deriveDeprotonatedIon(frag.mol, RDKit);
-      if (deprotFrag && deprotFrag.mz >= lowMassCutoffMz) {
-        candidates.push({
-          id: `${fragId}_neg`,
-          technique: 'LC-MS/MS',
-          polarity: 'Negative',
-          precursorMz: Number((parentMass - PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
-          mz: deprotFrag.mz,
-          formula: deprotFrag.formula,
-          neutralFormula: deprotFrag.neutralFormula,
-          smiles: deprotFrag.smiles,
-          canonicalSmiles: deprotFrag.canonicalSmiles,
-          exactMass: frag.exactMass,
-          neutralExactMass: frag.exactMass,
-          ionExactMass: deprotFrag.ionExactMass,
-          charge: -1,
-          ionType: '[Frag-H]-',
-          mechanism: `${fragMethod} 負離子骨架異裂 (${frag.bondDescription})：${deprotFrag.siteDescription}`,
-          fragmentationPathway: `[M-H]- → -${mb.neutralLossFormula} → ${deprotFrag.formula}`,
-          pathwayStatus: deprotFrag.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: fragId,
-          priority,
-          confidence: 'Medium',
-          sourceRule: 'LCMS_CID_NegativeCleavage',
-          heuristicScore: Number((baseScore * 0.9).toFixed(1)),
-          image: deprotFrag.image,
-          explanation: `負離子碰撞活化下脫去中性 ${mb.neutralLossFormula}，負電荷保留於共軛鹼碎片 ${deprotFrag.formula} (${deprotFrag.smiles})`,
-          parameterContext
-        });
-      }
-    }
-
-    fragCounter++;
-  }
+  );
 
   // ============================================================================
   // 5. Isotope Signatures

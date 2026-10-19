@@ -32,6 +32,14 @@ import {
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
 import { addIsotopeSignals } from './shared/isotopeSignals';
+import {
+  analyzeDirectCation,
+  directCationCandidate,
+  forEachSingleBondFragment,
+  fragmentAsRadicalIon,
+  fragmentIonCandidate,
+  fragmentStructure
+} from './shared/singleBondProducts';
 import { buildParameterSweep } from './shared/parameterSweep';
 import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
@@ -554,134 +562,75 @@ export function runGcMsFragmentation(
   // 4. Single-Bond Alpha & Homolytic Cleavages (Governed by EI vs CI & EE Regime)
   // ============================================================================
   if (!isCI) {
-    const singleBondFragments = generateSingleBondFragments(mol, RDKit);
-    let fragCounter = 1;
+    forEachSingleBondFragment(
+      ctx,
+      mol,
+      RDKit,
+      {
+        idPrefix: 'GCMS_Frag_',
+        // In soft EI (<30 eV), suppress unactivated C-C homolytic shattering
+        skip: (frag) =>
+          !regime.enableDeepHomolyticCleavage && !frag.isLabileHeteroatomBond && frag.bondClass === 'aliphatic_cc'
+      },
+      (visit) => {
+        const { frag, counter } = visit;
+        const massFrac = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
+        const priority: 'High' | 'Medium' | 'Low' = massFrac < 0.7 ? 'High' : 'Medium';
+        const score = Math.max(32, Math.min(86, 72 - massFrac * 22));
+        // LEGACY-QUIRK(Q3): 以中性質量減電子質量作為自由基陽離子 m/z；碎片本身帶形式電荷時不正確
+        const radMz = Number((frag.exactMass - ELECTRON_MASS).toFixed(4));
 
-    for (const frag of singleBondFragments) {
-      // In soft EI (<30 eV), suppress unactivated C-C homolytic shattering
-      if (!regime.enableDeepHomolyticCleavage && !frag.isLabileHeteroatomBond && frag.bondClass === 'aliphatic_cc') {
-        continue;
-      }
-
-      const fragId = `GCMS_Frag_${fragCounter}`;
-      const fragStoich = analyzeRDKitMolStoichiometry(frag.mol, false);
-      const mb = verifyFragmentMassBalance(
-        parentStoich.atomCounts,
-        parentMass,
-        fragStoich.atomCounts,
-        frag.exactMass
-      );
-
-      const massFrac = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
-      const priority: 'High' | 'Medium' | 'Low' = massFrac < 0.7 ? 'High' : 'Medium';
-      const score = Math.max(32, Math.min(86, 72 - massFrac * 22));
-
-      if (!seenStructureKeys.has(frag.smiles)) {
-        seenStructureKeys.add(frag.smiles);
-        structures.push({
-          id: fragId,
-          name: `EI 裂解碎片 ${fragCounter} (${frag.bondDescription.split(' ')[0]})`,
-          formula: frag.formula,
-          neutralFormula: frag.formula,
-          smiles: frag.smiles,
-          canonicalSmiles: frag.smiles,
-          exact_mass: frag.exactMass,
-          neutralExactMass: frag.exactMass,
-          ionExactMass: Number((frag.exactMass - ELECTRON_MASS).toFixed(4)),
-          mz: Number((frag.exactMass - ELECTRON_MASS).toFixed(4)),
-          charge: 1,
-          image: frag.image,
-          relative_intensity: Number(score.toFixed(1)),
-          heuristicScore: Number(score.toFixed(1)),
-          priority,
-          confidence: 'High',
-          mode: 'Positive',
-          mechanism: `EI (${ee} eV) ${frag.bondDescription}`,
-          fragmentationPathway: frag.bondDescription,
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceVerified: mb.verified
-        });
-      }
-
-      // Direct even-electron cleavage cation if available (e.g. R-[C+]=O or carbocation)
-      if (frag.directCationMol && frag.directCationMz) {
-        const catStoich = analyzeRDKitMolStoichiometry(frag.directCationMol, false);
-        const catMb = verifyFragmentMassBalance(
-          parentStoich.atomCounts,
-          parentMass,
-          catStoich.atomCounts,
-          catStoich.neutralExactMass
+        addStructureOnce(
+          out,
+          frag.smiles,
+          fragmentStructure(visit, {
+            name: `EI 裂解碎片 ${counter} (${frag.bondDescription.split(' ')[0]})`,
+            score: Number(score.toFixed(1)),
+            priority,
+            mode: 'Positive',
+            mechanism: `EI (${ee} eV) ${frag.bondDescription}`,
+            ion: { mass: radMz, charge: 1 }
+          })
         );
-        candidates.push({
-          id: `${fragId}_cat`,
-          technique: 'GC-MS',
-          polarity: 'Positive',
-          precursorMz: parentMass,
-          mz: catStoich.mz,
-          formula: catStoich.ionicFormula,
-          neutralFormula: catStoich.neutralFormula,
-          smiles: frag.directCationSmiles || frag.smiles,
-          canonicalSmiles: frag.directCationSmiles || frag.smiles,
-          exactMass: catStoich.neutralExactMass,
-          neutralExactMass: catStoich.neutralExactMass,
-          ionExactMass: catStoich.ionExactMass,
-          charge: 1,
-          ionType: `[${catStoich.neutralFormula}]+`,
-          mechanism: `EI ${frag.bondDescription}：偶數電子陽離子 (${frag.directCationSmiles})`,
-          fragmentationPathway: `M+. → Direct Bond Cleavage (-${catMb.neutralLossFormula}.) → ${catStoich.ionicFormula}`,
-          pathwayStatus: 'Verified Graph Product',
-          neutralLoss: `${catMb.neutralLossFormula}•`,
-          neutralLossMass: catMb.neutralLossMass,
-          massBalanceError: catMb.deltaMass,
-          massBalanceVerified: catMb.verified,
-          parentStructureId: fragId,
-          priority,
-          confidence: 'High',
-          sourceRule: 'GCMS_AlphaOrDirectCleavage',
-          heuristicScore: Number(Math.min(88, score + 4).toFixed(1)),
-          image: frag.directCationImage || frag.image,
-          explanation: `單鍵均裂脫去自由基 ${catMb.neutralLossFormula}•，形成偶數電子陽離子 ${catStoich.ionicFormula} (${frag.directCationSmiles})`,
-          parameterContext
-        });
+
+        // Direct even-electron cleavage cation if available (e.g. R-[C+]=O or carbocation)
+        if (frag.directCationMol && frag.directCationMz) {
+          const cat = analyzeDirectCation(ctx, frag.directCationMol);
+          candidates.push(
+            directCationCandidate(ctx, visit, cat, {
+              idSuffix: '_cat',
+              // LEGACY-QUIRK(Q19): precursorMz 使用中性母分子質量 parentMass，而非 M+. 的 m/z
+              precursorMz: parentMass,
+              mechanism: `EI ${frag.bondDescription}：偶數電子陽離子 (${frag.directCationSmiles})`,
+              fragmentationPathway: `M+. → Direct Bond Cleavage (-${cat.mb.neutralLossFormula}.) → ${cat.stoich.ionicFormula}`,
+              // EI 均裂丟失的是自由基，中性丟失以「•」標示
+              neutralLoss: `${cat.mb.neutralLossFormula}•`,
+              priority,
+              sourceRule: 'GCMS_AlphaOrDirectCleavage',
+              heuristicScore: Number(Math.min(88, score + 4).toFixed(1)),
+              explanation: `單鍵均裂脫去自由基 ${cat.mb.neutralLossFormula}•，形成偶數電子陽離子 ${cat.stoich.ionicFormula} (${frag.directCationSmiles})`
+            })
+          );
+        }
+
+        candidates.push(
+          // LEGACY-QUIRK(Q3): 離子式以字串接 "+."；碎片本身帶形式電荷時會出現 C6H6NO++. 這類錯誤
+          fragmentIonCandidate(ctx, visit, fragmentAsRadicalIon(frag, `${frag.formula}+.`, radMz), {
+            idSuffix: '_rad',
+            polarity: 'Positive',
+            ionType: '[Frag]+.',
+            precursorMz: parentMass,
+            mechanism: `EI ${frag.bondDescription} 伴隨氫轉移`,
+            fragmentationPathway: `M+. → Cleavage & H-Rearrangement → ${frag.formula}+.`,
+            priority,
+            confidence: 'High',
+            sourceRule: 'GCMS_HomolyticCleavage',
+            heuristicScore: Number(score.toFixed(1)),
+            explanation: `${ee} eV 條件下單鍵斷裂伴隨氫重排產生的離子 ${frag.formula}⁺•`
+          })
+        );
       }
-
-      const radMz = Number((frag.exactMass - ELECTRON_MASS).toFixed(4));
-      candidates.push({
-        id: `${fragId}_rad`,
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: parentMass,
-        mz: radMz,
-        formula: `${frag.formula}+.`,
-        neutralFormula: frag.formula,
-        smiles: frag.smiles,
-        canonicalSmiles: frag.smiles,
-        exactMass: frag.exactMass,
-        neutralExactMass: frag.exactMass,
-        ionExactMass: radMz,
-        charge: 1,
-        ionType: '[Frag]+.',
-        mechanism: `EI ${frag.bondDescription} 伴隨氫轉移`,
-        fragmentationPathway: `M+. → Cleavage & H-Rearrangement → ${frag.formula}+.`,
-        pathwayStatus: 'Verified Graph Product',
-        neutralLoss: mb.neutralLossFormula,
-        neutralLossMass: mb.neutralLossMass,
-        massBalanceError: mb.deltaMass,
-        massBalanceVerified: mb.verified,
-        parentStructureId: fragId,
-        priority,
-        confidence: 'High',
-        sourceRule: 'GCMS_HomolyticCleavage',
-        heuristicScore: Number(score.toFixed(1)),
-        image: frag.image,
-        explanation: `${ee} eV 條件下單鍵斷裂伴隨氫重排產生的離子 ${frag.formula}⁺•`,
-        parameterContext
-      });
-
-      fragCounter++;
-    }
+    );
   }
 
   // ============================================================================

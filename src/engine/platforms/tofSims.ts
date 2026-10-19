@@ -45,6 +45,14 @@ import {
 } from './shared/context';
 import { addDiagnosticIon } from './shared/diagnosticIons';
 import { addIsotopeSignals } from './shared/isotopeSignals';
+import {
+  analyzeDirectCation,
+  directCationCandidate,
+  forEachSingleBondFragment,
+  fragmentAsRadicalIon,
+  fragmentIonCandidate,
+  fragmentStructure
+} from './shared/singleBondProducts';
 import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
@@ -696,216 +704,126 @@ export function runTofSimsFragmentation(
   // ============================================================================
   // 4. Exocyclic Single-Bond Cleavages (Heterolytic & Homolytic)
   // ============================================================================
-  const cleavedFragments = generateSingleBondFragments(mol, RDKit);
-  let fragCount = 1;
-
-  for (const frag of cleavedFragments) {
-    // In giant cluster gentle sputtering (C60+ / Ar Cluster), suppress unactivated C-C bond shattering
-    if (regime.primaryIonClass === 'giant_cluster' && !frag.isLabileHeteroatomBond) {
-      continue;
-    }
-
-    const fragId = `Frag_${fragCount}`;
-    const fragStoich = analyzeRDKitMolStoichiometry(frag.mol, false);
-    const mb = verifyFragmentMassBalance(
-      parentStoich.atomCounts,
-      parentMass,
-      fragStoich.atomCounts,
-      frag.exactMass
-    );
-
-    const massFraction = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
-    const isMajor = frag.isLabileHeteroatomBond || (massFraction > 0.25 && massFraction < 0.85);
-    const priority: 'High' | 'Medium' | 'Low' = isMajor ? 'High' : 'Medium';
-    const confidence: 'High' | 'Medium' | 'Low' = 'High';
-    const baseScore = Math.max(
-      30,
-      Math.min(88, 48 + massFraction * 32 + (frag.isLabileHeteroatomBond ? 8 : 0))
-    );
-
-    if (!seenStructureKeys.has(frag.smiles)) {
-      seenStructureKeys.add(frag.smiles);
-      structures.push({
-        id: fragId,
-        name: `碎片 ${fragCount} (${frag.bondDescription.split(' ')[0]})`,
-        formula: frag.formula,
-        neutralFormula: frag.formula,
-        smiles: frag.smiles,
-        canonicalSmiles: frag.smiles,
-        exact_mass: frag.exactMass,
-        neutralExactMass: frag.exactMass,
-        ionExactMass: frag.exactMass,
-        mz: frag.exactMass,
-        charge: 0,
-        image: frag.image,
-        relative_intensity: Number(baseScore.toFixed(1)),
-        heuristicScore: Number(baseScore.toFixed(1)),
-        priority,
-        confidence,
-        mode: fg.negativePathEnabled ? 'Both' : 'Positive',
-        mechanism: `TOF-SIMS ${frag.bondDescription}`,
-        fragmentationPathway: frag.bondDescription,
-        pathwayStatus: 'Verified Graph Product',
-        neutralLoss: mb.neutralLossFormula,
-        neutralLossMass: mb.neutralLossMass,
-        massBalanceVerified: mb.verified
-      });
-    }
-
-    // 4a. Direct Heterolytic Cation (e.g. Acylium R-[C+]=O or Carbocation R+) if available
-    if (regime.enablePositive && frag.directCationMol && frag.directCationMz) {
-      const catStoich = analyzeRDKitMolStoichiometry(frag.directCationMol, false);
-      const catMb = verifyFragmentMassBalance(
-        parentStoich.atomCounts,
-        parentMass,
-        catStoich.atomCounts,
-        catStoich.neutralExactMass
+  forEachSingleBondFragment(
+    ctx,
+    mol,
+    RDKit,
+    {
+      idPrefix: 'Frag_',
+      // In giant cluster gentle sputtering (C60+ / Ar Cluster), suppress unactivated C-C bond shattering
+      skip: (frag) => regime.primaryIonClass === 'giant_cluster' && !frag.isLabileHeteroatomBond
+    },
+    (visit) => {
+      const { frag, counter } = visit;
+      const massFraction = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
+      const isMajor = frag.isLabileHeteroatomBond || (massFraction > 0.25 && massFraction < 0.85);
+      const priority: 'High' | 'Medium' | 'Low' = isMajor ? 'High' : 'Medium';
+      const confidence: 'High' | 'Medium' | 'Low' = 'High';
+      const baseScore = Math.max(
+        30,
+        Math.min(88, 48 + massFraction * 32 + (frag.isLabileHeteroatomBond ? 8 : 0))
       );
-      candidates.push({
-        id: `${fragId}_pos_direct`,
-        technique: 'TOF-SIMS',
-        polarity: 'Positive',
-        precursorMz: parentMass,
-        mz: catStoich.mz,
-        formula: catStoich.ionicFormula,
-        neutralFormula: catStoich.neutralFormula,
-        smiles: frag.directCationSmiles || frag.smiles,
-        canonicalSmiles: frag.directCationSmiles || frag.smiles,
-        exactMass: catStoich.neutralExactMass,
-        neutralExactMass: catStoich.neutralExactMass,
-        ionExactMass: catStoich.ionExactMass,
-        charge: 1,
-        ionType: `[${catStoich.neutralFormula}]+`,
-        mechanism: `${frag.bondDescription}：直接異裂陽離子 (${frag.directCationSmiles})`,
-        fragmentationPathway: `Direct Heterolytic Cleavage → ${catStoich.ionicFormula}`,
-        pathwayStatus: 'Verified Graph Product',
-        neutralLoss: catMb.neutralLossFormula,
-        neutralLossMass: catMb.neutralLossMass,
-        massBalanceError: catMb.deltaMass,
-        massBalanceVerified: catMb.verified,
-        parentStructureId: fragId,
-        priority,
-        confidence: 'High',
-        sourceRule: 'TOF-SIMS_DirectHeterolyticCation',
-        heuristicScore: Number(Math.min(92, baseScore + 4).toFixed(1)),
-        image: frag.directCationImage || frag.image,
-        explanation: `單鍵直接異裂保留正電荷於碳中心，形成 ${catStoich.ionicFormula} (${frag.directCationSmiles})`,
-        parameterContext
-      });
-    }
 
-    // 4b. Protonated H-transfer fragment [Frag+H]+
-    if (regime.enablePositive) {
-      const protFrag = deriveProtonatedIon(frag.mol, RDKit);
-      candidates.push({
-        id: `${fragId}_pos_H`,
-        technique: 'TOF-SIMS',
-        polarity: 'Positive',
-        precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
-        mz: protFrag.mz,
-        formula: protFrag.formula,
-        neutralFormula: protFrag.neutralFormula,
-        smiles: protFrag.smiles,
-        canonicalSmiles: protFrag.canonicalSmiles,
-        exactMass: frag.exactMass,
-        neutralExactMass: frag.exactMass,
-        ionExactMass: protFrag.ionExactMass,
-        charge: 1,
-        ionType: '[Frag+H]+',
-        mechanism: `${frag.bondDescription} 伴隨表面質子轉移 (${protFrag.siteDescription})`,
-        fragmentationPathway: `Bond Cleavage + H-Transfer → ${protFrag.formula}`,
-        pathwayStatus: 'Verified Graph Product',
-        neutralLoss: mb.neutralLossFormula,
-        neutralLossMass: mb.neutralLossMass,
-        massBalanceError: mb.deltaMass,
-        massBalanceVerified: mb.verified,
-        parentStructureId: fragId,
-        priority,
-        confidence,
-        sourceRule: 'TOF-SIMS_SingleBondCleavage_H',
-        heuristicScore: Number(baseScore.toFixed(1)),
-        image: protFrag.image,
-        explanation: `單鍵斷裂產物於表面獲得質子形成二次陽離子 ${protFrag.formula}`,
-        parameterContext
-      });
-    }
-
-    // 4c. Homolytic Radical Cation [Frag]+. (Enabled only when regime allows homolytic radicals)
-    if (regime.enablePositive && regime.enableHomolyticRadicals) {
-      const radMz = Number((frag.exactMass - ELECTRON_MASS).toFixed(4));
-      candidates.push({
-        id: `${fragId}_pos_rad`,
-        technique: 'TOF-SIMS',
-        polarity: 'Positive',
-        precursorMz: parentMass,
-        mz: radMz,
-        formula: `${frag.formula}+.`,
-        neutralFormula: frag.formula,
-        smiles: frag.smiles,
-        canonicalSmiles: frag.smiles,
-        exactMass: frag.exactMass,
-        neutralExactMass: frag.exactMass,
-        ionExactMass: radMz,
-        charge: 1,
-        ionType: '[Frag]+.',
-        mechanism: `${frag.bondDescription}：表面均裂自由基二次陽離子 (Homolytic Cleavage)`,
-        fragmentationPathway: `Homolytic Cleavage → ${frag.formula}+.`,
-        pathwayStatus: 'Verified Graph Product',
-        neutralLoss: mb.neutralLossFormula,
-        neutralLossMass: mb.neutralLossMass,
-        massBalanceError: mb.deltaMass,
-        massBalanceVerified: mb.verified,
-        parentStructureId: fragId,
-        priority: 'Medium',
-        confidence: 'Medium',
-        sourceRule: 'TOF-SIMS_HomolyticCleavage',
-        heuristicScore: Number((baseScore * 0.72).toFixed(1)),
-        image: frag.image,
-        explanation: '高能碰撞級聯下單鍵均裂產生的奇數電子游離基碎片離子',
-        parameterContext
-      });
-    }
-
-    // 4d. Negative Deprotonated Fragment [Frag-H]-
-    if (regime.enableNegative && fg.negativePathEnabled) {
-      const deprotFrag = deriveDeprotonatedIon(frag.mol, RDKit);
-      if (deprotFrag) {
-        candidates.push({
-          id: `${fragId}_neg`,
-          technique: 'TOF-SIMS',
-          polarity: 'Negative',
-          precursorMz: parentMass - PROTON_MASS_LEGACY_ROUNDED,
-          mz: deprotFrag.mz,
-          formula: deprotFrag.formula,
-          neutralFormula: deprotFrag.neutralFormula,
-          smiles: deprotFrag.smiles,
-          canonicalSmiles: deprotFrag.canonicalSmiles,
-          exactMass: frag.exactMass,
-          neutralExactMass: frag.exactMass,
-          ionExactMass: deprotFrag.ionExactMass,
-          charge: -1,
-          ionType: '[Frag-H]-',
-          mechanism: `陰離子裂解分支：${frag.bondDescription} 去質子化 (${deprotFrag.siteDescription})`,
-          fragmentationPathway: `Negative Cleavage → ${deprotFrag.formula}`,
-          pathwayStatus: deprotFrag.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
-          neutralLoss: mb.neutralLossFormula,
-          neutralLossMass: mb.neutralLossMass,
-          massBalanceError: mb.deltaMass,
-          massBalanceVerified: mb.verified,
-          parentStructureId: fragId,
+      addStructureOnce(
+        out,
+        frag.smiles,
+        fragmentStructure(visit, {
+          name: `碎片 ${counter} (${frag.bondDescription.split(' ')[0]})`,
+          score: Number(baseScore.toFixed(1)),
           priority,
-          confidence,
-          sourceRule: 'TOF-SIMS_NegativeFragment',
-          heuristicScore: Number((baseScore * 0.9).toFixed(1)),
-          image: deprotFrag.image,
-          explanation: `陰離子發射模式下碎片去質子化產物 ${deprotFrag.formula} (${deprotFrag.smiles})`,
-          parameterContext
-        });
+          // LEGACY-QUIRK(Q24): 只看分子是否有負離子路徑，不看使用者設定的極性
+          mode: fg.negativePathEnabled ? 'Both' : 'Positive',
+          mechanism: `TOF-SIMS ${frag.bondDescription}`
+        })
+      );
+
+      // 4a. Direct Heterolytic Cation (e.g. Acylium R-[C+]=O or Carbocation R+) if available
+      if (regime.enablePositive && frag.directCationMol && frag.directCationMz) {
+        const cat = analyzeDirectCation(ctx, frag.directCationMol);
+        candidates.push(
+          directCationCandidate(ctx, visit, cat, {
+            idSuffix: '_pos_direct',
+            // LEGACY-QUIRK(Q19): precursorMz 使用中性母分子質量 parentMass
+            precursorMz: parentMass,
+            mechanism: `${frag.bondDescription}：直接異裂陽離子 (${frag.directCationSmiles})`,
+            fragmentationPathway: `Direct Heterolytic Cleavage → ${cat.stoich.ionicFormula}`,
+            neutralLoss: cat.mb.neutralLossFormula,
+            priority,
+            sourceRule: 'TOF-SIMS_DirectHeterolyticCation',
+            heuristicScore: Number(Math.min(92, baseScore + 4).toFixed(1)),
+            explanation: `單鍵直接異裂保留正電荷於碳中心，形成 ${cat.stoich.ionicFormula} (${frag.directCationSmiles})`
+          })
+        );
+      }
+
+      // 4b. Protonated H-transfer fragment [Frag+H]+
+      if (regime.enablePositive) {
+        const protFrag = deriveProtonatedIon(frag.mol, RDKit);
+        candidates.push(
+          fragmentIonCandidate(ctx, visit, protFrag, {
+            idSuffix: '_pos_H',
+            polarity: 'Positive',
+            ionType: '[Frag+H]+',
+            // LEGACY-QUIRK(Q19): parentMass + 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+            precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
+            mechanism: `${frag.bondDescription} 伴隨表面質子轉移 (${protFrag.siteDescription})`,
+            fragmentationPathway: `Bond Cleavage + H-Transfer → ${protFrag.formula}`,
+            priority,
+            confidence,
+            sourceRule: 'TOF-SIMS_SingleBondCleavage_H',
+            heuristicScore: Number(baseScore.toFixed(1)),
+            explanation: `單鍵斷裂產物於表面獲得質子形成二次陽離子 ${protFrag.formula}`
+          })
+        );
+      }
+
+      // 4c. Homolytic Radical Cation [Frag]+. (Enabled only when regime allows homolytic radicals)
+      if (regime.enablePositive && regime.enableHomolyticRadicals) {
+        // LEGACY-QUIRK(Q3): 離子式以字串接 "+."、m/z 以中性質量減電子質量計算；碎片本身帶形式電荷時兩者皆錯（如 C6H6NO++.）
+        const radMz = Number((frag.exactMass - ELECTRON_MASS).toFixed(4));
+        candidates.push(
+          fragmentIonCandidate(ctx, visit, fragmentAsRadicalIon(frag, `${frag.formula}+.`, radMz), {
+            idSuffix: '_pos_rad',
+            polarity: 'Positive',
+            ionType: '[Frag]+.',
+            precursorMz: parentMass,
+            mechanism: `${frag.bondDescription}：表面均裂自由基二次陽離子 (Homolytic Cleavage)`,
+            fragmentationPathway: `Homolytic Cleavage → ${frag.formula}+.`,
+            priority: 'Medium',
+            confidence: 'Medium',
+            sourceRule: 'TOF-SIMS_HomolyticCleavage',
+            heuristicScore: Number((baseScore * 0.72).toFixed(1)),
+            explanation: '高能碰撞級聯下單鍵均裂產生的奇數電子游離基碎片離子'
+          })
+        );
+      }
+
+      // 4d. Negative Deprotonated Fragment [Frag-H]-
+      if (regime.enableNegative && fg.negativePathEnabled) {
+        const deprotFrag = deriveDeprotonatedIon(frag.mol, RDKit);
+        if (deprotFrag) {
+          candidates.push(
+            fragmentIonCandidate(ctx, visit, deprotFrag, {
+              idSuffix: '_neg',
+              polarity: 'Negative',
+              ionType: '[Frag-H]-',
+              // LEGACY-QUIRK(Q19): parentMass - 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+              precursorMz: parentMass - PROTON_MASS_LEGACY_ROUNDED,
+              mechanism: `陰離子裂解分支：${frag.bondDescription} 去質子化 (${deprotFrag.siteDescription})`,
+              fragmentationPathway: `Negative Cleavage → ${deprotFrag.formula}`,
+              pathwayStatus: deprotFrag.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
+              priority,
+              // LEGACY-QUIRK(Q26): [Frag-H]- 的 confidence 為 High（LC-MS/MS 為 Medium）
+              confidence,
+              sourceRule: 'TOF-SIMS_NegativeFragment',
+              heuristicScore: Number((baseScore * 0.9).toFixed(1)),
+              explanation: `陰離子發射模式下碎片去質子化產物 ${deprotFrag.formula} (${deprotFrag.smiles})`
+            })
+          );
+        }
       }
     }
-
-    fragCount++;
-  }
+  );
 
   // ============================================================================
   // 5. Isotope Signatures
