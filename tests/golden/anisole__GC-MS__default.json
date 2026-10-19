@@ -253,6 +253,7 @@
     "detected_format": "SMILES",
     "detected_groups": [
       "甲氧基 (-OCH3)",
+      "醚基 (-O-)",
       "芳香環系 (Aromatic Ring)"
     ],
     "exact_mass": 108.0575,

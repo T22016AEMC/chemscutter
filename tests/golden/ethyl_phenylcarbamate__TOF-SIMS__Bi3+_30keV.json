@@ -954,7 +954,6 @@
     "detected_format": "SMILES",
     "detected_groups": [
       "二級胺 (-NH-)",
-      "甲氧基 (-OCH3)",
       "胺基甲酸酯基 (-O-CONH-)",
       "芳香環系 (Aromatic Ring)"
     ],

@@ -63,6 +63,33 @@ describe('官能基偵測', () => {
   );
 });
 
+describe('甲氧基與醚基偵測', () => {
+  // Q5：甲氧基 CH3-O-C
+  expectFlag(
+    'hasMethoxy',
+    ['methyl_benzoate', 'anisole', 'methyl_hexanoate'],
+    ['aspirin', 'ethyl_acetate', 'glucose', 'diethyl_ether']
+  );
+
+  // Q5：醚基（氧兩側皆為非羰基碳）
+  expectFlag(
+    'hasEther',
+    ['diethyl_ether', 'anisole', 'glucose'],
+    ['aspirin', 'methyl_benzoate', 'ethyl_acetate', 'diethyl_carbonate']
+  );
+
+  it('甲氧基與醚基獨立判斷：anisole 兩個標籤都列出', () => {
+    const { mol } = parseInputToMol(SMILES.anisole, RDKit);
+    try {
+      const groups = detectFunctionalGroups(mol!, RDKit).detectedGroups;
+      expect(groups).toContain('甲氧基 (-OCH3)');
+      expect(groups).toContain('醚基 (-O-)');
+    } finally {
+      mol!.delete();
+    }
+  });
+});
+
 describe('乙醯基鎓離子 C2H3O+ 的產生（TOF-SIMS 預設）', () => {
   async function ionFormulas(name: string): Promise<string[]> {
     const result = await runMultiPlatformAnalysis(SMILES[name], { technique: 'TOF-SIMS' });

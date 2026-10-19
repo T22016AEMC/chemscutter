@@ -345,7 +345,6 @@
   "parent": {
     "detected_format": "SMILES",
     "detected_groups": [
-      "甲氧基 (-OCH3)",
       "碳酸酯基 (-O-COO-)"
     ],
     "exact_mass": 118.063,

@@ -489,7 +489,7 @@
     "detected_format": "SMILES",
     "detected_groups": [
       "脂肪醇羥基 (-OH)",
-      "甲氧基 (-OCH3)"
+      "醚基 (-O-)"
     ],
     "exact_mass": 180.0634,
     "formula": "C6H12O6",

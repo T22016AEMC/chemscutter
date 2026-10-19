@@ -63,7 +63,7 @@
   "parent": {
     "detected_format": "SMILES",
     "detected_groups": [
-      "甲氧基 (-OCH3)"
+      "醚基 (-O-)"
     ],
     "exact_mass": 74.0732,
     "formula": "C4H10O",

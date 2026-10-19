@@ -401,8 +401,7 @@
   "parent": {
     "detected_format": "ChemDraw/ChemDoodle Molfile (V2000/V3000)",
     "detected_groups": [
-      "乙醯酯結構 (Acetate)",
-      "甲氧基 (-OCH3)"
+      "乙醯酯結構 (Acetate)"
     ],
     "exact_mass": 88.0524,
     "formula": "C4H8O2",

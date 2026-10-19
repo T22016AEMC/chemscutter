@@ -66,8 +66,9 @@ export function detectFunctionalGroups(mol: JSMol, RDKit: RDKitModule): Function
   const hasPrimaryAmine = checkSmarts('[NX3H2][#6]');
   const hasSecondaryAmine = checkSmarts('[#6][NX3H1][#6]');
   const hasTertiaryAmine = checkSmarts('[#6][NX3]([#6])[#6]');
-  const hasMethoxy = checkSmarts('CO[#6,c]');
-  const hasEther = checkSmarts('[#6][OX2H0][#6]');
+  const hasMethoxy = checkSmarts('[CH3][OX2][#6]');
+  // 醚基：氧的兩側都是不帶 C=O／C=S／C=N 的碳（排除酯、碳酸酯等）
+  const hasEther = checkSmarts('[#6;!$([#6]=[O,S,N])][OX2][#6;!$([#6]=[O,S,N])]');
   const hasKetone = checkSmarts('[#6][CX3](=O)[#6]');
   const hasAldehyde = checkSmarts('[CX3H1](=O)[#6,#1]');
   const hasCarbonate = checkSmarts('[#6][OX2][CX3](=O)[OX2][#6]');
@@ -100,7 +101,7 @@ export function detectFunctionalGroups(mol: JSMol, RDKit: RDKitModule): Function
   if (hasSecondaryAmine) detectedGroups.push('二級胺 (-NH-)');
   if (hasTertiaryAmine) detectedGroups.push('三級胺 (-NR2)');
   if (hasMethoxy) detectedGroups.push('甲氧基 (-OCH3)');
-  else if (hasEther) detectedGroups.push('醚基 (-O-)');
+  if (hasEther) detectedGroups.push('醚基 (-O-)');
   if (hasKetone) detectedGroups.push('酮羰基 (C=O)');
   if (hasAldehyde) detectedGroups.push('醛基 (-CHO)');
   if (hasCarbonate) detectedGroups.push('碳酸酯基 (-O-COO-)');
