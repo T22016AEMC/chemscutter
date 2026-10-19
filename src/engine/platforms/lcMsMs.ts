@@ -112,7 +112,7 @@ export function runLcMsMsFragmentation(
     );
 
     // Alkali metal & Ammonium adducts: ONLY enabled in ESI (suppressed in gas-phase APCI)
-    const hasOxygenChelator = fg.hasEther || fg.hasEster || fg.hasCarbonate || fg.hasCarboxyl || fg.hasAliphaticOH;
+    const hasOxygenChelator = fg.hasEther || fg.hasEster || fg.hasCarbonate || fg.hasCarboxyl || fg.hasAliphaticOH || fg.hasCarbamate;
     if (regime.enableAlkaliAdducts && (hasOxygenChelator || config.precursorAdduct === '[M+Na]+')) {
       const naParent = deriveAdductIon(mol, '[M+Na]+', 300, 240);
       candidates.push(

@@ -216,6 +216,34 @@
       "technique": "LC-MS/MS"
     },
     {
+      "canonicalSmiles": "CCOC(=O)Nc1ccccc1",
+      "charge": 1,
+      "confidence": "High",
+      "exactMass": 165.079,
+      "explanation": "ESI 液相電噴灑中含氧官能基與微量 Na⁺ 螯合形成的非共價加合物 (APCI 下不顯著)",
+      "formula": "C9H11NNaO2+",
+      "fragmentationPathway": "ESI Sodium Adduct Formation → [M+Na]+",
+      "heuristicScore": 48,
+      "id": "Prec_M_Na_pos",
+      "imageHash": "faef2041f0fca7aeda34c6dfebe273f49520c5d5138f97fdd88443a8f420072a",
+      "ionExactMass": 188.0682,
+      "ionType": "[M+Na]+",
+      "massBalanceVerified": true,
+      "mechanism": "極性含氧/含氮官能基與鈉離子 (Na⁺) 配位形成非共價加合物",
+      "mz": 188.0682,
+      "neutralExactMass": 165.079,
+      "neutralFormula": "C9H11NO2",
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "polarity": "Positive",
+      "precursorMz": 188.0682,
+      "priority": "Medium",
+      "smiles": "CCOC(=O)Nc1ccccc1",
+      "sourceRule": "LCMS_SodiumAdduct",
+      "technique": "LC-MS/MS"
+    },
+    {
       "canonicalSmiles": "CC",
       "charge": 1,
       "confidence": "High",
@@ -482,6 +510,31 @@
       "smiles": "c1ccccc1",
       "sourceRule": "LCMS_CID_BackboneCleavage",
       "type": "產物離子 (LCMS_Frag_8)"
+    },
+    {
+      "adduct": "[M+Na]+",
+      "canonicalSmiles": "CCOC(=O)Nc1ccccc1",
+      "charge": 1,
+      "confidence": "High",
+      "formula": "C9H11NNaO2+",
+      "fragmentationPathway": "ESI Sodium Adduct Formation → [M+Na]+",
+      "heuristicScore": 48,
+      "id": "Prec_M_Na_pos",
+      "ionExactMass": 188.0682,
+      "massBalanceVerified": true,
+      "mechanism": "極性含氧/含氮官能基與鈉離子 (Na⁺) 配位形成非共價加合物",
+      "mode": "Positive",
+      "mz": 188.0682,
+      "neutralExactMass": 165.079,
+      "neutralFormula": "C9H11NO2",
+      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 10 eV (General)",
+      "parentStructureId": "Parent",
+      "pathwayStatus": "Verified Graph Product",
+      "priority": "Medium",
+      "relative_intensity": 48,
+      "smiles": "CCOC(=O)Nc1ccccc1",
+      "sourceRule": "LCMS_SodiumAdduct",
+      "type": "准分子離子 (Precursor Adduct)"
     },
     {
       "adduct": "[Frag+H]+",
@@ -804,11 +857,11 @@
           "priority": "High"
         },
         {
-          "formula": "C3H7O2+",
-          "id": "LCMS_Frag_5_pos",
-          "ionType": "[Frag+H]+",
-          "likelihood": "Trace",
-          "mz": 75.0441,
+          "formula": "C9H11NNaO2+",
+          "id": "Prec_M_Na_pos",
+          "ionType": "[M+Na]+",
+          "likelihood": "Prominent",
+          "mz": 188.0682,
           "priority": "Medium"
         }
       ]
