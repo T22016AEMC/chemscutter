@@ -19,7 +19,14 @@ import {
 import { PROTON_MASS_LEGACY_ROUNDED } from '../constants/masses';
 import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateLcMsMsRegime } from '../platform/parameterRegime';
-import { addStructureOnce, buildParentContext, buildParentStructure, createPlatformOutput } from './shared/context';
+import {
+  addStructureOnce,
+  buildParentContext,
+  buildParentStructure,
+  createPlatformOutput,
+  type PlatformContext
+} from './shared/context';
+import { precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
 export interface LcMsMsRunResult {
@@ -50,6 +57,7 @@ export function runLcMsMsFragmentation(
 
   const out = createPlatformOutput();
   const { candidates, structures, seenStructureKeys } = out;
+  const ctx: PlatformContext = { ...parent, technique: 'LC-MS/MS', parameterContext };
 
   // Add Parent Molecule
   addStructureOnce(
@@ -76,67 +84,39 @@ export function runLcMsMsFragmentation(
     // At high CE, precursor ion survival drops significantly
     const precursorSurvivalScore = isLowCE ? 98.0 : isHighCE ? 42.0 : hasBase ? 92.0 : 80.0;
 
-    candidates.push({
-      id: 'Prec_M_H_pos',
-      technique: 'LC-MS/MS',
-      polarity: 'Positive',
-      precursorMz: protParent.mz,
-      mz: protParent.mz,
-      formula: protParent.formula,
-      neutralFormula: parentFormula,
-      smiles: protParent.smiles,
-      canonicalSmiles: protParent.canonicalSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: protParent.ionExactMass,
-      charge: 1,
-      ionType: '[M+H]+',
-      mechanism: `${ionization} 正離子化：${protParent.siteDescription}`,
-      fragmentationPathway: `${ionization} Protonation → [M+H]+`,
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: isHighCE ? 'Medium' : 'High',
-      confidence: 'High',
-      sourceRule: 'LCMS_Protonation',
-      heuristicScore: precursorSurvivalScore,
-      image: protParent.image,
-      explanation: `軟電離過程中母分子獲得質子形成主要正前驅離子 ${protParent.formula} (m/z ${protParent.mz.toFixed(4)})`,
-      parameterContext
-    });
+    candidates.push(
+      precursorCandidate(ctx, protParent, {
+        id: 'Prec_M_H_pos',
+        polarity: 'Positive',
+        ionType: '[M+H]+',
+        mechanism: `${ionization} 正離子化：${protParent.siteDescription}`,
+        fragmentationPathway: `${ionization} Protonation → [M+H]+`,
+        priority: isHighCE ? 'Medium' : 'High',
+        confidence: 'High',
+        sourceRule: 'LCMS_Protonation',
+        heuristicScore: precursorSurvivalScore,
+        explanation: `軟電離過程中母分子獲得質子形成主要正前驅離子 ${protParent.formula} (m/z ${protParent.mz.toFixed(4)})`
+      })
+    );
 
     // Alkali metal & Ammonium adducts: ONLY enabled in ESI (suppressed in gas-phase APCI)
     const hasOxygenChelator = fg.hasEther || fg.hasEster || fg.hasCarbonate || fg.hasCarboxyl || fg.hasAliphaticOH;
     if (regime.enableAlkaliAdducts && (hasOxygenChelator || config.precursorAdduct === '[M+Na]+')) {
       const naParent = deriveAdductIon(mol, '[M+Na]+', 300, 240);
-      candidates.push({
-        id: 'Prec_M_Na_pos',
-        technique: 'LC-MS/MS',
-        polarity: 'Positive',
-        precursorMz: naParent.mz,
-        mz: naParent.mz,
-        formula: naParent.formula,
-        neutralFormula: parentFormula,
-        smiles: naParent.smiles,
-        canonicalSmiles: naParent.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: naParent.ionExactMass,
-        charge: 1,
-        ionType: '[M+Na]+',
-        mechanism: naParent.siteDescription,
-        fragmentationPathway: 'ESI Sodium Adduct Formation → [M+Na]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: hasBase ? 'Medium' : 'High',
-        confidence: 'High',
-        sourceRule: 'LCMS_SodiumAdduct',
-        heuristicScore: hasBase ? 48.0 : 74.0,
-        image: naParent.image,
-        explanation: 'ESI 液相電噴灑中含氧官能基與微量 Na⁺ 螯合形成的非共價加合物 (APCI 下不顯著)',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, naParent, {
+          id: 'Prec_M_Na_pos',
+          polarity: 'Positive',
+          ionType: '[M+Na]+',
+          mechanism: naParent.siteDescription,
+          fragmentationPathway: 'ESI Sodium Adduct Formation → [M+Na]+',
+          priority: hasBase ? 'Medium' : 'High',
+          confidence: 'High',
+          sourceRule: 'LCMS_SodiumAdduct',
+          heuristicScore: hasBase ? 48.0 : 74.0,
+          explanation: 'ESI 液相電噴灑中含氧官能基與微量 Na⁺ 螯合形成的非共價加合物 (APCI 下不顯著)'
+        })
+      );
     }
 
     if (
@@ -144,70 +124,45 @@ export function runLcMsMsFragmentation(
       (config.precursorAdduct === '[M+NH4]+' || (!hasBase && (fg.hasEster || fg.hasKetone)))
     ) {
       const nh4Parent = deriveAdductIon(mol, '[M+NH4]+', 300, 240);
-      candidates.push({
-        id: 'Prec_M_NH4_pos',
-        technique: 'LC-MS/MS',
-        polarity: 'Positive',
-        precursorMz: nh4Parent.mz,
-        mz: nh4Parent.mz,
-        formula: nh4Parent.formula,
-        neutralFormula: parentFormula,
-        smiles: nh4Parent.smiles,
-        canonicalSmiles: nh4Parent.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: nh4Parent.ionExactMass,
-        charge: 1,
-        ionType: '[M+NH4]+',
-        mechanism: nh4Parent.siteDescription,
-        fragmentationPathway: 'ESI Ammonium Adduct Formation → [M+NH4]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: 'Medium',
-        confidence: 'Medium',
-        sourceRule: 'LCMS_AmmoniumAdduct',
-        heuristicScore: 55.0,
-        image: nh4Parent.image,
-        explanation: '流動相含乙酸銨/甲酸銨緩衝鹽時形成的銨根配位准分子離子',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, nh4Parent, {
+          id: 'Prec_M_NH4_pos',
+          polarity: 'Positive',
+          ionType: '[M+NH4]+',
+          mechanism: nh4Parent.siteDescription,
+          fragmentationPathway: 'ESI Ammonium Adduct Formation → [M+NH4]+',
+          priority: 'Medium',
+          confidence: 'Medium',
+          sourceRule: 'LCMS_AmmoniumAdduct',
+          heuristicScore: 55.0,
+          explanation: '流動相含乙酸銨/甲酸銨緩衝鹽時形成的銨根配位准分子離子'
+        })
+      );
     }
   }
 
   if (regime.enableNegative) {
-    if (fg.hasCarboxyl || fg.hasPhenolicOH || fg.hasSulfonicAcid || fg.negativePathEnabled) {
+    // 已簡化：舊版條件為 fg.hasCarboxyl || fg.hasPhenolicOH || fg.hasSulfonicAcid || fg.negativePathEnabled；
+    // 前三項已包含在 negativePathEnabled 的定義中（functionalGroups.ts），因此只保留 negativePathEnabled
+    if (fg.negativePathEnabled) {
       const deprotParent = deriveDeprotonatedIon(mol, RDKit, 300, 240);
       if (deprotParent) {
         const negPrecursorScore = isLowCE ? 98.0 : isHighCE ? 45.0 : 90.0;
-        candidates.push({
-          id: 'Prec_M_H_neg',
-          technique: 'LC-MS/MS',
-          polarity: 'Negative',
-          precursorMz: deprotParent.mz,
-          mz: deprotParent.mz,
-          formula: deprotParent.formula,
-          neutralFormula: parentFormula,
-          smiles: deprotParent.smiles,
-          canonicalSmiles: deprotParent.canonicalSmiles,
-          exactMass: parentMass,
-          neutralExactMass: parentMass,
-          ionExactMass: deprotParent.ionExactMass,
-          charge: -1,
-          ionType: '[M-H]-',
-          mechanism: `${ionization} 負離子化：${deprotParent.siteDescription}`,
-          fragmentationPathway: `${ionization} Deprotonation → [M-H]-`,
-          pathwayStatus: deprotParent.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
-          massBalanceVerified: true,
-          parentStructureId: 'Parent',
-          priority: isHighCE ? 'Medium' : 'High',
-          confidence: 'High',
-          sourceRule: 'LCMS_Deprotonation',
-          heuristicScore: negPrecursorScore,
-          image: deprotParent.image,
-          explanation: `酸性位點解離形成真實共軛鹼前驅陰離子 ${deprotParent.formula} (${deprotParent.smiles})`,
-          parameterContext
-        });
+        candidates.push(
+          precursorCandidate(ctx, deprotParent, {
+            id: 'Prec_M_H_neg',
+            polarity: 'Negative',
+            ionType: '[M-H]-',
+            mechanism: `${ionization} 負離子化：${deprotParent.siteDescription}`,
+            fragmentationPathway: `${ionization} Deprotonation → [M-H]-`,
+            pathwayStatus: deprotParent.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
+            priority: isHighCE ? 'Medium' : 'High',
+            confidence: 'High',
+            sourceRule: 'LCMS_Deprotonation',
+            heuristicScore: negPrecursorScore,
+            explanation: `酸性位點解離形成真實共軛鹼前驅陰離子 ${deprotParent.formula} (${deprotParent.smiles})`
+          })
+        );
       }
     }
 
@@ -216,34 +171,20 @@ export function runLcMsMsFragmentation(
       (config.precursorAdduct === '[M+formate]-' || (fg.hasCarboxyl && parentMass > 80))
     ) {
       const formateAdduct = deriveAdductIon(mol, '[M+HCOO]-', 300, 240);
-      candidates.push({
-        id: 'Prec_M_Formate_neg',
-        technique: 'LC-MS/MS',
-        polarity: 'Negative',
-        precursorMz: formateAdduct.mz,
-        mz: formateAdduct.mz,
-        formula: formateAdduct.formula,
-        neutralFormula: parentFormula,
-        smiles: formateAdduct.smiles,
-        canonicalSmiles: formateAdduct.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: formateAdduct.ionExactMass,
-        charge: -1,
-        ionType: '[M+HCOO]-',
-        mechanism: formateAdduct.siteDescription,
-        fragmentationPathway: 'ESI Formate Adduct Formation → [M+HCOO]-',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: 'Low',
-        confidence: 'Medium',
-        sourceRule: 'LCMS_FormateAdduct',
-        heuristicScore: 44.0,
-        image: formateAdduct.image,
-        explanation: '流動相含甲酸添加劑時形成的非共價甲酸根加合物',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, formateAdduct, {
+          id: 'Prec_M_Formate_neg',
+          polarity: 'Negative',
+          ionType: '[M+HCOO]-',
+          mechanism: formateAdduct.siteDescription,
+          fragmentationPathway: 'ESI Formate Adduct Formation → [M+HCOO]-',
+          priority: 'Low',
+          confidence: 'Medium',
+          sourceRule: 'LCMS_FormateAdduct',
+          heuristicScore: 44.0,
+          explanation: '流動相含甲酸添加劑時形成的非共價甲酸根加合物'
+        })
+      );
     }
   }
 

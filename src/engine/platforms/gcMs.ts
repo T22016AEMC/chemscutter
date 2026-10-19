@@ -23,7 +23,14 @@ import {
 } from '../constants/masses';
 import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateGcMsRegime } from '../platform/parameterRegime';
-import { addStructureOnce, buildParentContext, buildParentStructure, createPlatformOutput } from './shared/context';
+import {
+  addStructureOnce,
+  buildParentContext,
+  buildParentStructure,
+  createPlatformOutput,
+  type PlatformContext
+} from './shared/context';
+import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
 export interface GcMsRunResult {
@@ -53,6 +60,7 @@ export function runGcMsFragmentation(
 
   const out = createPlatformOutput();
   const { candidates, structures, seenStructureKeys } = out;
+  const ctx: PlatformContext = { ...parent, technique: 'GC-MS', parameterContext };
 
   // Add Parent Molecule（EI 時母體為分子自由基陽離子 M⁺•）
   addStructureOnce(
@@ -74,66 +82,38 @@ export function runGcMsFragmentation(
   // ============================================================================
   if (isCI) {
     const protParent = deriveProtonatedIon(mol, RDKit, 300, 240);
-    candidates.push({
-      id: 'GCMS_CI_MH_pos',
-      technique: 'GC-MS',
-      polarity: 'Positive',
-      precursorMz: protParent.mz,
-      mz: protParent.mz,
-      formula: protParent.formula,
-      neutralFormula: parentFormula,
-      smiles: protParent.smiles,
-      canonicalSmiles: protParent.canonicalSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: protParent.ionExactMass,
-      charge: 1,
-      ionType: '[M+H]+',
-      mechanism: `CI (${reagentGas}) 氣相化學游離：${protParent.siteDescription}`,
-      fragmentationPathway: `CI Proton Transfer → ${protParent.formula}`,
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: 'High',
-      confidence: 'High',
-      sourceRule: 'GCMS_CI_Protonation',
-      heuristicScore: 98.0,
-      image: protParent.image,
-      explanation: `CI 反應氣 (${reagentGas}) 發生軟電離質子轉移，形成強烈准分子離子 ${protParent.formula}`,
-      parameterContext
-    });
+    candidates.push(
+      precursorCandidate(ctx, protParent, {
+        id: 'GCMS_CI_MH_pos',
+        polarity: 'Positive',
+        ionType: '[M+H]+',
+        mechanism: `CI (${reagentGas}) 氣相化學游離：${protParent.siteDescription}`,
+        fragmentationPathway: `CI Proton Transfer → ${protParent.formula}`,
+        priority: 'High',
+        confidence: 'High',
+        sourceRule: 'GCMS_CI_Protonation',
+        heuristicScore: 98.0,
+        explanation: `CI 反應氣 (${reagentGas}) 發生軟電離質子轉移，形成強烈准分子離子 ${protParent.formula}`
+      })
+    );
 
     // Reagent-gas specific adduct ions!
     if (reagentGas === 'Ammonia') {
       const nh4Adduct = deriveAdductIon(mol, '[M+NH4]+', 300, 240);
-      candidates.push({
-        id: 'GCMS_CI_MNH4_pos',
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: nh4Adduct.mz,
-        mz: nh4Adduct.mz,
-        formula: nh4Adduct.formula,
-        neutralFormula: parentFormula,
-        smiles: nh4Adduct.smiles,
-        canonicalSmiles: nh4Adduct.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: nh4Adduct.ionExactMass,
-        charge: 1,
-        ionType: '[M+NH4]+',
-        mechanism: 'NH₃ CI 特徵反應氣加合物：銨根配位陽離子 ([M+NH₄]⁺, +18.0338 Da)',
-        fragmentationPathway: 'NH3 CI Adduct Formation → [M+NH4]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: 'High',
-        confidence: 'High',
-        sourceRule: 'GCMS_CI_AmmoniaAdduct',
-        heuristicScore: 92.0,
-        image: nh4Adduct.image,
-        explanation: '氨氣作為 CI 反應氣時，極性官能基與 NH₄⁺ 形成極強之特徵 [M+NH₄]⁺ 峰',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, nh4Adduct, {
+          id: 'GCMS_CI_MNH4_pos',
+          polarity: 'Positive',
+          ionType: '[M+NH4]+',
+          mechanism: 'NH₃ CI 特徵反應氣加合物：銨根配位陽離子 ([M+NH₄]⁺, +18.0338 Da)',
+          fragmentationPathway: 'NH3 CI Adduct Formation → [M+NH4]+',
+          priority: 'High',
+          confidence: 'High',
+          sourceRule: 'GCMS_CI_AmmoniaAdduct',
+          heuristicScore: 92.0,
+          explanation: '氨氣作為 CI 反應氣時，極性官能基與 NH₄⁺ 形成極強之特徵 [M+NH₄]⁺ 峰'
+        })
+      );
     } else if (reagentGas === 'Methane') {
       // Methane CI: [M+C2H5]+ (+29.0386 Da) and [M+C3H5]+ (+41.0386 Da)
       const c2h5Counts = {
@@ -142,34 +122,20 @@ export function runGcMsFragmentation(
         H: (parentStoich.atomCounts['H'] || 0) + 5
       };
       const c2h5Mass = Number((parentMass + METHANE_CI_C2H5_ADDUCT_MASS).toFixed(4));
-      candidates.push({
-        id: 'GCMS_CI_MC2H5_pos',
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: c2h5Mass,
-        mz: c2h5Mass,
-        formula: formatHillFormula(c2h5Counts, 1, false),
-        neutralFormula: parentFormula,
-        smiles: parentSmiles,
-        canonicalSmiles: parentSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: c2h5Mass,
-        charge: 1,
-        ionType: '[M+C2H5]+',
-        mechanism: 'CH₄ CI 特徵乙基加合物離子 ([M+C₂H₅]⁺, M + 29.0386 Da)',
-        fragmentationPathway: 'Methane CI Reagent Addition → [M+C2H5]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: 'Medium',
-        confidence: 'High',
-        sourceRule: 'GCMS_CI_MethaneAdduct_C2H5',
-        heuristicScore: 68.0,
-        image: parentImg,
-        explanation: '甲烷電漿中之 C₂H₅⁺ 反應離子與母分子加合產生 M+29 特徵確認峰',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, parentAsIon(ctx, formatHillFormula(c2h5Counts, 1, false), c2h5Mass), {
+          id: 'GCMS_CI_MC2H5_pos',
+          polarity: 'Positive',
+          ionType: '[M+C2H5]+',
+          mechanism: 'CH₄ CI 特徵乙基加合物離子 ([M+C₂H₅]⁺, M + 29.0386 Da)',
+          fragmentationPathway: 'Methane CI Reagent Addition → [M+C2H5]+',
+          priority: 'Medium',
+          confidence: 'High',
+          sourceRule: 'GCMS_CI_MethaneAdduct_C2H5',
+          heuristicScore: 68.0,
+          explanation: '甲烷電漿中之 C₂H₅⁺ 反應離子與母分子加合產生 M+29 特徵確認峰'
+        })
+      );
     } else if (reagentGas === 'Isobutane') {
       // Isobutane CI: [M+C4H9]+ (+57.0699 Da)
       const c4h9Counts = {
@@ -178,34 +144,20 @@ export function runGcMsFragmentation(
         H: (parentStoich.atomCounts['H'] || 0) + 9
       };
       const c4h9Mass = Number((parentMass + ISOBUTANE_CI_C4H9_ADDUCT_MASS).toFixed(4));
-      candidates.push({
-        id: 'GCMS_CI_MC4H9_pos',
-        technique: 'GC-MS',
-        polarity: 'Positive',
-        precursorMz: c4h9Mass,
-        mz: c4h9Mass,
-        formula: formatHillFormula(c4h9Counts, 1, false),
-        neutralFormula: parentFormula,
-        smiles: parentSmiles,
-        canonicalSmiles: parentSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: c4h9Mass,
-        charge: 1,
-        ionType: '[M+C4H9]+',
-        mechanism: 'i-C₄H₁₀ CI 特徵叔丁基加合物離子 ([M+C₄H₉]⁺, M + 57.0699 Da)',
-        fragmentationPathway: 'Isobutane CI Reagent Addition → [M+C4H9]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: 'Medium',
-        confidence: 'High',
-        sourceRule: 'GCMS_CI_IsobutaneAdduct',
-        heuristicScore: 64.0,
-        image: parentImg,
-        explanation: '異丁烷 CI 電漿中之 t-C₄H₉⁺ 與母分子形成 M+57 加合物確認峰',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, parentAsIon(ctx, formatHillFormula(c4h9Counts, 1, false), c4h9Mass), {
+          id: 'GCMS_CI_MC4H9_pos',
+          polarity: 'Positive',
+          ionType: '[M+C4H9]+',
+          mechanism: 'i-C₄H₁₀ CI 特徵叔丁基加合物離子 ([M+C₄H₉]⁺, M + 57.0699 Da)',
+          fragmentationPathway: 'Isobutane CI Reagent Addition → [M+C4H9]+',
+          priority: 'Medium',
+          confidence: 'High',
+          sourceRule: 'GCMS_CI_IsobutaneAdduct',
+          heuristicScore: 64.0,
+          explanation: '異丁烷 CI 電漿中之 t-C₄H₉⁺ 與母分子形成 M+57 加合物確認峰'
+        })
+      );
     }
   } else {
     // Electron Ionization (EI) -> Odd-electron Molecular Radical Cation M+.
@@ -218,34 +170,20 @@ export function runGcMsFragmentation(
         : 48.0;
     const mRadMz = Number((parentMass - ELECTRON_MASS).toFixed(4));
 
-    candidates.push({
-      id: 'GCMS_Prec_Mrad_pos',
-      technique: 'GC-MS',
-      polarity: 'Positive',
-      precursorMz: mRadMz,
-      mz: mRadMz,
-      formula: `${parentFormula}+.`,
-      neutralFormula: parentFormula,
-      smiles: parentSmiles,
-      canonicalSmiles: parentSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: mRadMz,
-      charge: 1,
-      ionType: 'M+.',
-      mechanism: `EI (${ee} eV) 電子撞擊直接游離分子自由基陽離子 (Molecular Radical Cation M⁺•)`,
-      fragmentationPathway: `EI (${ee} eV) Direct Ionization → M+.`,
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: isAromaticOrRigid || regime.eeRegime === 'soft_ei' ? 'High' : 'Medium',
-      confidence: 'High',
-      sourceRule: 'GCMS_EI_MolecularIon',
-      heuristicScore: molIonScore,
-      image: parentImg,
-      explanation: `${ee} eV 電子束撞擊脫除一個價電子，形成奇數電子自由基陽離子 ${parentFormula}⁺• (m/z ${mRadMz.toFixed(4)})`,
-      parameterContext
-    });
+    candidates.push(
+      precursorCandidate(ctx, parentAsIon(ctx, `${parentFormula}+.`, mRadMz), {
+        id: 'GCMS_Prec_Mrad_pos',
+        polarity: 'Positive',
+        ionType: 'M+.',
+        mechanism: `EI (${ee} eV) 電子撞擊直接游離分子自由基陽離子 (Molecular Radical Cation M⁺•)`,
+        fragmentationPathway: `EI (${ee} eV) Direct Ionization → M+.`,
+        priority: isAromaticOrRigid || regime.eeRegime === 'soft_ei' ? 'High' : 'Medium',
+        confidence: 'High',
+        sourceRule: 'GCMS_EI_MolecularIon',
+        heuristicScore: molIonScore,
+        explanation: `${ee} eV 電子束撞擊脫除一個價電子，形成奇數電子自由基陽離子 ${parentFormula}⁺• (m/z ${mRadMz.toFixed(4)})`
+      })
+    );
   }
 
   // ============================================================================

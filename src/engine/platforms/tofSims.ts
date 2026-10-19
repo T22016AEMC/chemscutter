@@ -35,7 +35,14 @@ import {
 } from '../constants/masses';
 import { verifyFragmentMassBalance } from '../chem/massBalance';
 import { evaluateTofSimsRegime } from '../platform/parameterRegime';
-import { addStructureOnce, buildParentContext, buildParentStructure, createPlatformOutput } from './shared/context';
+import {
+  addStructureOnce,
+  buildParentContext,
+  buildParentStructure,
+  createPlatformOutput,
+  type PlatformContext
+} from './shared/context';
+import { parentAsIon, precursorCandidate } from './shared/precursorIons';
 import { buildSignals } from './shared/signals';
 
 export interface TechniqueRunResult {
@@ -66,6 +73,7 @@ export function runTofSimsFragmentation(
 
   const out = createPlatformOutput();
   const { candidates, structures, seenStructureKeys } = out;
+  const ctx: PlatformContext = { ...parent, technique: 'TOF-SIMS', parameterContext };
 
   // Add Parent Molecule to structures list
   addStructureOnce(
@@ -87,162 +95,91 @@ export function runTofSimsFragmentation(
     // [M+H]+
     const protParent = deriveProtonatedIon(mol, RDKit, 300, 240);
     const mhScore = Math.min(98, Math.max(40, (fg.negativePathEnabled ? 82 : 94) + regime.intactMolecularModifier));
-    candidates.push({
-      id: 'Parent_H_pos',
-      technique: 'TOF-SIMS',
-      polarity: 'Positive',
-      precursorMz: protParent.mz,
-      mz: protParent.mz,
-      formula: protParent.formula,
-      neutralFormula: parentFormula,
-      smiles: protParent.smiles,
-      canonicalSmiles: protParent.canonicalSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: protParent.ionExactMass,
-      charge: 1,
-      ionType: '[M+H]+',
-      mechanism: `表面二次離子碰撞級聯：${protParent.siteDescription}`,
-      fragmentationPathway: `Surface Proton Transfer → [M+H]+`,
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: 'High',
-      confidence: 'High',
-      sourceRule: 'TOF-SIMS_Protonation',
-      heuristicScore: mhScore,
-      image: protParent.image,
-      explanation: `一次離子束 (${primaryIon}) 轟擊樣品表面引發界面質子轉移，生成真實化學式為 ${protParent.formula} 之准分子二次陽離子`,
-      parameterContext
-    });
-
-    // [M+Na]+
-    if (regime.enableAlkaliAdducts) {
-      const naParent = deriveAdductIon(mol, '[M+Na]+', 300, 240);
-      candidates.push({
-        id: 'Parent_Na_pos',
-        technique: 'TOF-SIMS',
+    candidates.push(
+      precursorCandidate(ctx, protParent, {
+        id: 'Parent_H_pos',
         polarity: 'Positive',
-        precursorMz: naParent.mz,
-        mz: naParent.mz,
-        formula: naParent.formula,
-        neutralFormula: parentFormula,
-        smiles: naParent.smiles,
-        canonicalSmiles: naParent.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: naParent.ionExactMass,
-        charge: 1,
+        ionType: '[M+H]+',
+        mechanism: `表面二次離子碰撞級聯：${protParent.siteDescription}`,
+        fragmentationPathway: `Surface Proton Transfer → [M+H]+`,
+        priority: 'High',
+        confidence: 'High',
+        sourceRule: 'TOF-SIMS_Protonation',
+        heuristicScore: mhScore,
+        explanation: `一次離子束 (${primaryIon}) 轟擊樣品表面引發界面質子轉移，生成真實化學式為 ${protParent.formula} 之准分子二次陽離子`
+      })
+    );
+
+    // [M+Na]+ 與 [M+K]+
+    // 已簡化：舊版此處另包一層 if (regime.enableAlkaliAdducts)；TOF-SIMS 的 enableAlkaliAdducts 定義為
+    // enablePositive（parameterRegime.ts），在本區塊內恆為真，因此移除該判斷
+    const naParent = deriveAdductIon(mol, '[M+Na]+', 300, 240);
+    candidates.push(
+      precursorCandidate(ctx, naParent, {
+        id: 'Parent_Na_pos',
+        polarity: 'Positive',
         ionType: '[M+Na]+',
         mechanism: naParent.siteDescription,
         fragmentationPathway: 'Surface Alkali Cationization → [M+Na]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
         priority: 'Medium',
         confidence: 'High',
         sourceRule: 'TOF-SIMS_SodiumAdduct',
         heuristicScore: Math.max(30, 64 + Math.round(regime.intactMolecularModifier * 0.5)),
-        image: naParent.image,
-        explanation: '表面微量鹼金屬 Na⁺ 與極性位點配位形成非共價加合物',
-        parameterContext
-      });
+        explanation: '表面微量鹼金屬 Na⁺ 與極性位點配位形成非共價加合物'
+      })
+    );
 
-      // [M+K]+
-      const kParent = deriveAdductIon(mol, '[M+K]+', 300, 240);
-      candidates.push({
+    const kParent = deriveAdductIon(mol, '[M+K]+', 300, 240);
+    candidates.push(
+      precursorCandidate(ctx, kParent, {
         id: 'Parent_K_pos',
-        technique: 'TOF-SIMS',
         polarity: 'Positive',
-        precursorMz: kParent.mz,
-        mz: kParent.mz,
-        formula: kParent.formula,
-        neutralFormula: parentFormula,
-        smiles: kParent.smiles,
-        canonicalSmiles: kParent.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: kParent.ionExactMass,
-        charge: 1,
         ionType: '[M+K]+',
         mechanism: kParent.siteDescription,
         fragmentationPathway: 'Surface Alkali Cationization → [M+K]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
         priority: 'Low',
         confidence: 'Medium',
         sourceRule: 'TOF-SIMS_PotassiumAdduct',
         heuristicScore: 42.0,
-        image: kParent.image,
-        explanation: '表面微量 K⁺ 配位加合物',
-        parameterContext
-      });
-    }
+        explanation: '表面微量 K⁺ 配位加合物'
+      })
+    );
 
     // [M+Cs]+ ONLY when Cs+ primary ion is used!
     if (regime.enableCsAdduct) {
       const csParent = deriveAdductIon(mol, '[M+Cs]+', 300, 240);
-      candidates.push({
-        id: 'Parent_Cs_pos',
-        technique: 'TOF-SIMS',
-        polarity: 'Positive',
-        precursorMz: csParent.mz,
-        mz: csParent.mz,
-        formula: csParent.formula,
-        neutralFormula: parentFormula,
-        smiles: csParent.smiles,
-        canonicalSmiles: csParent.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: csParent.ionExactMass,
-        charge: 1,
-        ionType: '[M+Cs]+',
-        mechanism: csParent.siteDescription,
-        fragmentationPathway: 'Cs+ Primary Beam Cationization → [M+Cs]+',
-        pathwayStatus: 'Verified Graph Product',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: 'High',
-        confidence: 'High',
-        sourceRule: 'TOF-SIMS_CesiumAdduct',
-        heuristicScore: 78.0,
-        image: csParent.image,
-        explanation: '選用 Cs⁺ 作為一次離子源時，注入表面的銫離子與有機分子形成特徵 [M+Cs]⁺ 加合物',
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, csParent, {
+          id: 'Parent_Cs_pos',
+          polarity: 'Positive',
+          ionType: '[M+Cs]+',
+          mechanism: csParent.siteDescription,
+          fragmentationPathway: 'Cs+ Primary Beam Cationization → [M+Cs]+',
+          priority: 'High',
+          confidence: 'High',
+          sourceRule: 'TOF-SIMS_CesiumAdduct',
+          heuristicScore: 78.0,
+          explanation: '選用 Cs⁺ 作為一次離子源時，注入表面的銫離子與有機分子形成特徵 [M+Cs]⁺ 加合物'
+        })
+      );
     }
 
     // Molecular Radical Cation M+.
     const mRadMass = Number((parentMass - ELECTRON_MASS).toFixed(4));
-    candidates.push({
-      id: 'Parent_radical_pos',
-      technique: 'TOF-SIMS',
-      polarity: 'Positive',
-      precursorMz: mRadMass,
-      mz: mRadMass,
-      formula: `${parentFormula}+.`,
-      neutralFormula: parentFormula,
-      smiles: parentSmiles,
-      canonicalSmiles: parentSmiles,
-      exactMass: parentMass,
-      neutralExactMass: parentMass,
-      ionExactMass: mRadMass,
-      charge: 1,
-      ionType: 'M+.',
-      mechanism: '表面高能碰撞直接電子游離自由基陽離子 (Direct Electron Ionization)',
-      fragmentationPathway: 'Surface Direct Electron Emission → M+.',
-      pathwayStatus: 'Verified Graph Product',
-      massBalanceVerified: true,
-      parentStructureId: 'Parent',
-      priority: 'Medium',
-      confidence: 'High',
-      sourceRule: 'TOF-SIMS_DirectIonization',
-      heuristicScore: Math.max(30, 58 + Math.round(regime.intactMolecularModifier * 0.4)),
-      image: parentImg,
-      explanation: '表面高能碰撞級聯引發外層電子直接脫除，形成奇數電子分子離子',
-      parameterContext
-    });
+    candidates.push(
+      precursorCandidate(ctx, parentAsIon(ctx, `${parentFormula}+.`, mRadMass), {
+        id: 'Parent_radical_pos',
+        polarity: 'Positive',
+        ionType: 'M+.',
+        mechanism: '表面高能碰撞直接電子游離自由基陽離子 (Direct Electron Ionization)',
+        fragmentationPathway: 'Surface Direct Electron Emission → M+.',
+        priority: 'Medium',
+        confidence: 'High',
+        sourceRule: 'TOF-SIMS_DirectIonization',
+        heuristicScore: Math.max(30, 58 + Math.round(regime.intactMolecularModifier * 0.4)),
+        explanation: '表面高能碰撞級聯引發外層電子直接脫除，形成奇數電子分子離子'
+      })
+    );
   }
 
   // [M-H]- (Negative Secondary Ion with genuine deprotonated graph structure)
@@ -254,34 +191,21 @@ export function runTofSimsFragmentation(
         98,
         Math.max(35, (fg.negativePathEnabled ? 94 : 52) + regime.intactMolecularModifier + negBoost)
       );
-      candidates.push({
-        id: 'Parent_H_neg',
-        technique: 'TOF-SIMS',
-        polarity: 'Negative',
-        precursorMz: deprotParent.mz,
-        mz: deprotParent.mz,
-        formula: deprotParent.formula,
-        neutralFormula: parentFormula,
-        smiles: deprotParent.smiles,
-        canonicalSmiles: deprotParent.canonicalSmiles,
-        exactMass: parentMass,
-        neutralExactMass: parentMass,
-        ionExactMass: deprotParent.ionExactMass,
-        charge: -1,
-        ionType: '[M-H]-',
-        mechanism: `陰離子裂解分支：${deprotParent.siteDescription}`,
-        fragmentationPathway: 'Surface Deprotonation → [M-H]-',
-        pathwayStatus: deprotParent.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
-        massBalanceVerified: true,
-        parentStructureId: 'Parent',
-        priority: fg.negativePathEnabled ? 'High' : 'Medium',
-        confidence: 'High',
-        sourceRule: 'TOF-SIMS_Deprotonation',
-        heuristicScore: mhNegScore,
-        image: deprotParent.image,
-        explanation: `母分子脫去一顆質子 H⁺ 形成真實共軛鹼離子式 ${deprotParent.formula} (${deprotParent.smiles})`,
-        parameterContext
-      });
+      candidates.push(
+        precursorCandidate(ctx, deprotParent, {
+          id: 'Parent_H_neg',
+          polarity: 'Negative',
+          ionType: '[M-H]-',
+          mechanism: `陰離子裂解分支：${deprotParent.siteDescription}`,
+          fragmentationPathway: 'Surface Deprotonation → [M-H]-',
+          pathwayStatus: deprotParent.isGraphVerifiedIon ? 'Verified Graph Product' : 'Candidate',
+          priority: fg.negativePathEnabled ? 'High' : 'Medium',
+          confidence: 'High',
+          sourceRule: 'TOF-SIMS_Deprotonation',
+          heuristicScore: mhNegScore,
+          explanation: `母分子脫去一顆質子 H⁺ 形成真實共軛鹼離子式 ${deprotParent.formula} (${deprotParent.smiles})`
+        })
+      );
     }
   }
 
