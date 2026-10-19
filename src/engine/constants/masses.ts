@@ -60,3 +60,39 @@ export const ACETATE_ANION_MASS = 59.01385291; // CH3COO- (2C + 3H + 2O + e-)
 export const CL37_ISOTOPE_SHIFT = 1.99705;  // 37Cl - 35Cl
 export const BR81_ISOTOPE_SHIFT = 1.99795;  // 81Br - 79Br
 export const S34_ISOTOPE_SHIFT = 1.9958;    // 34S - 32S
+
+// ---------------------------------------------------------------------------
+// 以下為三個平台引擎（legacy tofSims／lcMsMs／gcMsFragmentation.ts）中寫死的數值
+// ---------------------------------------------------------------------------
+
+/**
+ * 平台引擎計算 precursorMz（[M+H]+／[M-H]- 前驅物）時寫死的質子質量 1.007276，
+ * 與 PROTON_MASS（1.00727647）不同；保留原值以維持輸出一致。
+ */
+export const PROTON_MASS_LEGACY_ROUNDED = 1.007276;
+
+// GC-MS CI 反應氣加合物的加成質量（直接加在中性母分子質量上即得離子 m/z）
+export const METHANE_CI_C2H5_ADDUCT_MASS = 29.03858;   // C2H5+
+export const ISOBUTANE_CI_C4H9_ADDUCT_MASS = 57.06988; // C4H9+
+
+// GC-MS 二階開環脫乙炔
+export const ACETYLENE_LOSS_MASS = 26.0157;            // C2H2
+export const TROPYLIUM_ION_MZ = 91.0542;               // [C7H7]+，作為 [C5H5]+ 的前驅物 m/z
+export const PHENYL_CATION_MZ = 77.0386;               // [C6H5]+，作為 [C4H3]+ 的前驅物 m/z
+
+// TOF-SIMS 負離子診斷峰（舊版直接寫死、已四捨五入至小數 4 位）
+// 注意：F⁻ 以質量表推算應為 18.9990（18.99840316 + 0.00054858），舊版寫 18.9989
+export const FLUORIDE_ANION_MZ = 18.9989;
+export const FLUORINE_NEUTRAL_MASS_ROUNDED = 18.9984;
+export const CL35_ANION_MZ = 34.9694;
+export const CL35_NEUTRAL_MASS_ROUNDED = 34.9689;
+export const CL37_ANION_MZ = 36.9665;
+export const CL37_NEUTRAL_MASS_ROUNDED = 36.9659;
+export const BR79_ANION_MZ = 78.9189;
+export const BR79_NEUTRAL_MASS_ROUNDED = 78.9183;
+export const BR81_ANION_MZ = 80.9168;
+export const BR81_NEUTRAL_MASS_ROUNDED = 80.9163;
+export const NITRITE_ANION_MZ = 45.9935;               // NO2-
+export const NO2_NEUTRAL_MASS_ROUNDED = 45.9929;
+export const CYANIDE_ANION_MZ = 26.0036;               // CN-
+export const CN_NEUTRAL_MASS_ROUNDED = 26.0031;

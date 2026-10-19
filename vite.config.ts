@@ -10,5 +10,12 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     exclude: ['legacy/**', 'node_modules/**', 'dist/**'],
     testTimeout: 30000,
+    coverage: {
+      provider: 'v8',
+      // 只統計引擎本身；legacy/ 與測試檔不列入
+      include: ['src/engine/**/*.ts'],
+      reporter: ['text', 'json-summary', 'json'],
+      reportsDirectory: 'coverage',
+    },
   },
 });

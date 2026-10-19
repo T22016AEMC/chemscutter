@@ -152,6 +152,45 @@ export const PARAM_VARIANTS: { technique: MassTechnique; suffix: string; config:
 
 export const PARAM_MOLECULES = ['aspirin', 'butyrophenone', 'bromochlorobenzene'];
 
+/**
+ * 擴充對照測試用的額外分子（不屬於標準答案），用來覆蓋標準答案觸及不到的規則分支。
+ */
+export const EXTRA_MOLECULES: Record<string, string> = {
+  benzaldehyde: 'O=Cc1ccccc1',
+  acetophenone: 'CC(=O)c1ccccc1',
+  styrene: 'C=Cc1ccccc1',
+  phenylacetylene: 'C#Cc1ccccc1',
+  iodobenzene: 'Ic1ccccc1',
+  sulfanilamide: 'Nc1ccc(cc1)S(N)(=O)=O',
+  dimethyl_sulfone: 'CS(C)(=O)=O',
+  ethyl_phenylcarbamate: 'CCOC(=O)Nc1ccccc1',
+  diethyl_carbonate: 'CCOC(=O)OCC',
+  diethyl_ether: 'CCOCC',
+  anisole: 'COc1ccccc1',
+  phenol: 'Oc1ccccc1',
+  aniline: 'Nc1ccccc1',
+  triethylamine: 'CCN(CC)CC',
+  n_methylacetamide: 'CNC(C)=O',
+  acetic_acid: 'CC(O)=O',
+  hexanoic_acid: 'CCCCCC(O)=O',
+  methyl_hexanoate: 'CCCCCC(=O)OC',
+  hexanal: 'CCCCCC=O',
+  cyclohexanone: 'O=C1CCCCC1',
+  naphthalene: 'c1ccc2ccccc2c1',
+  pyridine: 'c1ccncc1',
+  indole: 'c1ccc2[nH]ccc2c1',
+  trifluorotoluene: 'FC(F)(F)c1ccccc1',
+  dichloromethane: 'ClCCl',
+  thiophenol: 'Sc1ccccc1',
+  ethylbenzene: 'CCc1ccccc1',
+  propylbenzene: 'CCCc1ccccc1',
+  methionine: 'CSCC[C@H](N)C(O)=O',
+  phenylalanine: 'N[C@@H](Cc1ccccc1)C(O)=O',
+  tetramethylammonium: 'C[N+](C)(C)C',
+  sodium_benzoate: '[Na+].[O-]C(=O)c1ccccc1',
+  testosterone: 'CC12CCC3C(CCC4=CC(=O)CCC34C)C1CCC2O',
+};
+
 export interface Case {
   id: string;
   /** INPUTS 中的輸入名稱 */
@@ -176,6 +215,20 @@ export function buildCases(): Case[] {
         input: MOLECULES[name],
         config: v.config,
       });
+    }
+  }
+  return cases;
+}
+
+/** 擴充對照案例：每個額外分子 × (3 平台預設 config + 11 組參數) */
+export function buildExtraCases(): Case[] {
+  const cases: Case[] = [];
+  for (const [name, input] of Object.entries(EXTRA_MOLECULES)) {
+    for (const technique of TECHNIQUES) {
+      cases.push({ id: `${name}__${techniqueId(technique)}__default`, inputName: name, input, config: { technique } });
+    }
+    for (const v of PARAM_VARIANTS) {
+      cases.push({ id: `${name}__${techniqueId(v.technique)}__${v.suffix}`, inputName: name, input, config: v.config });
     }
   }
   return cases;
