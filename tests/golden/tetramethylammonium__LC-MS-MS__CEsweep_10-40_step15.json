@@ -6,18 +6,18 @@
       "charge": 1,
       "confidence": "High",
       "exactMass": 60.0808,
-      "explanation": "前驅離子移動質子 (Mobile Proton) 引發單鍵異裂，脫去中性 CH2 (14.0157 Da)，生成 C3H11N+",
-      "formula": "C3H11N+",
-      "fragmentationPathway": "[M+H]+ → -CH2 → C3H11N+",
+      "explanation": "單鍵異裂後碎片保留原有的形式電荷，直接形成偶電子離子 C3H10N+",
+      "formula": "C3H10N+",
+      "fragmentationPathway": "[M+H]+ → -CH2 → C3H10N+",
       "heuristicScore": 81.4,
-      "id": "LCMS_Frag_2_pos",
+      "id": "LCMS_Frag_2_ion_pos",
       "imageHash": "3dd42bb704cdfd2baea39faf4cecd6158ffce5e1621433a6bdd0c3ff5f0bab70",
-      "ionExactMass": 61.0886,
-      "ionType": "[Frag+H]+",
+      "ionExactMass": 60.0808,
+      "ionType": "[Frag]+",
       "massBalanceError": 0.0005,
       "massBalanceVerified": true,
-      "mechanism": "CID 電荷導向異裂 (雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage))：氣相質子轉移形成准分子陽離子",
-      "mz": 61.0886,
+      "mechanism": "CID 碰撞誘導異裂 (雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage))：碎片本身帶正形式電荷 (C[NH+](C)C)",
+      "mz": 60.0808,
       "neutralExactMass": 60.0808,
       "neutralFormula": "C3H10N",
       "neutralLoss": "CH2",
@@ -29,7 +29,7 @@
       "precursorMz": 75.1043,
       "priority": "High",
       "smiles": "C[NH+](C)C",
-      "sourceRule": "LCMS_CID_BackboneCleavage",
+      "sourceRule": "LCMS_ChargedFragment",
       "technique": "LC-MS/MS"
     },
     {
@@ -58,37 +58,6 @@
       "priority": "High",
       "smiles": "C[N+](C)(C)C",
       "sourceRule": "LCMS_Protonation",
-      "technique": "LC-MS/MS"
-    },
-    {
-      "canonicalSmiles": "C[NH+](C)C",
-      "charge": -1,
-      "confidence": "Medium",
-      "exactMass": 60.0808,
-      "explanation": "負離子碰撞活化下脫去中性 CH2，負電荷保留於共軛鹼碎片 C3H9N- (C[NH+](C)C)",
-      "formula": "C3H9N-",
-      "fragmentationPathway": "[M-H]- → -CH2 → C3H9N-",
-      "heuristicScore": 73.2,
-      "id": "LCMS_Frag_2_neg",
-      "imageHash": "3dd42bb704cdfd2baea39faf4cecd6158ffce5e1621433a6bdd0c3ff5f0bab70",
-      "ionExactMass": 59.074,
-      "ionType": "[Frag-H]-",
-      "massBalanceError": 0.0005,
-      "massBalanceVerified": true,
-      "mechanism": "CID 負離子骨架異裂 (雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage))：酸性官能基去質子化形成共軛鹼陰離子",
-      "mz": 59.074,
-      "neutralExactMass": 60.0808,
-      "neutralFormula": "C3H10N",
-      "neutralLoss": "CH2",
-      "neutralLossMass": 14.0157,
-      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 25 eV (General)",
-      "parentStructureId": "LCMS_Frag_2",
-      "pathwayStatus": "Candidate",
-      "polarity": "Negative",
-      "precursorMz": 73.0897,
-      "priority": "High",
-      "smiles": "C[NH+](C)C",
-      "sourceRule": "LCMS_CID_NegativeCleavage",
       "technique": "LC-MS/MS"
     },
     {
@@ -140,19 +109,19 @@
   },
   "signals": [
     {
-      "adduct": "[Frag+H]+",
+      "adduct": "[Frag]+",
       "canonicalSmiles": "C[NH+](C)C",
       "charge": 1,
       "confidence": "High",
-      "formula": "C3H11N+",
-      "fragmentationPathway": "[M+H]+ → -CH2 → C3H11N+",
+      "formula": "C3H10N+",
+      "fragmentationPathway": "[M+H]+ → -CH2 → C3H10N+",
       "heuristicScore": 81.4,
-      "id": "LCMS_Frag_2_pos",
-      "ionExactMass": 61.0886,
+      "id": "LCMS_Frag_2_ion_pos",
+      "ionExactMass": 60.0808,
       "massBalanceVerified": true,
-      "mechanism": "CID 電荷導向異裂 (雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage))：氣相質子轉移形成准分子陽離子",
+      "mechanism": "CID 碰撞誘導異裂 (雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage))：碎片本身帶正形式電荷 (C[NH+](C)C)",
       "mode": "Positive",
-      "mz": 61.0886,
+      "mz": 60.0808,
       "neutralExactMass": 60.0808,
       "neutralFormula": "C3H10N",
       "neutralLoss": "CH2",
@@ -163,7 +132,7 @@
       "priority": "High",
       "relative_intensity": 81.4,
       "smiles": "C[NH+](C)C",
-      "sourceRule": "LCMS_CID_BackboneCleavage",
+      "sourceRule": "LCMS_ChargedFragment",
       "type": "產物離子 (LCMS_Frag_2)"
     },
     {
@@ -190,33 +159,6 @@
       "smiles": "C[N+](C)(C)C",
       "sourceRule": "LCMS_Protonation",
       "type": "准分子離子 (Precursor Adduct)"
-    },
-    {
-      "adduct": "[Frag-H]-",
-      "canonicalSmiles": "C[NH+](C)C",
-      "charge": -1,
-      "confidence": "Medium",
-      "formula": "C3H9N-",
-      "fragmentationPathway": "[M-H]- → -CH2 → C3H9N-",
-      "heuristicScore": 73.2,
-      "id": "LCMS_Frag_2_neg",
-      "ionExactMass": 59.074,
-      "massBalanceVerified": true,
-      "mechanism": "CID 負離子骨架異裂 (雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage))：酸性官能基去質子化形成共軛鹼陰離子",
-      "mode": "Negative",
-      "mz": 59.074,
-      "neutralExactMass": 60.0808,
-      "neutralFormula": "C3H10N",
-      "neutralLoss": "CH2",
-      "neutralLossMass": 14.0157,
-      "parameterContext": "LC-MS/MS Generic, QTOF, CID, CE 25 eV (General)",
-      "parentStructureId": "LCMS_Frag_2",
-      "pathwayStatus": "Candidate",
-      "priority": "High",
-      "relative_intensity": 73.2,
-      "smiles": "C[NH+](C)C",
-      "sourceRule": "LCMS_CID_NegativeCleavage",
-      "type": "產物離子 (LCMS_Frag_2)"
     },
     {
       "adduct": "[Frag+H]+",
@@ -312,7 +254,7 @@
     },
     {
       "canonicalSmiles": "C[NH+](C)C",
-      "charge": 0,
+      "charge": 1,
       "confidence": "High",
       "exact_mass": 60.0808,
       "formula": "C3H10N+",
@@ -351,19 +293,11 @@
           "priority": "High"
         },
         {
-          "formula": "C3H11N+",
-          "id": "LCMS_Frag_2_pos",
-          "ionType": "[Frag+H]+",
+          "formula": "C3H10N+",
+          "id": "LCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
           "likelihood": "Dominant",
-          "mz": 61.0886,
-          "priority": "High"
-        },
-        {
-          "formula": "C3H9N-",
-          "id": "LCMS_Frag_2_neg",
-          "ionType": "[Frag-H]-",
-          "likelihood": "Dominant",
-          "mz": 59.074,
+          "mz": 60.0808,
           "priority": "High"
         },
         {
@@ -382,11 +316,11 @@
       "regimeSummary": "中能區：一階與二階產物離子並存",
       "topCandidates": [
         {
-          "formula": "C3H11N+",
-          "id": "LCMS_Frag_2_pos",
-          "ionType": "[Frag+H]+",
+          "formula": "C3H10N+",
+          "id": "LCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
           "likelihood": "Dominant",
-          "mz": 61.0886,
+          "mz": 60.0808,
           "priority": "High"
         },
         {
@@ -395,14 +329,6 @@
           "ionType": "[M+H]+",
           "likelihood": "Dominant",
           "mz": 75.1043,
-          "priority": "High"
-        },
-        {
-          "formula": "C3H9N-",
-          "id": "LCMS_Frag_2_neg",
-          "ionType": "[Frag-H]-",
-          "likelihood": "Prominent",
-          "mz": 59.074,
           "priority": "High"
         },
         {
@@ -429,19 +355,11 @@
           "priority": "High"
         },
         {
-          "formula": "C3H11N+",
-          "id": "LCMS_Frag_2_pos",
-          "ionType": "[Frag+H]+",
+          "formula": "C3H10N+",
+          "id": "LCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
           "likelihood": "Dominant",
-          "mz": 61.0886,
-          "priority": "High"
-        },
-        {
-          "formula": "C3H9N-",
-          "id": "LCMS_Frag_2_neg",
-          "ionType": "[Frag-H]-",
-          "likelihood": "Prominent",
-          "mz": 59.074,
+          "mz": 60.0808,
           "priority": "High"
         },
         {

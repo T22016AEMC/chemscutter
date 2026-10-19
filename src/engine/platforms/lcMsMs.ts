@@ -33,6 +33,8 @@ import {
   residualIonCandidate
 } from './shared/neutralLossProducts';
 import {
+  chargedFragmentCandidate,
+  chargedFragmentIonInfo,
   forEachSingleBondFragment,
   fragmentIonCandidate,
   fragmentStructure
@@ -492,9 +494,53 @@ export function runLcMsMsFragmentation(
           score: Number(baseScore.toFixed(1)),
           priority,
           mode: regime.enableNegative ? 'Both' : 'Positive',
-          mechanism: `${fragMethod} 碰撞誘導異裂：${frag.bondDescription}`
+          mechanism: `${fragMethod} 碰撞誘導異裂：${frag.bondDescription}`,
+          ion: visit.charge !== 0 ? chargedFragmentIonInfo(visit) : undefined
         })
       );
+
+      // 碎片本身帶形式電荷：只產生該離子本身（[Frag]+／[Frag]-），不再推導 [Frag+H]+ 與 [Frag-H]-
+      if (visit.charge !== 0) {
+        // 分數、優先度、過濾條件（含低質量截止）與 precursorMz 沿用 [Frag+H]+
+        if (visit.charge > 0 && regime.enablePositive && visit.stoich.mz >= lowMassCutoffMz) {
+          candidates.push(
+            chargedFragmentCandidate(ctx, visit, {
+              // LEGACY-QUIRK(Q19): parentMass + 1.007276 並四捨五入至 4 位（TOF-SIMS 未四捨五入）
+              precursorMz: Number((parentMass + PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
+              mechanism: `${fragMethod} 碰撞誘導異裂 (${frag.bondDescription})：碎片本身帶正形式電荷 (${frag.smiles})`,
+              fragmentationPathway: `[M+H]+ → -${mb.neutralLossFormula} → ${visit.stoich.ionicFormula}`,
+              priority,
+              confidence: 'High',
+              sourceRule: 'LCMS_ChargedFragment',
+              heuristicScore: Number(baseScore.toFixed(1)),
+              explanation: `單鍵異裂後碎片保留原有的形式電荷，直接形成偶電子離子 ${visit.stoich.ionicFormula}`
+            })
+          );
+        }
+        // 分數、優先度、過濾條件（含低質量截止）與 precursorMz 沿用 [Frag-H]-
+        if (
+          visit.charge < 0 &&
+          regime.enableNegative &&
+          (fg.negativePathEnabled || frag.exactMass > 55) &&
+          visit.stoich.mz >= lowMassCutoffMz
+        ) {
+          candidates.push(
+            chargedFragmentCandidate(ctx, visit, {
+              // LEGACY-QUIRK(Q19): parentMass - 1.007276 並四捨五入至 4 位（TOF-SIMS 未四捨五入）
+              precursorMz: Number((parentMass - PROTON_MASS_LEGACY_ROUNDED).toFixed(4)),
+              mechanism: `${fragMethod} 負離子骨架異裂 (${frag.bondDescription})：碎片本身帶負形式電荷 (${frag.smiles})`,
+              fragmentationPathway: `[M-H]- → -${mb.neutralLossFormula} → ${visit.stoich.ionicFormula}`,
+              priority,
+              // LEGACY-QUIRK(Q26): 沿用 LC-MS/MS [Frag-H]- 的 confidence（Medium；TOF-SIMS 為 High）
+              confidence: 'Medium',
+              sourceRule: 'LCMS_ChargedFragment',
+              heuristicScore: Number((baseScore * 0.9).toFixed(1)),
+              explanation: `單鍵異裂後碎片保留原有的形式電荷，直接形成偶電子離子 ${visit.stoich.ionicFormula}`
+            })
+          );
+        }
+        return;
+      }
 
       // Positive: Protonated H-transfer product ion [Frag+H]+
       if (regime.enablePositive) {

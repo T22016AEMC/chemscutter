@@ -51,6 +51,8 @@ import {
 import {
   analyzeDirectCation,
   directCationCandidate,
+  chargedFragmentCandidate,
+  chargedFragmentIonInfo,
   forEachSingleBondFragment,
   fragmentAsRadicalIon,
   fragmentIonCandidate,
@@ -674,9 +676,49 @@ export function runTofSimsFragmentation(
           priority,
           // LEGACY-QUIRK(Q24): 只看分子是否有負離子路徑，不看使用者設定的極性
           mode: fg.negativePathEnabled ? 'Both' : 'Positive',
-          mechanism: `TOF-SIMS ${frag.bondDescription}`
+          mechanism: `TOF-SIMS ${frag.bondDescription}`,
+          ion: visit.charge !== 0 ? chargedFragmentIonInfo(visit) : undefined
         })
       );
+
+      // 碎片本身帶形式電荷：只產生該離子本身（[Frag]+／[Frag]-），
+      // 不再推導 [Frag+H]+、[Frag]+.、[Frag-H]- 與直接異裂陽離子
+      if (visit.charge !== 0) {
+        if (visit.charge > 0 && regime.enablePositive) {
+          // 分數、優先度與 precursorMz 沿用 [Frag+H]+
+          candidates.push(
+            chargedFragmentCandidate(ctx, visit, {
+              // LEGACY-QUIRK(Q19): parentMass + 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+              precursorMz: parentMass + PROTON_MASS_LEGACY_ROUNDED,
+              mechanism: `${frag.bondDescription}：碎片本身帶正形式電荷，直接以離子形式脫附 (${frag.smiles})`,
+              fragmentationPathway: `Bond Cleavage → ${visit.stoich.ionicFormula}`,
+              priority,
+              confidence,
+              sourceRule: 'TOF-SIMS_ChargedFragment',
+              heuristicScore: Number(baseScore.toFixed(1)),
+              explanation: `單鍵斷裂後碎片保留原有的形式電荷，直接形成偶電子離子 ${visit.stoich.ionicFormula}`
+            })
+          );
+        }
+        if (visit.charge < 0 && regime.enableNegative && fg.negativePathEnabled) {
+          // 分數、優先度、過濾條件與 precursorMz 沿用 [Frag-H]-
+          candidates.push(
+            chargedFragmentCandidate(ctx, visit, {
+              // LEGACY-QUIRK(Q19): parentMass - 1.007276，未四捨五入（LC-MS/MS 有四捨五入）
+              precursorMz: parentMass - PROTON_MASS_LEGACY_ROUNDED,
+              mechanism: `${frag.bondDescription}：碎片本身帶負形式電荷，直接以離子形式脫附 (${frag.smiles})`,
+              fragmentationPathway: `Bond Cleavage → ${visit.stoich.ionicFormula}`,
+              priority,
+              // LEGACY-QUIRK(Q26): 沿用 TOF-SIMS [Frag-H]- 的 confidence（High；LC-MS/MS 為 Medium）
+              confidence,
+              sourceRule: 'TOF-SIMS_ChargedFragment',
+              heuristicScore: Number((baseScore * 0.9).toFixed(1)),
+              explanation: `單鍵斷裂後碎片保留原有的形式電荷，直接形成偶電子離子 ${visit.stoich.ionicFormula}`
+            })
+          );
+        }
+        return;
+      }
 
       // 4a. Direct Heterolytic Cation (e.g. Acylium R-[C+]=O or Carbocation R+) if available
       if (regime.enablePositive && frag.directCationMol && frag.directCationMz) {
@@ -720,7 +762,7 @@ export function runTofSimsFragmentation(
 
       // 4c. Homolytic Radical Cation [Frag]+. (Enabled only when regime allows homolytic radicals)
       if (regime.enablePositive && regime.enableHomolyticRadicals) {
-        // LEGACY-QUIRK(Q3): 離子式以字串接 "+."、m/z 以中性質量減電子質量計算；碎片本身帶形式電荷時兩者皆錯（如 C6H6NO++.）
+        // 中性碎片的自由基陽離子：離子式為中性式加 "+."，m/z 為中性質量減電子質量
         const radMz = Number((frag.exactMass - ELECTRON_MASS).toFixed(4));
         candidates.push(
           fragmentIonCandidate(ctx, visit, fragmentAsRadicalIon(frag, `${frag.formula}+.`, radMz), {

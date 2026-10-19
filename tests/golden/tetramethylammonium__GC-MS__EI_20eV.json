@@ -96,20 +96,20 @@
       "charge": 1,
       "confidence": "High",
       "exactMass": 60.0808,
-      "explanation": "20 eV 條件下單鍵斷裂伴隨氫重排產生的離子 C3H10N+⁺•",
-      "formula": "C3H10N++.",
-      "fragmentationPathway": "M+. → Cleavage & H-Rearrangement → C3H10N++.",
-      "heuristicScore": 54.2,
-      "id": "GCMS_Frag_2_rad",
+      "explanation": "單鍵斷裂後碎片保留原有的形式電荷，直接形成偶電子離子 C3H10N+",
+      "formula": "C3H10N+",
+      "fragmentationPathway": "M+. → Bond Cleavage → C3H10N+",
+      "heuristicScore": 58.2,
+      "id": "GCMS_Frag_2_ion_pos",
       "imageHash": "3dd42bb704cdfd2baea39faf4cecd6158ffce5e1621433a6bdd0c3ff5f0bab70",
-      "ionExactMass": 60.0803,
-      "ionType": "[Frag]+.",
+      "ionExactMass": 60.0808,
+      "ionType": "[Frag]+",
       "massBalanceError": 0.0005,
       "massBalanceVerified": true,
-      "mechanism": "EI 雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage) 伴隨氫轉移",
-      "mz": 60.0803,
+      "mechanism": "EI 雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)：碎片本身帶正形式電荷 (C[NH+](C)C)",
+      "mz": 60.0808,
       "neutralExactMass": 60.0808,
-      "neutralFormula": "C3H10N+",
+      "neutralFormula": "C3H10N",
       "neutralLoss": "CH2",
       "neutralLossMass": 14.0157,
       "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
@@ -119,7 +119,7 @@
       "precursorMz": 74.097,
       "priority": "Medium",
       "smiles": "C[NH+](C)C",
-      "sourceRule": "GCMS_HomolyticCleavage",
+      "sourceRule": "GCMS_ChargedFragment",
       "technique": "GC-MS"
     }
   ],
@@ -219,30 +219,30 @@
       "type": "碎片離子 (GCMS_Frag_1)"
     },
     {
-      "adduct": "[Frag]+.",
+      "adduct": "[Frag]+",
       "canonicalSmiles": "C[NH+](C)C",
       "charge": 1,
       "confidence": "High",
-      "formula": "C3H10N++.",
-      "fragmentationPathway": "M+. → Cleavage & H-Rearrangement → C3H10N++.",
-      "heuristicScore": 54.2,
-      "id": "GCMS_Frag_2_rad",
-      "ionExactMass": 60.0803,
+      "formula": "C3H10N+",
+      "fragmentationPathway": "M+. → Bond Cleavage → C3H10N+",
+      "heuristicScore": 58.2,
+      "id": "GCMS_Frag_2_ion_pos",
+      "ionExactMass": 60.0808,
       "massBalanceVerified": true,
-      "mechanism": "EI 雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage) 伴隨氫轉移",
+      "mechanism": "EI 雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)：碎片本身帶正形式電荷 (C[NH+](C)C)",
       "mode": "Positive",
-      "mz": 60.0803,
+      "mz": 60.0808,
       "neutralExactMass": 60.0808,
-      "neutralFormula": "C3H10N+",
+      "neutralFormula": "C3H10N",
       "neutralLoss": "CH2",
       "neutralLossMass": 14.0157,
       "parameterContext": "GC-MS EI (20 eV), Quadrupole, Low-Energy Soft EI Regime",
       "parentStructureId": "GCMS_Frag_2",
       "pathwayStatus": "Verified Graph Product",
       "priority": "Medium",
-      "relative_intensity": 54.2,
+      "relative_intensity": 58.2,
       "smiles": "C[NH+](C)C",
-      "sourceRule": "GCMS_HomolyticCleavage",
+      "sourceRule": "GCMS_ChargedFragment",
       "type": "碎片離子 (GCMS_Frag_2)"
     }
   ],
@@ -314,11 +314,11 @@
       "heuristicScore": 54.2,
       "id": "GCMS_Frag_2",
       "imageHash": "3dd42bb704cdfd2baea39faf4cecd6158ffce5e1621433a6bdd0c3ff5f0bab70",
-      "ionExactMass": 60.0803,
+      "ionExactMass": 60.0808,
       "massBalanceVerified": true,
       "mechanism": "EI (20 eV) 雜原子單鍵斷裂 (C-O / C-N / C-S Cleavage)",
       "mode": "Positive",
-      "mz": 60.0803,
+      "mz": 60.0808,
       "name": "EI 裂解碎片 2 (雜原子單鍵斷裂)",
       "neutralExactMass": 60.0808,
       "neutralFormula": "C3H10N+",
@@ -361,11 +361,11 @@
           "priority": "Medium"
         },
         {
-          "formula": "C3H10N++.",
-          "id": "GCMS_Frag_2_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Unfavored",
-          "mz": 60.0803,
+          "formula": "C3H10N+",
+          "id": "GCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
+          "likelihood": "Trace",
+          "mz": 60.0808,
           "priority": "Low"
         }
       ]
@@ -400,11 +400,11 @@
           "priority": "High"
         },
         {
-          "formula": "C3H10N++.",
-          "id": "GCMS_Frag_2_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Trace",
-          "mz": 60.0803,
+          "formula": "C3H10N+",
+          "id": "GCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
+          "likelihood": "Prominent",
+          "mz": 60.0808,
           "priority": "Medium"
         }
       ]
@@ -439,11 +439,11 @@
           "priority": "High"
         },
         {
-          "formula": "C3H10N++.",
-          "id": "GCMS_Frag_2_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Trace",
-          "mz": 60.0803,
+          "formula": "C3H10N+",
+          "id": "GCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
+          "likelihood": "Prominent",
+          "mz": 60.0808,
           "priority": "Medium"
         }
       ]
@@ -478,11 +478,11 @@
           "priority": "High"
         },
         {
-          "formula": "C3H10N++.",
-          "id": "GCMS_Frag_2_rad",
-          "ionType": "[Frag]+.",
-          "likelihood": "Trace",
-          "mz": 60.0803,
+          "formula": "C3H10N+",
+          "id": "GCMS_Frag_2_ion_pos",
+          "ionType": "[Frag]+",
+          "likelihood": "Prominent",
+          "mz": 60.0808,
           "priority": "Medium"
         }
       ]

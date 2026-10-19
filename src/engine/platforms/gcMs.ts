@@ -39,6 +39,8 @@ import {
 import {
   analyzeDirectCation,
   directCationCandidate,
+  chargedFragmentCandidate,
+  chargedFragmentIonInfo,
   forEachSingleBondFragment,
   fragmentAsRadicalIon,
   fragmentIonCandidate,
@@ -518,7 +520,7 @@ export function runGcMsFragmentation(
         const massFrac = parentMass > 0 ? frag.exactMass / parentMass : 0.5;
         const priority: 'High' | 'Medium' | 'Low' = massFrac < 0.7 ? 'High' : 'Medium';
         const score = Math.max(32, Math.min(86, 72 - massFrac * 22));
-        // LEGACY-QUIRK(Q3): 以中性質量減電子質量作為自由基陽離子 m/z；碎片本身帶形式電荷時不正確
+        // 中性碎片的自由基陽離子 m/z：中性質量減電子質量
         const radMz = Number((frag.exactMass - ELECTRON_MASS).toFixed(4));
 
         addStructureOnce(
@@ -530,9 +532,32 @@ export function runGcMsFragmentation(
             priority,
             mode: 'Positive',
             mechanism: `EI (${ee} eV) ${frag.bondDescription}`,
-            ion: { mass: radMz, charge: 1 }
+            // LEGACY-QUIRK(Q33): 中性碎片以自由基陽離子呈現（charge 1、m/z 減電子質量），但 formula 仍為中性式（沒有 "+."）
+            ion: visit.charge !== 0 ? chargedFragmentIonInfo(visit) : { mass: radMz, charge: 1 }
           })
         );
+
+        // 碎片本身帶形式電荷：只產生該離子本身（[Frag]+），不再推導直接異裂陽離子與 [Frag]+.；
+        // GC-MS 只有正離子模式，負電荷碎片不產生候選
+        if (visit.charge !== 0) {
+          if (visit.charge > 0) {
+            // GC-MS 沒有 [Frag+H]+，分數、優先度與 precursorMz 沿用直接異裂陽離子
+            candidates.push(
+              chargedFragmentCandidate(ctx, visit, {
+                // LEGACY-QUIRK(Q19): precursorMz 使用中性母分子質量 parentMass，而非 M+. 的 m/z
+                precursorMz: parentMass,
+                mechanism: `EI ${frag.bondDescription}：碎片本身帶正形式電荷 (${frag.smiles})`,
+                fragmentationPathway: `M+. → Bond Cleavage → ${visit.stoich.ionicFormula}`,
+                priority,
+                confidence: 'High',
+                sourceRule: 'GCMS_ChargedFragment',
+                heuristicScore: Number(Math.min(88, score + 4).toFixed(1)),
+                explanation: `單鍵斷裂後碎片保留原有的形式電荷，直接形成偶電子離子 ${visit.stoich.ionicFormula}`
+              })
+            );
+          }
+          return;
+        }
 
         // Direct even-electron cleavage cation if available (e.g. R-[C+]=O or carbocation)
         if (frag.directCationMol && frag.directCationMz) {
@@ -555,7 +580,7 @@ export function runGcMsFragmentation(
         }
 
         candidates.push(
-          // LEGACY-QUIRK(Q3): 離子式以字串接 "+."；碎片本身帶形式電荷時會出現 C6H6NO++. 這類錯誤
+          // 中性碎片的自由基陽離子 [Frag]+.
           fragmentIonCandidate(ctx, visit, fragmentAsRadicalIon(frag, `${frag.formula}+.`, radMz), {
             idSuffix: '_rad',
             polarity: 'Positive',

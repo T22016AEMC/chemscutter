@@ -14,7 +14,11 @@ export interface FragmentVisit {
   fragId: string;
   /** 從 1 起算，被略過的碎片不計數 */
   counter: number;
-  /** 中性碎片（H 轉移產物）相對母分子的質量平衡 */
+  /** 碎片（H 轉移產物）的化學計量 */
+  stoich: MolGraphStoichiometry;
+  /** 碎片分子圖的淨電荷；不為 0 時碎片本身就是離子（例如硝基斷裂後保留 N+ 的一側） */
+  charge: number;
+  /** 碎片（H 轉移產物）相對母分子的質量平衡 */
   mb: MassBalanceVerification;
 }
 
@@ -38,7 +42,7 @@ export function forEachSingleBondFragment(
     const fragId = `${opts.idPrefix}${counter}`;
     const fragStoich = analyzeRDKitMolStoichiometry(frag.mol, false);
     const mb = verifyAgainstParent(ctx, fragStoich.atomCounts, frag.exactMass);
-    visit({ frag, fragId, counter, mb });
+    visit({ frag, fragId, counter, stoich: fragStoich, charge: fragStoich.netCharge, mb });
     counter++;
   }
 }
@@ -50,8 +54,11 @@ export interface FragmentStructureSpec {
   priority: 'High' | 'Medium' | 'Low';
   mode: string;
   mechanism: string;
-  /** 碎片以離子形式呈現時（GC-MS EI 的自由基陽離子）提供；省略則為中性碎片 */
-  ion?: { mass: number; charge: number };
+  /**
+   * 碎片以離子形式呈現時提供（GC-MS EI 的自由基陽離子、本身帶電的碎片）；省略則為中性碎片。
+   * mass 為離子精確質量；mz 省略時與 mass 相同（電荷絕對值為 1）
+   */
+  ion?: { mass: number; mz?: number; charge: number };
 }
 
 /** 碎片的 structures 項目（以 frag.smiles 去重，由呼叫端使用 addStructureOnce 加入） */
@@ -67,7 +74,7 @@ export function fragmentStructure(v: FragmentVisit, spec: FragmentStructureSpec)
     exact_mass: frag.exactMass,
     neutralExactMass: frag.exactMass,
     ionExactMass: spec.ion ? spec.ion.mass : frag.exactMass,
-    mz: spec.ion ? spec.ion.mass : frag.exactMass,
+    mz: spec.ion ? spec.ion.mz ?? spec.ion.mass : frag.exactMass,
     charge: spec.ion ? spec.ion.charge : 0,
     image: frag.image,
     relative_intensity: spec.score,
@@ -193,6 +200,8 @@ export interface FragmentIonSpec {
   sourceRule: string;
   heuristicScore: number;
   explanation: string;
+  /** 省略時依極性為 1 或 -1 */
+  charge?: number;
 }
 
 /** 碎片離子 candidate：中性質量為碎片質量，質量平衡沿用中性碎片的結果，charge 依極性 */
@@ -216,7 +225,7 @@ export function fragmentIonCandidate(
     exactMass: frag.exactMass,
     neutralExactMass: frag.exactMass,
     ionExactMass: ion.ionExactMass,
-    charge: spec.polarity === 'Negative' ? -1 : 1,
+    charge: spec.charge ?? (spec.polarity === 'Negative' ? -1 : 1),
     ionType: spec.ionType,
     mechanism: spec.mechanism,
     fragmentationPathway: spec.fragmentationPathway,
@@ -234,4 +243,44 @@ export function fragmentIonCandidate(
     explanation: spec.explanation,
     parameterContext: ctx.parameterContext
   };
+}
+
+// ---------------------------------------------------------------------------
+// 本身帶形式電荷的碎片（例如硝基斷裂後保留 N+ 的一側、[OH-]）
+// ---------------------------------------------------------------------------
+
+/** 帶電碎片的 structures 用離子資訊（實際電荷、離子精確質量與 m/z） */
+export function chargedFragmentIonInfo(v: FragmentVisit): { mass: number; mz: number; charge: number } {
+  return { mass: v.stoich.ionExactMass, mz: v.stoich.mz, charge: v.charge };
+}
+
+export type ChargedFragmentSpec = Omit<FragmentIonSpec, 'idSuffix' | 'polarity' | 'ionType' | 'charge' | 'pathwayStatus'>;
+
+/**
+ * 帶電碎片本身作為偶電子離子的 candidate：離子式由元素計數加實際電荷產生，
+ * m/z = (原子質量總和 − 電荷 × 電子質量) / |電荷|，ionType 為 [Frag]+ 或 [Frag]-。
+ * 呼叫端須先確認該極性已啟用。
+ */
+export function chargedFragmentCandidate(
+  ctx: PlatformContext,
+  v: FragmentVisit,
+  spec: ChargedFragmentSpec
+): FragmentCandidate {
+  const positive = v.charge > 0;
+  const ion: FragmentIon = {
+    mz: v.stoich.mz,
+    ionExactMass: v.stoich.ionExactMass,
+    formula: v.stoich.ionicFormula,
+    neutralFormula: v.stoich.neutralFormula,
+    smiles: v.frag.smiles,
+    canonicalSmiles: v.frag.smiles,
+    image: v.frag.image
+  };
+  return fragmentIonCandidate(ctx, v, ion, {
+    ...spec,
+    idSuffix: positive ? '_ion_pos' : '_ion_neg',
+    polarity: positive ? 'Positive' : 'Negative',
+    ionType: positive ? '[Frag]+' : '[Frag]-',
+    charge: v.charge
+  });
 }

@@ -132,7 +132,7 @@
     },
     {
       "canonicalSmiles": "C[NH+](C)C",
-      "charge": 0,
+      "charge": 1,
       "confidence": "High",
       "exact_mass": 60.0808,
       "formula": "C3H10N+",
