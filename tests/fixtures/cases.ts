@@ -252,7 +252,7 @@ export interface Case {
 }
 
 /** 全部 93 個案例：20 種輸入 × 3 平台預設參數，加上 3 個分子 × 11 組參數 */
-export function buildCases(): Case[] {
+function buildCases(): Case[] {
   const cases: Case[] = [];
   for (const [name, input] of INPUTS) {
     for (const technique of TECHNIQUES) {
@@ -273,7 +273,7 @@ export function buildCases(): Case[] {
 }
 
 /** 擴充對照案例：每個額外分子 × (3 平台預設 config + 11 組參數) */
-export function buildExtraCases(): Case[] {
+function buildExtraCases(): Case[] {
   const cases: Case[] = [];
   for (const [name, input] of Object.entries(EXTRA_MOLECULES)) {
     for (const technique of TECHNIQUES) {
@@ -287,7 +287,7 @@ export function buildExtraCases(): Case[] {
 }
 
 /** 缺口補強案例：6 個分子 × 6 組新參數組合 */
-export function buildGapCases(): Case[] {
+function buildGapCases(): Case[] {
   const all: Record<string, string> = { ...MOLECULES, ...EXTRA_MOLECULES };
   const cases: Case[] = [];
   for (const name of GAP_MOLECULES) {
@@ -306,7 +306,7 @@ export function buildGapCases(): Case[] {
 /**
  * 標準答案的完整案例清單（產生腳本與 tests/golden.test.ts 讀取這份）：
  * 原 93 個 + 擴充分子 462 個 + 缺口補強 36 個 = 591 個。
- * 原 93 個的順序與內容不可變動（buildCases() 另供對照測試使用）。
+ * 前 93 個（第一階段建立的原始案例）的順序與內容不可變動。
  */
 export function buildGoldenCases(): Case[] {
   return [...buildCases(), ...buildExtraCases(), ...buildGapCases()];

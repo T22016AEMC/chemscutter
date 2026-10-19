@@ -10,6 +10,8 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     exclude: ['legacy/**', 'node_modules/**', 'dist/**'],
     testTimeout: 30000,
+    // 精簡輸出：通過的測試只顯示點，失敗項目與最後摘要照常顯示
+    reporters: ['dot'],
     coverage: {
       provider: 'v8',
       // 只統計引擎本身；legacy/ 與測試檔不列入

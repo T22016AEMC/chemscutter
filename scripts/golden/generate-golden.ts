@@ -1,10 +1,10 @@
-// 以舊版引擎（legacy/）產生標準答案（golden master），供之後重構時逐一比對。
+// 以新引擎（src/engine/）產生標準答案（golden master），供之後重構時逐一比對。
 // 執行方式：npm run golden:generate
 // 注意：tests/golden/ 的檔案不得手動修改，也不得重新產生，除非指令明確要求。
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runMultiPlatformAnalysis } from '../../legacy/src/server/chemistryEngine';
+import { runMultiPlatformAnalysis } from '../../src/engine';
 import { buildGoldenCases } from '../../tests/fixtures/cases';
 import { toGoldenJson } from '../../tests/fixtures/normalize';
 
