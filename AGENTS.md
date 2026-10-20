@@ -27,6 +27,7 @@ CheMScutter 是質譜候選碎片模擬器：輸入化學結構，預測其在 T
 
 ## legacy/ 規則
 - legacy/ 為唯讀參考：不得修改。src/、tests/、scripts/ 一律不得 import legacy/ 內的任何檔案。
+- 唯一例外：為移除舊版 AI Studio 連結，僅允許把 legacy/README.md 中指向 AI Studio 的連結改成一行「已移除」說明。除此之外不得修改 legacy/ 內任何檔案，也不得擴大解釋這項例外。
 - legacy/app.py、legacy/analyze.py 是更早期的廢棄版本，忽略即可。
 
 ## 化學規則的修改限制（重要）
