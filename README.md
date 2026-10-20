@@ -10,6 +10,10 @@ https://t22016aemc.github.io/chemscutter/
 
 推送到 `main` 會自動執行型別檢查、測試與建置，全部通過後部署到 GitHub Pages；任何一步失敗就不會更新網站。網站首頁底部顯示版本（git commit 短雜湊）與建置時間，可用來確認是否已更新到最新版本。
 
+## 給接手者
+
+請先讀根目錄的 [AGENTS.md](AGENTS.md)（工作守則）與 [docs/](docs/)（計畫表 PLAN.md、已知問題 KNOWN_ISSUES.md、決定紀錄 DECISIONS.md）。其中「化學規則的修改限制」最重要：沒有被明確指示就不得改動；有疑問先問使用者。
+
 ## 目錄結構
 
 - `src/engine/`：化學計算引擎（純 TypeScript）
