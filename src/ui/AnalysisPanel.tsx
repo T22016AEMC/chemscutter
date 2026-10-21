@@ -8,6 +8,7 @@ import type { PreparedStructure } from '../engine/chem/prepareStructure';
 import { FRAME_CHANNEL, fromExpectedWindow, isFrameResponse, type FrameRequest, type FrameResponse } from '../shared/ketcherProtocol';
 import { confirmationLines } from './confirmation';
 import PubChemSearch from './PubChemSearch';
+import ResultsView from './results/ResultsView';
 import { compoundUrl, type PubChemCompound } from './pubchem';
 import './analysis.css';
 
@@ -249,23 +250,7 @@ export default function AnalysisPanel() {
           {busy ? '正在載入分析引擎並計算候選碎片，請稍候…' : result ? `分析完成：${result.technique}，共 ${result.candidates?.length ?? 0} 筆候選。` : ''}
         </p>
       </section>
-      {result && <section className="results" aria-labelledby="results-title">
-        <h2 id="results-title">{result.technique} 分析結果</h2>
-        <p>母體化學式：{result.parent.formula}；精確質量：{result.parent.exact_mass.toFixed(4)} Da。</p>
-        <p className="result-note">分數為候選優先評分（0–100），不代表實測峰強度。化學正確性需自行驗證。</p>
-        {result.candidates?.length ? <div className="table-scroll" tabIndex={0} role="region" aria-label="候選碎片表格，可水平捲動">
-          <table>
-            <caption>候選碎片，共 {result.candidates.length} 筆</caption>
-            <thead><tr><th scope="col">m/z</th><th scope="col">化學式</th><th scope="col">說明</th><th scope="col">分數</th></tr></thead>
-            <tbody>{result.candidates.map((candidate, index) => <tr key={`${candidate.id}-${index}`}>
-              <td className="number">{candidate.mz.toFixed(4)}</td>
-              <td className="formula">{candidate.formula}</td>
-              <td>{candidate.explanation || candidate.mechanism}</td>
-              <td className="number">{candidate.heuristicScore ?? '—'}</td>
-            </tr>)}</tbody>
-          </table>
-        </div> : <p>這次分析沒有產生候選碎片。</p>}
-      </section>}
+      {result && <ResultsView result={result} />}
     </>
   );
 }

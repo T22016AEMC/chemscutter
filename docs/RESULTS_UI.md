@@ -1,0 +1,42 @@
+# 階段 2c 結果畫面
+
+## 使用的資料
+
+所有資料只讀；不修改 AnalysisResult 型別、引擎輸出或化學規則。
+
+| 範圍 | 使用欄位 | 用途 |
+| --- | --- | --- |
+| AnalysisResult | technique、simulationConfig、simulationModeLabel、parameterContext、activeRegimeDescription、disclaimer | 結果標題、此次分析的參數快照與引擎說明 |
+| parent | smiles、formula、exact_mass、standardization_note、removed_components | 標準化後母分子摘要 |
+| candidates | id、technique、polarity、mz、formula、ionType、heuristicScore、confidence、priority、sourceRule | 表格、篩選、排序、分組、棒狀圖及連動 |
+| candidates | explanation、mechanism、fragmentationPathway、pathwayStatus | 說明及詳情；不據此新增信心理由 |
+| candidates | neutralFormula、exactMass、neutralExactMass、ionExactMass、charge、precursorMz | 詳情中的既有質量與電荷；只展示 ionExactMass / abs(charge)，不重算化學質量 |
+| candidates | massBalanceError、massBalanceVerified、neutralLoss、neutralLossMass、parameterContext | 原始質量平衡、中性丟失與參數情境 |
+| candidates | smiles、canonicalSmiles、parentStructureId | Worker 結構繪圖、文字詳情及關聯結構名稱 |
+| structures | id、name | 依 parentStructureId 找關聯名稱，不依公式或質量猜測關聯 |
+| sweepResults | parameterValue、parameterLabel、regimeSummary、topCandidates 的全部欄位 | CE／EE 掃描的可展開表格 |
+
+未使用：signals（不重複建立另一份候選）、candidates.image（改以可見列的原有 SMILES 在 Worker 繪圖）、structures 除 id／name 外的欄位、parent.input_smiles／detected_format／compound_name／original_image／detected_groups／negative_path_enabled／fragmentation_theories。沒有要求引擎增加任何欄位。
+
+## 顯示決定
+
+- 表格每頁二十筆，只有頁面上實際可見的縮圖才啟動繪圖請求；結果卸載時結束繪圖 Worker。相同 SMILES 在此次結果內共用圖片，分頁不重新分析。
+- 圖表以 SVG 自行實作，不新增套件；正、負離子上下分圖，以標題及實線／虛線區分。使用藍色與橙色，選取以黑色粗線、圓點及表格外框標示。
+- 棒高使用既有 heuristicScore；缺少分數時表格標示未提供，圖表不補上數值。固定 0–100 分數軸，明示「分數為啟發式可信度，不是訊號強度」。
+- 最高分的標籤最多五個，依圖表水平距離留白；標籤顯示 m/z，滑鼠／鍵盤焦點提示保留離子式與分數。不合併相同 m/z 的候選；重疊棒仍可透過表格或鍵盤個別選取。
+- 詳情顯示「引擎未提供獨立信心理由」，列出既有說明、機制與途徑狀態。質量平衡的 true／false／缺值分別顯示，不重新驗證，也不把缺值當成失敗。
+- 表格 m/z 四位小數；詳情的質量、電荷及 m/z 保留 JavaScript 數值的原始文字精度。
+- 離子式分段保存 raw；顯示下標、電荷上標及自由基圓點，還原 raw 必須與原始字串逐字相同。保留同位素與其他註記，不推斷 Q7 的多電荷歧義。
+- LC 直接顯示引擎既有 CE 掃描；不修 D2 或 Q20，不把掃描誤稱為每個 CE 重新碎裂，不用掃描的相對可能性取代主表分數。
+- 圖示由唯讀參考檔複製至 public，保留原檔；沒有引入舊版程式碼。發布圖示沿用部署 base。
+
+## 運作與效能驗證方式
+
+- 純函式測試涵蓋排序、組合篩選、極性、座標、範圍與標籤間距。所有 591 個 golden 的母分子、候選、訊號及結構式均檢查格式化後可逐字還原。
+- 瀏覽器效能頁使用正式壓縮建置的相同 ResultsView，載入候選最多的 methionine／TOF-SIMS／Bi3+ 30 keV golden（59 筆），並複製為五百筆獨立識別碼的合成資料。合成資料僅測效能，不視為化學結果，不寫入 golden。
+- 最後三次量測中位數：59 筆 React 提交約 6 ms、提交至兩個動畫影格約 21 ms；500 筆約 8 ms／30 ms。兩種資料量的表格均只掛載二十列；500 筆為二十五頁。數值不含分析引擎與縮圖 WASM 首次下載；瀏覽器暖機及系統負載會造成波動，原始量測另存於驗證產物。
+- 首次互動的比較指標為「導覽起至可操作的直接分析按鈕出現後兩個動畫影格」，使用本機相同瀏覽器、無節流、交錯測試修改前後各三次；不是 Lighthouse TTI 或 INP。中位數約 99 ms → 99 ms，差異在量測波動內。
+- 主頁 JS 約 242 kB → 258 kB（gzip 約 77 kB → 82 kB）；繪圖 Worker 約 65 kB，只有可見結構需要時才建立，RDKit WASM 沿用同一個 Vite 資源網址。
+- 390px iframe 視窗中，內容視寬與頁面寬度均為 375px（扣除瀏覽器捲軸），表格在寬 317px 的容器內捲動，未溢出整頁。截圖、測試頁與原始量測保存在已忽略的 test-results/，不提交。
+
+正式站須在部署成功後以乙酸乙酯及指定橋環 SMILES 逐平台驗證摘要、圖表、排序篩選、縮放、連動、詳情與縮圖；驗證結果另於階段回報列出。完成後等待使用者指示，不開始 2d。

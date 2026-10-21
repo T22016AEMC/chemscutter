@@ -15,16 +15,16 @@
 - 2b-1 Ketcher iframe、文字匯入、RDKit 驗證與多成分確認；上線問題 A、B 分別於 e750a47、0a97fd0 修正並部署驗證（2026-10-21）
 - 測試產物忽略規則：9acd499；確認 test-results/ 沒有 Git 歷史，瀏覽器報告、截圖與快取不提交。
 - 2b-2 PubChem 名稱查詢、最多五筆自行選擇、Ketcher 明確確認與模擬網路測試；保留文字直接分析及既有多成分確認（2026-10-21）。部署及正式站運作驗證結果見本階段回報。
+- 2c 結果摘要、分頁候選表、排序篩選、SVG 分數圖與連動、縮放、完整詳情、可還原的離子式排版、Worker 可見列縮圖與程式圖示。欄位及效能紀錄見 docs/RESULTS_UI.md；部署驗證後回報並等待使用者確認。
 - 3 GitHub Pages 自動部署（提前執行），網站已上線
 
 待做：
-- 2c 結果畫面：質譜圖、候選表、篩選排序、結構圖；加入程式圖示（legacy/public/chemscutter_icon.jpg）
 - 2d 儀器參數表單、Excel 匯出、預設值統一（D1）
 - 2e 依使用者實際操作意見修飾介面
 - 4 圖片辨識（MolScribe），結果須經 Ketcher 讓使用者確認才計算；託管方式未定（Hugging Face 免費方案已不支援 Docker Spaces）
 - 5 未來優化，依優先順序：Q32 永久帶電母體；使用者在畫面上驗證並處理需化學判斷的問題；RDKit 記憶體釋放（P1）；實測峰值上傳與候選比對；完整同位素分布；CFM-ID 對照（授權待確認）；可分享結果的網址
 
-目前停點：完成 2b-2 的檢查、推送、部署及正式站驗證後回報，等待使用者指示，不自行開始 2c。
+目前停點：完成 2c 的檢查、推送、部署及正式站驗證後回報，等待使用者指示，不自行開始 2d。
 
 ## 環境
 - Windows，Node.js v24，Git 2.56；gh CLI 已登入 T22016AEMC
@@ -36,7 +36,7 @@
 - CI：checkout@v7、setup-node@v7（Node 24）、upload-pages-artifact@v5、deploy-pages@v5；若因 ubuntu-latest 轉 Ubuntu 26 出錯，改固定 runner 版本
 - 首頁版本資訊由 scripts/build-info.mjs 注入（git 短雜湊、建置時間）
 - RDKit MinimalLib 沒有 get_molformula() 與標準化方法；分子式由 get_json() 計算；鹽類標準化自行實作於 src/engine/chem/standardize.ts
-- 標準答案 tests/golden/（591 個案例，由 npm run golden:generate 以新引擎產生，npm run golden:diff 檢查差異）；永久化學測試 tests/chemistry/；含 Worker 協定、輸入轉換、多成分確認與 PubChem 模擬網路測試共 1318 個
+- 標準答案 tests/golden/（591 個案例，由 npm run golden:generate 以新引擎產生，npm run golden:diff 檢查差異）；永久化學測試 tests/chemistry/；含 Worker 協定、輸入轉換、多成分確認、PubChem、結果顯示與繪圖測試共 1334 個
 - 完成標準：npm run typecheck、npm run test:clean、npm run build 全部通過
 - test:clean 會先刪除 Vitest 快取，因為 import.meta.glob 的檔案清單會被快取而造成測試假通過
 - 2a 本機正式建置驗證：乙酸乙酯 CCOC(C)=O 三平台候選數依序為 TOF-SIMS 22、LC-MS/MS 13、GC-MS 11；空白、無效 SMILES 提示及錯誤後重試通過，瀏覽器無錯誤。推送後須在正式網址重做三平台運作驗證。

@@ -39,6 +39,9 @@
 - Q34 LC [M+Na]+ 是否納入醯胺
 
 ## 架構與流程決定
+- 2c 結果顯示只讀既有 AnalysisResult：以分頁候選表及自製 SVG 分數圖提供篩選、排序、縮放與選取連動，不新增套件，不修改引擎型別、化學邏輯或標準答案。縮圖透過延後建立的繪圖 Worker 呼叫既有 depiction，只為可見列繪製，使用 img data URL。欄位盤點、顯示取捨與量測方式見 docs/RESULTS_UI.md。
+- 使用者確認：沒有獨立信心理由時明示「引擎未提供獨立信心理由」，僅列原始 explanation、mechanism、pathwayStatus；質量詳情列既有中性／離子質量、電荷及 m/z，只展示離子質量除以電荷絕對值，不重新計算化學質量。離子式顯示 +• 等排版，但保留各段原字串，以逐字還原驗證，不修改資料。
+- 2c 效能驗證採 59 筆最大 golden 及 500 筆合成候選，表格每頁二十筆。LC／GC 的能量掃描直接顯示既有資料，保留 D2／Q20 行為並在畫面說明限制；信心、質量平衡及途徑標示不作二次化學判定。
 - 2b-2 PubChem（2026-10-21）：使用瀏覽器直接 GET `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{encodedName}/cids/JSON?name_type=complete`，或由使用者明確選擇 `name_type=word` 名稱關鍵字模式；再用 `/rest/pug/compound/cid/{cids}/property/Title,IUPACName,MolecularFormula,SMILES,ConnectivitySMILES/JSON` 取得前五筆屬性。完整模式不暗中放寬成關鍵字，清單無論一筆或多筆都須自行選擇。正式名稱顯示 IUPACName，Title 為摘要名稱，連結由驗證過的 CID 組成固定 PubChem 網域。
 - 依實際回應優先取 SMILES，缺少才退回 ConnectivitySMILES；例如 CID 5950 的 SMILES 含 `@@`，ConnectivitySMILES 不含立體標記。端點與兩種欄位語意已對照 [PubChem 官方說明](https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest)。實測 CORS 標頭為 `Access-Control-Allow-Origin: *`，本機瀏覽器跨來源 fetch 成功取得 CID 2244；不加後端、代理或套件。
 - 名稱查詢只傳使用者輸入名稱，後續屬性查詢只傳 PubChem 回傳的 CID，不傳使用者繪圖、SMILES 或 Molfile。請求不帶認證、不送 referrer、不接受重新導向，使用 cache: no-store；資料僅以 React 文字顯示，不插入 HTML。查詢快取最多二十筆，只存在目前頁面的記憶體，不使用持久儲存。頁面清楚提示「請輸入英文名稱或 CAS 號」、資料來源及資料傳送範圍。
