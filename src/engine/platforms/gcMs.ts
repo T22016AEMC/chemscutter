@@ -526,15 +526,17 @@ export function runGcMsFragmentation(
         addStructureOnce(
           out,
           frag.smiles,
-          fragmentStructure(visit, {
-            name: `EI 裂解碎片 ${counter} (${frag.bondDescription.split(' ')[0]})`,
-            score: Number(score.toFixed(1)),
-            priority,
-            mode: 'Positive',
-            mechanism: `EI (${ee} eV) ${frag.bondDescription}`,
-            // LEGACY-QUIRK(Q33): 中性碎片以自由基陽離子呈現（charge 1、m/z 減電子質量），但 formula 仍為中性式（沒有 "+."）
-            ion: visit.charge !== 0 ? chargedFragmentIonInfo(visit) : { mass: radMz, charge: 1 }
-          })
+          {
+            ...fragmentStructure(visit, {
+              name: `EI 裂解碎片 ${counter} (${frag.bondDescription.split(' ')[0]})`,
+              score: Number(score.toFixed(1)),
+              priority,
+              mode: 'Positive',
+              mechanism: `EI (${ee} eV) ${frag.bondDescription}`,
+              ion: visit.charge !== 0 ? chargedFragmentIonInfo(visit) : { mass: radMz, charge: 1 }
+            }),
+            formula: visit.charge === 0 ? `${frag.formula}+.` : frag.formula
+          }
         );
 
         // 碎片本身帶形式電荷：只產生該離子本身（[Frag]+），不再推導直接異裂陽離子與 [Frag]+.；

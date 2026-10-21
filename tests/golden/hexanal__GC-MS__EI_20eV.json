@@ -455,7 +455,7 @@
       "charge": 1,
       "confidence": "High",
       "exact_mass": 30.0106,
-      "formula": "CH2O",
+      "formula": "CH2O+.",
       "fragmentationPathway": "羰基 α-碳單鍵斷裂 (Carbonyl α-Cleavage)",
       "heuristicScore": 65.4,
       "id": "GCMS_Frag_2",

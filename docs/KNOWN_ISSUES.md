@@ -4,6 +4,7 @@
 嚴重度：★★★ 產生錯誤或不存在的候選／錯誤 m/z；★★ 標籤、欄位或說明錯誤；★ 邊界情況或影響極小
 
 ## 已修正或移除
+- Q33 GC 中性單鍵碎片 structures 的 formula 補上 "+."，與 charge 1 及 candidates 一致；108 個 GC 案例、496 筆 formula 更新（2026-10-21）。
 - Q3 帶電碎片以實際電荷計算離子式與 m/z（3655482）
 - Q5 甲氧基與醚基判斷（394e802）
 - Q13 [C5H5]+ 死程式碼已移除（SMILES 無效），待以正確結構重新實作
@@ -37,7 +38,6 @@
 - Q29 ★ 中性丟失帶電產物 id 後綴三平台不同 [LEGACY-QUIRK]
 - Q31 ★ GC 中性丟失帶電產物 charge 固定 1 [LEGACY-QUIRK]
 - Q32 ★★★ 永久帶電母體（四級銨）仍產生 [M+H]+，需改前驅離子整體邏輯
-- Q33 ★ GC 中性單鍵碎片 structures 的 formula 與 charge 不一致（structures 是自由基陽離子 charge 1，formula 卻是中性式）。決定：formula 改為「中性式 + "+."」，與 candidates 一致；影響 108 個 GC 案例。[LEGACY-QUIRK(Q33)] 排入 2a 開頭。
 - Q34 ★ LC [M+Na]+ 條件是否也納入醯胺，待審查
 
 ## 程式品質

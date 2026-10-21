@@ -43,22 +43,8 @@ function chargeConsistent(formula: string, charge: number): boolean {
   return true;
 }
 
-/**
- * 已知例外 LEGACY-QUIRK(Q33)：GC-MS 中性單鍵碎片的 structures 項目以自由基陽離子呈現
- * （charge 1、m/z 為中性質量減電子質量），但 formula 是中性式（沒有 "+."）。
- */
-function isKnownQ33(caseId: string, section: Section, item: Item): boolean {
-  return (
-    caseId.split('__')[1] === 'GC-MS' &&
-    section === 'structures' &&
-    String(item.id).startsWith('GCMS_Frag_') &&
-    item.charge === 1 &&
-    formulaSign(item.formula) === 0
-  );
-}
-
-/** 回傳一個案例中所有違規項目的說明（不含已知例外 Q33） */
-function violations(caseId: string, data: Golden): string[] {
+/** 回傳一個案例中所有違規項目的說明 */
+function violations(data: Golden): string[] {
   const out: string[] = [];
   const sections: [Section, Item[]][] = [
     ['candidates', data.candidates ?? []],
@@ -70,7 +56,7 @@ function violations(caseId: string, data: Golden): string[] {
       const f = bareFormula(item.formula);
       const bad = BAD_PATTERNS.filter((p) => f.includes(p));
       if (bad.length > 0) out.push(`${section} ${item.id}: ${item.formula} 含 ${bad.join('、')}`);
-      if (item.charge !== undefined && !chargeConsistent(item.formula, item.charge) && !isKnownQ33(caseId, section, item)) {
+      if (item.charge !== undefined && !chargeConsistent(item.formula, item.charge)) {
         out.push(`${section} ${item.id}: ${item.formula} 的 charge 為 ${item.charge}`);
       }
     }
@@ -91,10 +77,12 @@ describe('離子式電荷符號', () => {
     expect(chargeConsistent('CH4', 1)).toBe(false);
     expect(chargeConsistent('C6H5-', 1)).toBe(false);
     expect(chargeConsistent('C2H4N2+', 2)).toBe(true);
-    expect(violations('x__TOF-SIMS__default', { candidates: [{ id: 'a', formula: 'C6H6NO++.', charge: 1 }] })).toHaveLength(1);
+    expect(violations({ candidates: [{ id: 'a', formula: 'C6H6NO++.', charge: 1 }] })).toHaveLength(1);
+    expect(violations({ structures: [{ id: 'GCMS_Frag_1', formula: 'CH4', charge: 1 }] })).toHaveLength(1);
+    expect(violations({ structures: [{ id: 'GCMS_Frag_1', formula: 'CH4+.', charge: 1 }] })).toStrictEqual([]);
   });
 
-  it.each(cases.map((c) => [c.id, c.data]))('%s', (id, data) => {
-    expect(violations(id, data)).toStrictEqual([]);
+  it.each(cases.map((c) => [c.id, c.data]))('%s', (_id, data) => {
+    expect(violations(data)).toStrictEqual([]);
   });
 });

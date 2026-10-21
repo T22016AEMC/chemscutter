@@ -10,10 +10,11 @@
 - 1a–1f 引擎重構：標準答案 591 個案例、共用模組、三平台引擎搬移與合併重複段落、移除新舊對照測試
 - 1.5a 修正 m/z 43 乙醯基鎓誤套（Q15）、甲氧基與醚基判斷（Q5）
 - 1.5b LC [M+Na]+ 納入胺甲酸酯；鹽類標準化（Q14）；帶電碎片以實際電荷計算（Q3）
+- Q33 GC 中性單鍵碎片 structures 離子式修正（108 個案例，2026-10-21）
 - 3 GitHub Pages 自動部署（提前執行），網站已上線，目前只有「重建中」首頁
 
 待做：
-- 2a 引擎在瀏覽器 Web Worker 執行，在正式網址驗證 RDKit WASM 可載入；首頁加 SMILES 測試區（輸入 SMILES、選平台、顯示候選碎片純文字表格）；順手修 Q33；移除 legacy/README.md 中的 AI Studio 連結
+- 2a 引擎在瀏覽器 Web Worker 執行，在正式網址驗證 RDKit WASM 可載入；首頁加 SMILES 測試區（輸入 SMILES、選平台、顯示候選碎片純文字表格）；移除 legacy/README.md 中的 AI Studio 連結
 - 2b 結構輸入：Ketcher 繪圖器、SMILES／Molfile 貼上、PubChem 名稱查詢（Ketcher 與 Vite／React 版本相容性是主要風險，需放慢檢查）
 - 2c 結果畫面：質譜圖、候選表、篩選排序、結構圖；加入程式圖示（legacy/public/chemscutter_icon.jpg）
 - 2d 儀器參數表單、Excel 匯出、預設值統一（D1）
