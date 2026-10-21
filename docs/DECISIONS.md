@@ -39,6 +39,11 @@
 - Q34 LC [M+Na]+ 是否納入醯胺
 
 ## 架構與流程決定
+- 2b-2 PubChem（2026-10-21）：使用瀏覽器直接 GET `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{encodedName}/cids/JSON?name_type=complete`，或由使用者明確選擇 `name_type=word` 名稱關鍵字模式；再用 `/rest/pug/compound/cid/{cids}/property/Title,IUPACName,MolecularFormula,SMILES,ConnectivitySMILES/JSON` 取得前五筆屬性。完整模式不暗中放寬成關鍵字，清單無論一筆或多筆都須自行選擇。正式名稱顯示 IUPACName，Title 為摘要名稱，連結由驗證過的 CID 組成固定 PubChem 網域。
+- 依實際回應優先取 SMILES，缺少才退回 ConnectivitySMILES；例如 CID 5950 的 SMILES 含 `@@`，ConnectivitySMILES 不含立體標記。端點與兩種欄位語意已對照 [PubChem 官方說明](https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest)。實測 CORS 標頭為 `Access-Control-Allow-Origin: *`，本機瀏覽器跨來源 fetch 成功取得 CID 2244；不加後端、代理或套件。
+- 名稱查詢只傳使用者輸入名稱，後續屬性查詢只傳 PubChem 回傳的 CID，不傳使用者繪圖、SMILES 或 Molfile。請求不帶認證、不送 referrer、不接受重新導向，使用 cache: no-store；資料僅以 React 文字顯示，不插入 HTML。查詢快取最多二十筆，只存在目前頁面的記憶體，不使用持久儲存。頁面清楚提示「請輸入英文名稱或 CAS 號」、資料來源及資料傳送範圍。
+- 查詢到的結構只載入 Ketcher，不覆寫自行貼入的文字欄位，不送入 Worker。使用者須確認繪圖並按「從 Ketcher 取得結構並分析」，才能進入既有 RDKit 驗證與分析流程；多成分仍需第二次明確確認。重新選擇（包含相同 CID）會撤銷先前的分析準備並重新載圖。
+- 依 [PubChem 請求限制](https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling) 保守限制請求至少間隔 500ms，同一時間只允許一筆名稱查詢，總逾時二十秒並用 AbortController 中止。HTTP 429／503 顯示暫時限流並至少冷卻三十秒，有可讀取的 Retry-After 則遵守較長時間；不自動重試。查無結果、格式異常、網路／離線與逾時分別顯示中文訊息。
 - 2b-1 問題 B（使用者決定）：自行貼上的 SMILES／Molfile 可經 RDKit 驗證後直接分析，不必載入 Ketcher；以 Worker 產生的小結構圖顯示實際分析內容。Ketcher 為選用繪圖器，使用繪圖區內容的按鈕與文字直接分析分開標示。先在 Ketcher 確認才計算的要求，僅保留給之後的 PubChem 名稱查詢與圖片辨識，因為這些來源可能認錯結構。所有路徑仍共用既有標準化與多成分明確確認，不更改化學規則。
 - 直接分析保存原始文字送入既有引擎，保留 SMILES 縮寫／修復及格式回報行為；繪圖路徑維持原本 Molfile 轉 SMILES 的行為。兩者的驗證結果與錯誤狀態分開，文字分析不會被繪圖器載入或同步失敗阻擋。Ketcher 的 setMolecule 可能吞掉例外並發出 FAILURE，因此同步必須同時檢查該事件，失敗不得標為已同步。
 - 2b-1 問題 A：Indigo 的未指定立體組態警告不作為 RDKit 解析失敗。輸入轉換僅攔截不支援的繪圖內容，再以既有 RDKit 解析、消毒及標準化流程驗證；不更改 SMILES 解析行為或化學規則。錯誤分為空白、無法解析、價鍵／消毒失敗、不支援內容、多成分及其他，附來源與原始訊息；重現輸入與證據見 docs/INPUT_FIXES.md。

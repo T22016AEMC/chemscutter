@@ -7,10 +7,14 @@ import type { StructureRequest, StructureResponse } from '../worker/structureSes
 import type { PreparedStructure } from '../engine/chem/prepareStructure';
 import { FRAME_CHANNEL, fromExpectedWindow, isFrameResponse, type FrameRequest, type FrameResponse } from '../shared/ketcherProtocol';
 import { confirmationLines } from './confirmation';
+import PubChemSearch from './PubChemSearch';
+import { compoundUrl, type PubChemCompound } from './pubchem';
 import './analysis.css';
 
 export default function AnalysisPanel() {
   const [smiles, setSmiles] = useState('CCOC(C)=O');
+  const [drawingInput, setDrawingInput] = useState({ value: 'CCOC(C)=O' });
+  const [selectedCompound, setSelectedCompound] = useState<PubChemCompound | null>(null);
   const [technique, setTechnique] = useState<MassTechnique>('TOF-SIMS');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -51,13 +55,30 @@ export default function AnalysisPanel() {
     setSynced(false);
     const timer = setTimeout(() => {
       loadId.current = ++frameId.current;
-      sendFrame({ channel: FRAME_CHANNEL, type: 'load', id: loadId.current, input: smiles });
+      sendFrame({ channel: FRAME_CHANNEL, type: 'load', id: loadId.current, input: drawingInput.value });
     }, 350);
     return () => clearTimeout(timer);
-  }, [smiles, ready]);
+  }, [drawingInput, ready]);
 
   function sendFrame(request: FrameRequest) {
     iframe.current?.contentWindow?.postMessage(request, location.origin);
+  }
+
+  function openDrawing() {
+    if (open) return;
+    openedAt.current = performance.now();
+    setOpen(true);
+    setFrameStatus('正在載入繪圖器與本機 WASM…');
+  }
+
+  function selectCompound(compound: PubChemCompound) {
+    invalidate();
+    source.current = 'drawing';
+    loadId.current = 0;
+    setSynced(false);
+    setSelectedCompound(compound);
+    setDrawingInput({ value: compound.smiles });
+    openDrawing();
   }
 
   function invalidate() {
@@ -169,10 +190,11 @@ export default function AnalysisPanel() {
       <section className="analysis-panel" aria-labelledby="analysis-title">
         <h2 id="analysis-title">結構輸入與分析</h2>
         <p>貼上 SMILES／Molfile 可直接分析，也可選用 Ketcher 繪圖。兩種操作分別使用文字欄位與繪圖區的內容。範例為乙酸乙酯。</p>
-        <p>結構資料只在瀏覽器內處理，不會送到外部服務。繪圖器保留英文介面。</p>
+        <p>結構驗證與分析只在瀏覽器內執行；名稱查詢會把名稱送到 PubChem。繪圖器保留英文介面。</p>
         <div className="input-controls">
+          <PubChemSearch onSelect={selectCompound} disabled={busy} />
           <label htmlFor="smiles">SMILES／Molfile</label>
-          <textarea id="smiles" rows={4} value={smiles} onChange={(event) => { invalidate(); source.current = 'text'; setSynced(false); setSmiles(event.target.value); }}
+          <textarea id="smiles" rows={4} value={smiles} onChange={(event) => { invalidate(); source.current = 'text'; loadId.current = 0; setSynced(false); setSelectedCompound(null); setSmiles(event.target.value); setDrawingInput({ value: event.target.value }); }}
             disabled={busy} spellCheck={false} autoComplete="off" aria-describedby="smiles-help" />
           <small id="smiles-help">例如 CCOC(C)=O；直接分析使用此欄位，不需開啟 Ketcher。繪圖區已開啟時，文字也會同步載入。</small>
           <button type="button" disabled={busy} onClick={analyzeText}>直接分析</button>
@@ -186,7 +208,12 @@ export default function AnalysisPanel() {
               {textPreview.standardization_note && <p>{textPreview.standardization_note}</p>}
             </figcaption>
           </figure>}
-          {!open && <button type="button" onClick={() => { openedAt.current = performance.now(); setOpen(true); setFrameStatus('正在載入繪圖器與本機 WASM…'); }}>開啟 Ketcher 繪圖區</button>}
+          {!open && <button type="button" onClick={openDrawing}>開啟 Ketcher 繪圖區</button>}
+          {selectedCompound && <div className="pubchem-selected" role="status">
+            <p>繪圖區查詢來源：<a href={compoundUrl(selectedCompound.cid)} target="_blank" rel="noopener noreferrer">PubChem CID {selectedCompound.cid}</a>，{selectedCompound.title}；分子式：{selectedCompound.formula}。</p>
+            <p>正式名稱（IUPAC）：{selectedCompound.name}。採用欄位：{selectedCompound.smilesField}。</p>
+            <p>請確認下方 Ketcher 顯示的結構，再按「從 Ketcher 取得結構並分析」。查詢結果不會填入上方文字欄位；「直接分析」仍只使用您自行貼入的文字。</p>
+          </div>}
           {open && <div className="ketcher-container"><iframe ref={iframe} title="Ketcher 結構繪圖器" src={`${import.meta.env.BASE_URL}ketcher/`}
             onError={() => { setDrawingError('繪圖器載入失敗，請重新整理後再試。'); setDrawingDetails('來源：iframe 載入；不影響文字直接分析。'); }} /></div>}
           <p role="status">{frameStatus}</p>

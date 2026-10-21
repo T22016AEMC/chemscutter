@@ -17,6 +17,11 @@ textarea { width: 100%; padding: 10px; font: inherit; font-family: ui-monospace,
 .text-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 8px 0; overflow-wrap: anywhere; }
 .text-preview img { width: 180px; height: 120px; object-fit: contain; }
 .text-preview figcaption { max-width: 100%; }
+.pubchem-search { padding: 16px; background: #edf5f6; border-radius: 6px; }
+.pubchem-results { padding-left: 24px; }
+.pubchem-results li { padding: 12px 0; border-bottom: 1px solid #c5d6dc; overflow-wrap: anywhere; }
+.pubchem-results p { margin: 4px 0; }
+.pubchem-selected { padding: 12px; border: 2px solid #155d70; overflow-wrap: anywhere; }
 label { font-weight: 650; margin-top: 8px; }
 input, select, button { font: inherit; border-radius: 6px; padding: 10px 12px; }
 input, select { width: 100%; border: 1px solid #71868f; background: white; color: inherit; }
