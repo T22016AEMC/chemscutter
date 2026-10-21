@@ -1,0 +1,25 @@
+{
+  "name": "chemscutter-ketcher-frame",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "vite build && node notices.mjs"
+  },
+  "dependencies": {
+    "events": "3.3.0",
+    "ketcher-core": "3.18.0",
+    "ketcher-react": "3.18.0",
+    "ketcher-standalone": "3.18.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.27",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "6.1.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.4"
+  }
+}

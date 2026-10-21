@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && npm run build --prefix packages/ketcher-frame",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck --prefix packages/ketcher-frame",
     "golden:generate": "tsx scripts/golden/generate-golden.ts",
     "test:coverage": "vitest run --coverage",
     "test:clean": "node -e \"for (const d of ['node_modules/.vitest-cache','node_modules/.vite/vitest']) require('fs').rmSync(d,{recursive:true,force:true})\" && vitest run",

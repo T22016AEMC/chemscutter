@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AnalysisResult, MassTechnique } from '../engine/types';
 import { getProfileForConfig } from '../engine/platform/instrumentProfiles';
 import { createAnalysisWorker } from '../worker/client';
-import { techniques, type AnalysisRequest, type AnalysisResponse } from '../worker/protocol';
+import { techniques } from '../worker/protocol';
+import type { StructureRequest, StructureResponse } from '../worker/structureSession';
+import type { PreparedStructure } from '../engine/chem/prepareStructure';
+import { FRAME_CHANNEL, fromExpectedWindow, isFrameResponse, type FrameRequest, type FrameResponse } from '../shared/ketcherProtocol';
+import { confirmationLines } from './confirmation';
 import './analysis.css';
 
 export default function AnalysisPanel() {
@@ -13,9 +17,109 @@ export default function AnalysisPanel() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const requestId = useRef(0);
+  const [open, setOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [synced, setSynced] = useState(false);
+  const [frameStatus, setFrameStatus] = useState('');
+  const [prepared, setPrepared] = useState<PreparedStructure | null>(null);
+  const preparationId = useRef(0);
+  const iframe = useRef<HTMLIFrameElement>(null);
+  const frameId = useRef(0);
+  const loadId = useRef(0);
+  const exportId = useRef(0);
+  const openedAt = useRef(0);
+  const frameHandler = useRef<(message: FrameResponse) => void>(() => {});
+  const workerHandler = useRef<(message: StructureResponse) => void>(() => {});
   const config = getProfileForConfig(technique).defaultConfig;
 
   useEffect(() => () => workerRef.current?.terminate(), []);
+  useEffect(() => {
+    const receive = (event: MessageEvent<unknown>) => {
+      if (fromExpectedWindow(event, location.origin, iframe.current?.contentWindow) && isFrameResponse(event.data)) frameHandler.current(event.data);
+    };
+    window.addEventListener('message', receive);
+    return () => window.removeEventListener('message', receive);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    setSynced(false);
+    const timer = setTimeout(() => {
+      loadId.current = ++frameId.current;
+      sendFrame({ channel: FRAME_CHANNEL, type: 'load', id: loadId.current, input: smiles });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [smiles, ready]);
+
+  function sendFrame(request: FrameRequest) {
+    iframe.current?.contentWindow?.postMessage(request, location.origin);
+  }
+
+  function invalidate() {
+    exportId.current = 0;
+    setPrepared(null);
+    preparationId.current = 0;
+    ++requestId.current;
+    setResult(null);
+    setBusy(false);
+    workerRef.current?.postMessage({ type: 'invalidate', id: requestId.current } satisfies StructureRequest);
+  }
+
+  function sendWorker(request: StructureRequest) {
+    if (!workerRef.current) {
+      const worker = createAnalysisWorker();
+      worker.onmessage = (event: MessageEvent<StructureResponse>) => workerHandler.current(event.data);
+      worker.onerror = workerFailed;
+      worker.onmessageerror = workerFailed;
+      workerRef.current = worker;
+    }
+    workerRef.current.postMessage(request);
+  }
+
+  function runPrepared(confirmed: boolean, id = preparationId.current) {
+    setBusy(true);
+    setError('');
+    try { sendWorker({ type: 'run-prepared', id: ++requestId.current, preparationId: id, confirmed, technique }); }
+    catch { workerFailed(); }
+  }
+
+  workerHandler.current = (response) => {
+    if (response.id !== requestId.current) return;
+    setBusy(false);
+    if (response.type === 'prepared') {
+      preparationId.current = response.id;
+      if (response.structure.multipleComponents) setPrepared(response.structure);
+      else runPrepared(false, response.id);
+    } else if (response.type === 'result') setResult(response.result);
+    else {
+      setError(response.message);
+      if (response.code === 'ENGINE_LOAD_FAILED') {
+        workerRef.current?.terminate();
+        workerRef.current = null;
+      }
+    }
+  };
+
+  frameHandler.current = (response) => {
+    if (response.type === 'ready') {
+      setReady(true);
+      setFrameStatus(`繪圖器已就緒，首次載入耗時 ${((performance.now() - openedAt.current) / 1000).toFixed(2)} 秒。`);
+    } else if (response.type === 'changed') {
+      invalidate();
+      setSynced(true);
+      setError('');
+    } else if (response.type === 'loaded' && response.id === loadId.current) {
+      setSynced(true);
+      setError('');
+    } else if (response.type === 'structure' && response.id === exportId.current) {
+      try { sendWorker({ type: 'prepare', id: ++requestId.current, input: response.structure.molfile }); }
+      catch { workerFailed(); }
+    } else if (response.type === 'error' && (response.id === null || response.id === loadId.current || response.id === exportId.current)) {
+      setBusy(false);
+      setError(response.message);
+      if (response.id === loadId.current) setSynced(false);
+    }
+  };
 
   function workerFailed() {
     workerRef.current?.terminate();
@@ -24,39 +128,15 @@ export default function AnalysisPanel() {
     setError('背景分析中斷，請再試一次。若仍無法分析，請重新整理頁面。');
   }
 
-  function analyze(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function analyze() {
     if (busy) return;
     setError('');
     setResult(null);
-    if (!smiles.trim()) {
-      setError('請輸入 SMILES。');
-      return;
-    }
+    setPrepared(null);
     setBusy(true);
     try {
-      if (!workerRef.current) {
-        const worker = createAnalysisWorker();
-        worker.onmessage = (event: MessageEvent<AnalysisResponse>) => {
-          const response = event.data;
-          if (response.id !== requestId.current) return;
-          setBusy(false);
-          if (response.type === 'result') {
-            setResult(response.result);
-          } else {
-            setError(response.message);
-            if (response.code === 'ENGINE_LOAD_FAILED') {
-              worker.terminate();
-              workerRef.current = null;
-            }
-          }
-        };
-        worker.onerror = workerFailed;
-        worker.onmessageerror = workerFailed;
-        workerRef.current = worker;
-      }
-      const request: AnalysisRequest = { type: 'analyze', id: ++requestId.current, smiles, technique };
-      workerRef.current.postMessage(request);
+      exportId.current = ++frameId.current;
+      sendFrame({ channel: FRAME_CHANNEL, type: 'export', id: exportId.current });
     } catch {
       workerFailed();
     }
@@ -65,13 +145,18 @@ export default function AnalysisPanel() {
   return (
     <>
       <section className="analysis-panel" aria-labelledby="analysis-title">
-        <h2 id="analysis-title">SMILES 測試區</h2>
-        <p>輸入結構並選擇平台，查看候選碎片。範例為乙酸乙酯。</p>
-        <form onSubmit={analyze} noValidate>
-          <label htmlFor="smiles">SMILES</label>
-          <input id="smiles" value={smiles} onChange={(event) => setSmiles(event.target.value)}
+        <h2 id="analysis-title">結構輸入與分析</h2>
+        <p>繪圖或貼上 SMILES／Molfile，先在 Ketcher 確認結構，再取得結構進行分析。範例為乙酸乙酯。</p>
+        <p>結構資料只在瀏覽器內處理，不會送到外部服務。繪圖器保留英文介面。</p>
+        <div className="input-controls">
+          <label htmlFor="smiles">SMILES／Molfile</label>
+          <textarea id="smiles" rows={4} value={smiles} onChange={(event) => { invalidate(); setSynced(false); setSmiles(event.target.value); }}
             disabled={busy} spellCheck={false} autoComplete="off" aria-describedby="smiles-help" />
-          <small id="smiles-help">例如 CCOC(C)=O；若無法辨識，請檢查 SMILES 的內容。</small>
+          <small id="smiles-help">例如 CCOC(C)=O；文字會同步載入已開啟的 Ketcher。也可直接在繪圖器繪圖或貼上結構。</small>
+          {!open && <button type="button" onClick={() => { openedAt.current = performance.now(); setOpen(true); setFrameStatus('正在載入繪圖器與本機 WASM…'); }}>開啟 Ketcher 繪圖區</button>}
+          {open && <div className="ketcher-container"><iframe ref={iframe} title="Ketcher 結構繪圖器" src={`${import.meta.env.BASE_URL}ketcher/`}
+            onError={() => setError('繪圖器載入失敗，請重新整理後再試。')} /></div>}
+          <p role="status">{frameStatus}</p>
           <label htmlFor="technique">分析平台</label>
           <select id="technique" value={technique} disabled={busy}
             onChange={(event) => setTechnique(event.target.value as MassTechnique)}>
@@ -88,8 +173,14 @@ export default function AnalysisPanel() {
             </>}
             {technique === 'GC-MS' && <p>游離方式：{config.ionization}；電子能量：{config.electronEnergy} eV。</p>}
           </div>
-          <button type="submit" disabled={busy}>{busy ? '分析中…' : '開始分析'}</button>
-        </form>
+          <button type="button" disabled={busy || !ready || !synced} onClick={analyze}>{busy ? '處理中…' : '從 Ketcher 取得結構並分析'}</button>
+          {prepared?.multipleComponents && <section className="component-confirmation" aria-labelledby="confirmation-title">
+            <h3 id="confirmation-title">請確認實際分析的成分</h3>
+            <img src={prepared.retainedImage} alt="實際將被分析的保留成分結構" />
+            {confirmationLines(prepared).map((line) => <p key={line}>{line}</p>)}
+            <button type="button" disabled={busy} onClick={() => runPrepared(true)}>確認，只分析保留的成分</button>
+          </section>}
+        </div>
         <p role="status" aria-live="polite">
           {busy ? '正在載入分析引擎並計算候選碎片，請稍候…' : result ? `分析完成：${result.technique}，共 ${result.candidates?.length ?? 0} 筆候選。` : ''}
         </p>
