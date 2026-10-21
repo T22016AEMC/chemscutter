@@ -15,7 +15,7 @@
 - 3 GitHub Pages 自動部署（提前執行），網站已上線
 
 待做：
-- 2b-1 上線修正：A 移除 Indigo 未指定立體組態的誤攔截，補錯誤分類、原始訊息與橋環／稠環往返測試；A、B 各自提交並部署。B 尚未開始，完成兩項後仍等待使用者確認，不開始 2b-2。
+- 2b-1 上線修正：A 已於 e750a47 部署，移除 Indigo 未指定立體組態的誤攔截，補錯誤分類、原始訊息與橋環／稠環往返測試。B 新增不依賴 Ketcher 的文字直接分析、RDKit 小結構圖與欄位錯誤，保留所有路徑的多成分明確確認；A、B 各自提交並部署，完成後仍等待使用者確認，不開始 2b-2。
 - 2b 結構輸入：2b-1 已實作 Ketcher 延後載入 iframe、SMILES／Molfile 同步、RDKit 輸入驗證與多成分明確確認（2026-10-21）；子套件 React 18 與主站 React 19 隔離。本機繪圖器匯入與縮放通過；完成檢查後推送，再驗證正式網站。2b-2 PubChem 名稱查詢須待使用者確認，不得自行開始。
 - 2c 結果畫面：質譜圖、候選表、篩選排序、結構圖；加入程式圖示（legacy/public/chemscutter_icon.jpg）
 - 2d 儀器參數表單、Excel 匯出、預設值統一（D1）
@@ -33,7 +33,7 @@
 - CI：checkout@v7、setup-node@v7（Node 24）、upload-pages-artifact@v5、deploy-pages@v5；若因 ubuntu-latest 轉 Ubuntu 26 出錯，改固定 runner 版本
 - 首頁版本資訊由 scripts/build-info.mjs 注入（git 短雜湊、建置時間）
 - RDKit MinimalLib 沒有 get_molformula() 與標準化方法；分子式由 get_json() 計算；鹽類標準化自行實作於 src/engine/chem/standardize.ts
-- 標準答案 tests/golden/（591 個案例，由 npm run golden:generate 以新引擎產生，npm run golden:diff 檢查差異）；永久化學測試 tests/chemistry/；含 Worker 協定、輸入轉換與多成分確認測試共 1280 個
+- 標準答案 tests/golden/（591 個案例，由 npm run golden:generate 以新引擎產生，npm run golden:diff 檢查差異）；永久化學測試 tests/chemistry/；含 Worker 協定、輸入轉換與多成分確認測試共 1291 個
 - 完成標準：npm run typecheck、npm run test:clean、npm run build 全部通過
 - test:clean 會先刪除 Vitest 快取，因為 import.meta.glob 的檔案清單會被快取而造成測試假通過
 - 2a 本機正式建置驗證：乙酸乙酯 CCOC(C)=O 三平台候選數依序為 TOF-SIMS 22、LC-MS/MS 13、GC-MS 11；空白、無效 SMILES 提示及錯誤後重試通過，瀏覽器無錯誤。推送後須在正式網址重做三平台運作驗證。

@@ -3,6 +3,12 @@ export function unsupportedCheck(check: Record<string, string>): boolean {
   return !!(check.query || check.rgroups || check.pseudoatoms);
 }
 
+/** 只辨識 Molfile 的聚合物／重複單元格式標記，不改寫輸入。 */
+export function unsupportedMolfile(input: string): boolean {
+  return /^M  STY\b[^\r\n]*\b(SRU|MUL|MON|COP|CRO|MOD|MER|GRA)\b/m.test(input)
+    || /^M  V30 \d+ (SRU|MUL|MON|COP|CRO|MOD|MER|GRA)\b/m.test(input);
+}
+
 /** 只辨識輸入格式中的不支援物件，不推斷化合物是否為鹽類或混合物。 */
 export function unsupportedDrawing(ket: string): string | undefined {
   const visit = (value: unknown): string | undefined => {

@@ -15,6 +15,10 @@ export default function AnalysisPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
+  const [drawingError, setDrawingError] = useState('');
+  const [drawingDetails, setDrawingDetails] = useState('');
+  const [textPreview, setTextPreview] = useState<PreparedStructure | null>(null);
+  const source = useRef<'text' | 'drawing'>('text');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const requestId = useRef(0);
@@ -62,6 +66,8 @@ export default function AnalysisPanel() {
     preparationId.current = 0;
     ++requestId.current;
     setResult(null);
+    setTextPreview(null);
+    setError('');
     setBusy(false);
     workerRef.current?.postMessage({ type: 'invalidate', id: requestId.current } satisfies StructureRequest);
   }
@@ -89,6 +95,7 @@ export default function AnalysisPanel() {
     setBusy(false);
     if (response.type === 'prepared') {
       preparationId.current = response.id;
+      if (source.current === 'text') setTextPreview(response.structure);
       if (response.structure.multipleComponents) setPrepared(response.structure);
       else runPrepared(false, response.id);
     } else if (response.type === 'result') setResult(response.result);
@@ -107,19 +114,19 @@ export default function AnalysisPanel() {
       setReady(true);
       setFrameStatus(`繪圖器已就緒，首次載入耗時 ${((performance.now() - openedAt.current) / 1000).toFixed(2)} 秒。`);
     } else if (response.type === 'changed') {
-      invalidate();
+      if (source.current === 'drawing') invalidate();
       setSynced(true);
-      setError('');
+      setDrawingError('');
     } else if (response.type === 'loaded' && response.id === loadId.current) {
       setSynced(true);
-      setError('');
+      setDrawingError('');
     } else if (response.type === 'structure' && response.id === exportId.current) {
-      try { sendWorker({ type: 'prepare', id: ++requestId.current, input: response.structure.molfile }); }
+      try { sendWorker({ type: 'prepare', id: ++requestId.current, input: response.structure.molfile, source: 'drawing' }); }
       catch { workerFailed(); }
     } else if (response.type === 'error' && (response.id === null || response.id === loadId.current || response.id === exportId.current)) {
-      setBusy(false);
-      setError(response.message);
-      setErrorDetails(response.details || '來源：Ketcher；RDKit 尚未執行。');
+      if (source.current === 'drawing') setBusy(false);
+      setDrawingError(response.message);
+      setDrawingDetails(response.details || '來源：Ketcher；RDKit 尚未執行。');
       if (response.id === loadId.current) setSynced(false);
     }
   };
@@ -134,6 +141,8 @@ export default function AnalysisPanel() {
 
   function analyze() {
     if (busy) return;
+    source.current = 'drawing';
+    setTextPreview(null);
     setError('');
     setResult(null);
     setPrepared(null);
@@ -146,21 +155,44 @@ export default function AnalysisPanel() {
     }
   }
 
+  function analyzeText() {
+    if (busy) return;
+    invalidate();
+    source.current = 'text';
+    setBusy(true);
+    try { sendWorker({ type: 'prepare', id: ++requestId.current, input: smiles, source: 'text' }); }
+    catch { workerFailed(); }
+  }
+
   return (
     <>
       <section className="analysis-panel" aria-labelledby="analysis-title">
         <h2 id="analysis-title">結構輸入與分析</h2>
-        <p>繪圖或貼上 SMILES／Molfile，先在 Ketcher 確認結構，再取得結構進行分析。範例為乙酸乙酯。</p>
+        <p>貼上 SMILES／Molfile 可直接分析，也可選用 Ketcher 繪圖。兩種操作分別使用文字欄位與繪圖區的內容。範例為乙酸乙酯。</p>
         <p>結構資料只在瀏覽器內處理，不會送到外部服務。繪圖器保留英文介面。</p>
         <div className="input-controls">
           <label htmlFor="smiles">SMILES／Molfile</label>
-          <textarea id="smiles" rows={4} value={smiles} onChange={(event) => { invalidate(); setSynced(false); setSmiles(event.target.value); }}
+          <textarea id="smiles" rows={4} value={smiles} onChange={(event) => { invalidate(); source.current = 'text'; setSynced(false); setSmiles(event.target.value); }}
             disabled={busy} spellCheck={false} autoComplete="off" aria-describedby="smiles-help" />
-          <small id="smiles-help">例如 CCOC(C)=O；文字會同步載入已開啟的 Ketcher。也可直接在繪圖器繪圖或貼上結構。</small>
+          <small id="smiles-help">例如 CCOC(C)=O；直接分析使用此欄位，不需開啟 Ketcher。繪圖區已開啟時，文字也會同步載入。</small>
+          <button type="button" disabled={busy} onClick={analyzeText}>直接分析</button>
+          <small>使用文字欄位；目前平台：{technique}。{!smiles.trim() && '欄位空白，請先貼上 SMILES／Molfile。'}</small>
+          {error && <div className="error"><p role="alert">{error}</p>
+            <details><summary>技術細節</summary><pre>{errorDetails || '未提供額外訊息。'}</pre></details>
+          </div>}
+          {textPreview && <figure className="text-preview">
+            <img src={textPreview.retainedImage} alt="RDKit 驗證後實際分析的結構" />
+            <figcaption>實際分析的 SMILES：{textPreview.retainedSmiles}
+              {textPreview.standardization_note && <p>{textPreview.standardization_note}</p>}
+            </figcaption>
+          </figure>}
           {!open && <button type="button" onClick={() => { openedAt.current = performance.now(); setOpen(true); setFrameStatus('正在載入繪圖器與本機 WASM…'); }}>開啟 Ketcher 繪圖區</button>}
           {open && <div className="ketcher-container"><iframe ref={iframe} title="Ketcher 結構繪圖器" src={`${import.meta.env.BASE_URL}ketcher/`}
-            onError={() => setError('繪圖器載入失敗，請重新整理後再試。')} /></div>}
+            onError={() => { setDrawingError('繪圖器載入失敗，請重新整理後再試。'); setDrawingDetails('來源：iframe 載入；不影響文字直接分析。'); }} /></div>}
           <p role="status">{frameStatus}</p>
+          {drawingError && <div className="error"><p role="alert">繪圖區：{drawingError}</p>
+            <details><summary>繪圖區技術細節</summary><pre>{drawingDetails}</pre></details>
+          </div>}
           <label htmlFor="technique">分析平台</label>
           <select id="technique" value={technique} disabled={busy}
             onChange={(event) => setTechnique(event.target.value as MassTechnique)}>
@@ -178,6 +210,7 @@ export default function AnalysisPanel() {
             {technique === 'GC-MS' && <p>游離方式：{config.ionization}；電子能量：{config.electronEnergy} eV。</p>}
           </div>
           <button type="button" disabled={busy || !ready || !synced} onClick={analyze}>{busy ? '處理中…' : '從 Ketcher 取得結構並分析'}</button>
+          <small>使用繪圖區內容。{!open ? '請先開啟 Ketcher；文字欄位可使用「直接分析」。' : !ready ? '繪圖器正在載入，請稍候。' : !synced ? '繪圖區尚未同步完成，請先處理匯入訊息。' : ''}</small>
           {prepared?.multipleComponents && <section className="component-confirmation" aria-labelledby="confirmation-title">
             <h3 id="confirmation-title">請確認實際分析的成分</h3>
             <img src={prepared.retainedImage} alt="實際將被分析的保留成分結構" />
@@ -188,9 +221,6 @@ export default function AnalysisPanel() {
         <p role="status" aria-live="polite">
           {busy ? '正在載入分析引擎並計算候選碎片，請稍候…' : result ? `分析完成：${result.technique}，共 ${result.candidates?.length ?? 0} 筆候選。` : ''}
         </p>
-        {error && <div className="error"><p role="alert">{error}</p>
-          <details><summary>技術細節</summary><pre>{errorDetails || '未提供額外訊息。'}</pre></details>
-        </div>}
       </section>
       {result && <section className="results" aria-labelledby="results-title">
         <h2 id="results-title">{result.technique} 分析結果</h2>

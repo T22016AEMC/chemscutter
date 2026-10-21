@@ -2,6 +2,7 @@ import { parseInputToMol } from './inputParsing';
 import { standardizeMolecule } from './standardize';
 import type { JSMol, RDKitModule } from '../rdkit/types';
 import { InputValidationError } from '../../shared/inputErrors';
+import { unsupportedMolfile } from '../../shared/structureChecks';
 
 export interface PreparedStructure {
   inputSmiles: string;
@@ -17,6 +18,7 @@ export interface PreparedStructure {
 export function prepareStructure(input: string, rdkit: RDKitModule): PreparedStructure {
   if (!input.trim()) throw new InputValidationError('EMPTY_INPUT', '來源：輸入檢查；RDKit 尚未執行。');
   if (/\$RXN|>>/.test(input)) throw new InputValidationError('UNSUPPORTED_CONTENT', '來源：輸入格式；偵測到反應式，RDKit 尚未執行。');
+  if (unsupportedMolfile(input)) throw new InputValidationError('UNSUPPORTED_CONTENT', '來源：Molfile 格式；偵測到聚合物／重複單元，RDKit 尚未執行。');
   let mol: JSMol | null = null;
   let retained: JSMol | null = null;
   const errors = rdkit.set_log_capture('rdApp.error');

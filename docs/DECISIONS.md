@@ -39,6 +39,8 @@
 - Q34 LC [M+Na]+ 是否納入醯胺
 
 ## 架構與流程決定
+- 2b-1 問題 B（使用者決定）：自行貼上的 SMILES／Molfile 可經 RDKit 驗證後直接分析，不必載入 Ketcher；以 Worker 產生的小結構圖顯示實際分析內容。Ketcher 為選用繪圖器，使用繪圖區內容的按鈕與文字直接分析分開標示。先在 Ketcher 確認才計算的要求，僅保留給之後的 PubChem 名稱查詢與圖片辨識，因為這些來源可能認錯結構。所有路徑仍共用既有標準化與多成分明確確認，不更改化學規則。
+- 直接分析保存原始文字送入既有引擎，保留 SMILES 縮寫／修復及格式回報行為；繪圖路徑維持原本 Molfile 轉 SMILES 的行為。兩者的驗證結果與錯誤狀態分開，文字分析不會被繪圖器載入或同步失敗阻擋。Ketcher 的 setMolecule 可能吞掉例外並發出 FAILURE，因此同步必須同時檢查該事件，失敗不得標為已同步。
 - 2b-1 問題 A：Indigo 的未指定立體組態警告不作為 RDKit 解析失敗。輸入轉換僅攔截不支援的繪圖內容，再以既有 RDKit 解析、消毒及標準化流程驗證；不更改 SMILES 解析行為或化學規則。錯誤分為空白、無法解析、價鍵／消毒失敗、不支援內容、多成分及其他，附來源與原始訊息；重現輸入與證據見 docs/INPUT_FIXES.md。
 - 階段 2b-1 採獨立子套件與 iframe：Ketcher 3.18.0 的 Miew 相依只宣告支援 React 18，故子套件固定使用 React 18.3.1 與三個 Ketcher 3.18.0 套件，維持自己的 lockfile；主站保留 React 19，不加 overrides。建置產物應由 CI 產生到 dist/ketcher/，不提交預先建置的二進位檔，以保留可重現建置與來源可追溯性。
 - Ketcher iframe 保留官方英文介面；主站操作、確認與錯誤訊息採台灣繁體中文。日後若要將繪圖器繁中化，須另行評估翻譯維護成本。
@@ -48,7 +50,7 @@
 - 加入 events 後子套件型別檢查與正式建置通過，events 外部化警告消失；瀏覽器接著因 Ketcher 寫入 global.currentState 而出現 ReferenceError: global is not defined，畫面仍空白。依停止條件再次暫停，尚未加入 global 相容設定或其他補丁。此輪建置未再報告 buffer、process、util 外部化；後續執行路徑因初始化失敗而尚無法驗證，不宣稱已排除所有相容性問題。
 - Ketcher 來源映射中的 global 用途包括 currentState、localStorage、FileReader、ActiveXObject 與 Blob。經使用者核准，僅在子套件使用 Vite define 將 global 對應 globalThis，不新增套件。正式建置的本機瀏覽器已能匯入 SMILES／Molfile、顯示結構與縮放，無 console 錯誤或警告；沒有再加入 Node 補丁。若後續出現其他 Node 環境缺失，停止補丁並評估官方預建 standalone，不自行切換。
 - 子頁產物約 30.752 MB（十進位）：主 chunk 28.845 MB，另外兩個動態 chunk 約 1.221 MB、0.425 MB，lodash 約 0.079 MB，CSS 約 0.181 MB。最大來源為 standalone 內嵌 Worker 的 Base64 約 21.158 MB，其中含二次編碼的 Indigo WASM（原始 11.803 MB）；這些是同一份資料的不同表示大小，不可相加。未輸出獨立字型或 WASM 檔案，未做資源縮減。若未來要評估改用套件的 binaryWasm 入口減少 Base64 膨脹，須另行驗證功能與資源路徑，本階段不變更。
-- 2b-1 確認邊界：iframe 只在開啟繪圖區後建立，雙向 postMessage 檢查 origin、source 與型別。文字先同步到 Ketcher；使用者取得結構後，Worker 以 RDKit 轉換 Molfile、呼叫既有標準化並保存準備編號。多成分必須帶明確確認才能分析，編輯會撤銷舊準備；單一成分直接沿用分析流程。保留成分以 RDKit 產生的圖片顯示，不插入 HTML。三平台單元測試逐欄比較轉換後完整結果與 2a 相同 SMILES 的結果。
+- 2b-1 繪圖路徑的確認邊界（B 之後文字可直接分析）：iframe 只在開啟繪圖區後建立，雙向 postMessage 檢查 origin、source 與型別。繪圖區已開啟時文字會同步到 Ketcher；使用者取得繪圖結構後，Worker 以 RDKit 轉換 Molfile、呼叫既有標準化並保存準備編號。所有路徑的多成分都必須帶明確確認才能分析，修改輸入會撤銷相對應的舊準備；單一成分直接沿用分析流程。保留成分以 RDKit 產生的圖片顯示，不插入 HTML。三平台單元測試逐欄比較轉換後完整結果與 2a 相同 SMILES 的結果。
 - 子套件建置後附上固定官方版本的 LICENSE、NOTICE，以及 lockfile 正式相依的授權原文與聲明；這些文字隨同一份 GitHub Pages artifact 發布。CI 只增加子套件安裝與建置，不改變部署架構。
 - 階段 2a：首頁以 module Worker 呼叫 runMultiPlatformAnalysis；RDKit WASM 由 Vite 匯入資源網址並透過 locateFile 載入，沿用 /chemscutter/ base。介面顯示既有參數，D1、D2 留待後續階段處理；不新增套件。
 - 標準答案換行固定為 LF：.gitattributes 僅對 tests/golden/ 設定 text eol=lf，避免 Windows 檢出為 CRLF 造成逐位元組差異；golden:diff 比對腳本保持不變。

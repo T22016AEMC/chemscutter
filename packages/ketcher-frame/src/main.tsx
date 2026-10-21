@@ -11,6 +11,7 @@ import './style.css';
 const provider = new StandaloneStructServiceProvider();
 let editor: Ketcher | null = null;
 let loading = false;
+let importFailed = false;
 let activeId: number | null = null;
 let queue = Promise.resolve();
 const send = (message: FrameResponse) => window.parent.postMessage(message, window.location.origin);
@@ -26,8 +27,10 @@ window.addEventListener('message', (event: MessageEvent<unknown>) => {
       if (!editor) throw new Error('繪圖器尚未就緒，請稍候再試。');
       if (request.type === 'load') {
         loading = true;
+        importFailed = false;
         try {
           await editor.setMolecule(request.input);
+          if (importFailed) throw new Error('Ketcher emitted FAILURE while importing the input');
           if (request.input.trim() && !(await editor.getSmiles()).trim()) throw new Error('Ketcher returned an empty structure after import');
         }
         catch (error) { throw new InputValidationError('UNPARSABLE', `來源：Ketcher 匯入；RDKit 尚未執行。\n${String(error)}`); }
@@ -55,6 +58,8 @@ async function initialize(ketcher: Ketcher) {
   try {
     ketcher.setSettings({ 'ignore-stereochemistry-errors': false });
     await ketcher.indigo.info();
+    // Ketcher 的 runAsyncAction 會吞掉匯入例外，必須接收 FAILURE，不能以 Promise 完成判定成功。
+    ketcher.eventBus.on('FAILURE', () => { if (loading) importFailed = true; });
     ketcher.editor.subscribe('change', () => {
       if (!loading) send({ channel: FRAME_CHANNEL, type: 'changed' });
     });
