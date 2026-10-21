@@ -1,4 +1,5 @@
 import type { AnalysisResult, MassTechnique } from '../engine/types';
+import type { InputCategory } from '../shared/inputErrors';
 
 export const techniques: readonly MassTechnique[] = ['TOF-SIMS', 'LC-MS/MS', 'GC-MS'];
 
@@ -16,6 +17,8 @@ export type AnalysisResponse =
       id: number | null;
       code: 'INVALID_REQUEST' | 'EMPTY_INPUT' | 'ENGINE_LOAD_FAILED' | 'ANALYSIS_FAILED';
       message: string;
+      category?: InputCategory;
+      details?: string;
     };
 
 export function isAnalysisRequest(value: unknown): value is AnalysisRequest {

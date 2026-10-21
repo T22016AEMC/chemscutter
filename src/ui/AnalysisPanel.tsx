@@ -14,6 +14,7 @@ export default function AnalysisPanel() {
   const [technique, setTechnique] = useState<MassTechnique>('TOF-SIMS');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [errorDetails, setErrorDetails] = useState('');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const requestId = useRef(0);
@@ -93,6 +94,7 @@ export default function AnalysisPanel() {
     } else if (response.type === 'result') setResult(response.result);
     else {
       setError(response.message);
+      setErrorDetails(response.details || '來源：Worker 流程；RDKit 未提供額外訊息。');
       if (response.code === 'ENGINE_LOAD_FAILED') {
         workerRef.current?.terminate();
         workerRef.current = null;
@@ -117,6 +119,7 @@ export default function AnalysisPanel() {
     } else if (response.type === 'error' && (response.id === null || response.id === loadId.current || response.id === exportId.current)) {
       setBusy(false);
       setError(response.message);
+      setErrorDetails(response.details || '來源：Ketcher；RDKit 尚未執行。');
       if (response.id === loadId.current) setSynced(false);
     }
   };
@@ -126,6 +129,7 @@ export default function AnalysisPanel() {
     workerRef.current = null;
     setBusy(false);
     setError('背景分析中斷，請再試一次。若仍無法分析，請重新整理頁面。');
+    setErrorDetails('來源：Worker 通訊；未取得 RDKit 原始訊息。');
   }
 
   function analyze() {
@@ -184,7 +188,9 @@ export default function AnalysisPanel() {
         <p role="status" aria-live="polite">
           {busy ? '正在載入分析引擎並計算候選碎片，請稍候…' : result ? `分析完成：${result.technique}，共 ${result.candidates?.length ?? 0} 筆候選。` : ''}
         </p>
-        {error && <p role="alert" className="error">{error}</p>}
+        {error && <div className="error"><p role="alert">{error}</p>
+          <details><summary>技術細節</summary><pre>{errorDetails || '未提供額外訊息。'}</pre></details>
+        </div>}
       </section>
       {result && <section className="results" aria-labelledby="results-title">
         <h2 id="results-title">{result.technique} 分析結果</h2>

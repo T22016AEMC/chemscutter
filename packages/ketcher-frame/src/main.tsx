@@ -3,7 +3,8 @@ import { Editor } from 'ketcher-react';
 import type { Ketcher } from 'ketcher-core';
 import { StandaloneStructServiceProvider } from 'ketcher-standalone';
 import { FRAME_CHANNEL, fromExpectedWindow, isFrameRequest, type FrameResponse } from '../../../src/shared/ketcherProtocol';
-import { unsupportedDrawing } from '../../../src/shared/structureChecks';
+import { unsupportedDrawing, unsupportedCheck } from '../../../src/shared/structureChecks';
+import { InputValidationError, inputMessages, type InputCategory } from '../../../src/shared/inputErrors';
 import 'ketcher-react/dist/index.css';
 import './style.css';
 
@@ -13,7 +14,8 @@ let loading = false;
 let activeId: number | null = null;
 let queue = Promise.resolve();
 const send = (message: FrameResponse) => window.parent.postMessage(message, window.location.origin);
-const fail = (message: string, id = activeId) => send({ channel: FRAME_CHANNEL, type: 'error', id, message });
+const fail = (message: string, id = activeId, category: InputCategory = 'OTHER', details = '來源：Ketcher；RDKit 尚未執行。') =>
+  send({ channel: FRAME_CHANNEL, type: 'error', id, message, category, details });
 
 window.addEventListener('message', (event: MessageEvent<unknown>) => {
   if (!fromExpectedWindow(event, window.location.origin, window.parent) || !isFrameRequest(event.data)) return;
@@ -26,25 +28,24 @@ window.addEventListener('message', (event: MessageEvent<unknown>) => {
         loading = true;
         try {
           await editor.setMolecule(request.input);
-          if (request.input.trim() && !(await editor.getSmiles()).trim()) throw new Error('empty');
+          if (request.input.trim() && !(await editor.getSmiles()).trim()) throw new Error('Ketcher returned an empty structure after import');
         }
-        catch { throw new Error('無法載入結構。請檢查 SMILES 或 Molfile 的格式、價鍵與立體化學。'); }
+        catch (error) { throw new InputValidationError('UNPARSABLE', `來源：Ketcher 匯入；RDKit 尚未執行。\n${String(error)}`); }
         send({ channel: FRAME_CHANNEL, type: 'loaded', id: request.id });
       } else {
-        if (editor.containsReaction()) throw new Error('目前不支援反應箭頭或反應式，請只保留要分析的結構。');
+        if (editor.containsReaction()) throw new InputValidationError('UNSUPPORTED_CONTENT', '來源：Ketcher；畫布含反應式，RDKit 尚未執行。');
         const ket = await editor.getKet();
         const drawingError = unsupportedDrawing(ket);
-        if (drawingError) throw new Error(drawingError);
+        if (drawingError) throw new InputValidationError('UNSUPPORTED_CONTENT', `來源：Ketcher；${drawingError}\nRDKit 尚未執行。`);
         const check = await editor.indigo.check(ket, { types: ['valence', 'stereo', 'query', 'rgroups', 'pseudoatoms'] });
-        if (check.valence || check.stereo) throw new Error('結構含有價鍵或立體化學錯誤，請在 Ketcher 中修正後再試。');
-        if (check.query || check.rgroups || check.pseudoatoms) throw new Error('目前不支援 R 基團、查詢原子或未指定的原子，請改用明確結構。');
+        if (unsupportedCheck(check)) throw new InputValidationError('UNSUPPORTED_CONTENT', `來源：Indigo；RDKit 尚未執行。\n${JSON.stringify(check)}`);
         const molfile = await editor.getMolfile('v3000');
         const smiles = await editor.getSmiles();
         send({ channel: FRAME_CHANNEL, type: 'structure', id: request.id, structure: { molfile, smiles, ket } });
       }
     } catch (error) {
-      fail(error instanceof Error && /[\u3400-\u9fff]/.test(error.message)
-        ? error.message : '無法取得有效結構，請檢查畫面是否空白、含不支援內容或價鍵錯誤。', request.id);
+      if (error instanceof InputValidationError) fail(error.message, request.id, error.category, error.details);
+      else fail(inputMessages.OTHER, request.id, 'OTHER', `來源：Ketcher；RDKit 尚未執行。\n${String(error)}`);
     } finally { loading = false; activeId = null; }
   });
 });

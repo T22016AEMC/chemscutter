@@ -3,6 +3,7 @@ import { prepareStructure, type PreparedStructure } from '../engine/chem/prepare
 import { runMultiPlatformAnalysis } from '../engine';
 import { techniques, type AnalysisResponse } from './protocol';
 import type { MassTechnique } from '../engine/types';
+import { InputValidationError } from '../shared/inputErrors';
 
 export type StructureRequest =
   | { type: 'prepare'; id: number; input: string }
@@ -38,12 +39,13 @@ export function createStructureSession(analyze = runMultiPlatformAnalysis) {
         return { type: 'prepared', id, structure };
       }
       if (!pending || pending.id !== request.preparationId) throw new Error('結構已變更，請重新從 Ketcher 取得結構。');
-      if (pending.structure.multipleComponents && !request.confirmed) throw new Error('請先確認保留成分；只會分析保留的成分。');
+      if (pending.structure.multipleComponents && !request.confirmed) throw new InputValidationError('MULTIPLE_COMPONENTS', '來源：確認流程；未呼叫分析引擎。');
       const input = pending.structure.inputSmiles;
       const result = await analyze(input, { technique: request.technique });
       return { type: 'result', id, result };
     } catch (error) {
       if (loadingEngine) return { type: 'error', id, code: 'ENGINE_LOAD_FAILED', message: '分析引擎載入失敗，請確認網路連線後再試。' };
+      if (error instanceof InputValidationError) return { type: 'error', id, code: 'ANALYSIS_FAILED', category: error.category, message: error.message, details: error.details };
       return { type: 'error', id, code: 'ANALYSIS_FAILED', message: error instanceof Error ? error.message : '結構處理失敗，請重新取得結構。' };
     }
   };

@@ -13,6 +13,7 @@ textarea { width: 100%; padding: 10px; font: inherit; font-family: ui-monospace,
 .ketcher-container iframe { display: block; width: 100%; min-width: 760px; height: 600px; border: 0; }
 .component-confirmation { border: 2px solid #b26b16; background: #fff8eb; padding: 16px; overflow-wrap: anywhere; }
 .component-confirmation img { display: block; max-width: 100%; background: white; }
+.error pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 label { font-weight: 650; margin-top: 8px; }
 input, select, button { font: inherit; border-radius: 6px; padding: 10px 12px; }
 input, select { width: 100%; border: 1px solid #71868f; background: white; color: inherit; }

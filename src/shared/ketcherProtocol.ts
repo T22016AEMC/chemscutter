@@ -1,3 +1,4 @@
+import { isInputCategory, type InputCategory } from './inputErrors';
 export const FRAME_CHANNEL = 'chemscutter-ketcher-v1';
 
 export interface FrameStructure {
@@ -14,7 +15,7 @@ export type FrameResponse =
   | { channel: typeof FRAME_CHANNEL; type: 'ready' | 'changed' }
   | { channel: typeof FRAME_CHANNEL; type: 'loaded'; id: number }
   | { channel: typeof FRAME_CHANNEL; type: 'structure'; id: number; structure: FrameStructure }
-  | { channel: typeof FRAME_CHANNEL; type: 'error'; id: number | null; message: string };
+  | { channel: typeof FRAME_CHANNEL; type: 'error'; id: number | null; message: string; category?: InputCategory; details?: string };
 
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object';
 const requestId = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
@@ -32,7 +33,8 @@ export function isFrameRequest(value: unknown): value is FrameRequest {
 export function isFrameResponse(value: unknown): value is FrameResponse {
   if (!record(value) || value.channel !== FRAME_CHANNEL) return false;
   if (value.type === 'ready' || value.type === 'changed') return true;
-  if (value.type === 'error') return (value.id === null || requestId(value.id)) && typeof value.message === 'string';
+  if (value.type === 'error') return (value.id === null || requestId(value.id)) && typeof value.message === 'string'
+    && (value.category === undefined || isInputCategory(value.category)) && (value.details === undefined || typeof value.details === 'string');
   if (!requestId(value.id)) return false;
   return value.type === 'loaded' || (value.type === 'structure' && isFrameStructure(value.structure));
 }

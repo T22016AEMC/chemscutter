@@ -1,3 +1,8 @@
+/** Indigo 的未指定立體組態等警告不代表 RDKit 解析失敗。此處只攔截不支援的內容。 */
+export function unsupportedCheck(check: Record<string, string>): boolean {
+  return !!(check.query || check.rgroups || check.pseudoatoms);
+}
+
 /** 只辨識輸入格式中的不支援物件，不推斷化合物是否為鹽類或混合物。 */
 export function unsupportedDrawing(ket: string): string | undefined {
   const visit = (value: unknown): string | undefined => {

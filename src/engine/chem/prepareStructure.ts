@@ -1,6 +1,7 @@
 import { parseInputToMol } from './inputParsing';
 import { standardizeMolecule } from './standardize';
 import type { JSMol, RDKitModule } from '../rdkit/types';
+import { InputValidationError } from '../../shared/inputErrors';
 
 export interface PreparedStructure {
   inputSmiles: string;
@@ -14,19 +15,24 @@ export interface PreparedStructure {
 
 /** 只轉換輸入與呼叫既有標準化，不新增成分選擇或化學規則。 */
 export function prepareStructure(input: string, rdkit: RDKitModule): PreparedStructure {
-  if (!input.trim()) throw new Error('畫面是空的，請先繪圖或輸入 SMILES／Molfile。');
-  if (/\$RXN|>>/.test(input)) throw new Error('目前不支援反應式，請只保留要分析的結構。');
+  if (!input.trim()) throw new InputValidationError('EMPTY_INPUT', '來源：輸入檢查；RDKit 尚未執行。');
+  if (/\$RXN|>>/.test(input)) throw new InputValidationError('UNSUPPORTED_CONTENT', '來源：輸入格式；偵測到反應式，RDKit 尚未執行。');
   let mol: JSMol | null = null;
   let retained: JSMol | null = null;
+  const errors = rdkit.set_log_capture('rdApp.error');
+  const warnings = rdkit.set_log_capture('rdApp.warning');
+  const rawMessages = () => [errors?.get_buffer(), warnings?.get_buffer()].filter(Boolean).join('\n');
+  const details = () => `來源：RDKit ${rdkit.version()}\n輸入：\n${input}\n解析選項：未傳入，沿用既有預設。\nRDKit 原始訊息：\n${rawMessages() || '（未提供）'}`;
   try {
     const parsed = parseInputToMol(input, rdkit);
     mol = parsed.mol;
-    if (!mol || !mol.is_valid()) throw new Error('無法辨識結構，請檢查 SMILES／Molfile 的格式、價鍵與立體化學。');
-    if (mol.get_num_atoms() === 0) throw new Error('畫面是空的，請先繪圖或匯入結構。');
+    if (!mol || !mol.is_valid()) throw new InputValidationError(
+      /valence|kekul|saniti|non-ring atom|aromatic/i.test(rawMessages()) ? 'SANITIZATION_FAILED' : 'UNPARSABLE', details());
+    if (mol.get_num_atoms() === 0) throw new InputValidationError('EMPTY_INPUT', details());
     const json = mol.get_json();
     const atoms = (JSON.parse(json) as { molecules: { atoms: { z?: number }[] }[] }).molecules[0].atoms;
     if (atoms.some((atom) => atom.z === 0) || json.includes('rdkitQueries')) {
-      throw new Error('目前不支援 R 基團、查詢原子或未指定的原子，請改用明確結構。');
+      throw new InputValidationError('UNSUPPORTED_CONTENT', details());
     }
     const inputSmiles = mol.get_smiles();
     const standardized = standardizeMolecule(mol, rdkit);
@@ -38,8 +44,13 @@ export function prepareStructure(input: string, rdkit: RDKitModule): PreparedStr
       // 此處僅計算 RDKit 輸出的不相連成分，不以字串產生碎片。
       multipleComponents: inputSmiles.includes('.')
     };
+  } catch (error) {
+    if (error instanceof InputValidationError) throw error;
+    throw new InputValidationError('OTHER', `${details()}\n例外：${error instanceof Error ? error.message : String(error)}`);
   } finally {
     if (retained && retained !== mol) retained.delete();
     mol?.delete();
+    errors?.delete();
+    warnings?.delete();
   }
 }
