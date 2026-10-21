@@ -11,10 +11,10 @@
 - 1.5a 修正 m/z 43 乙醯基鎓誤套（Q15）、甲氧基與醚基判斷（Q5）
 - 1.5b LC [M+Na]+ 納入胺甲酸酯；鹽類標準化（Q14）；帶電碎片以實際電荷計算（Q3）
 - Q33 GC 中性單鍵碎片 structures 離子式修正（108 個案例，2026-10-21）
-- 3 GitHub Pages 自動部署（提前執行），網站已上線，目前只有「重建中」首頁
+- 2a Web Worker 分析、RDKit WASM 資源路徑、首頁 SMILES 測試區與結果表格；移除舊版 README 的 AI Studio 連結（2026-10-21）
+- 3 GitHub Pages 自動部署（提前執行），網站已上線
 
 待做：
-- 2a 引擎在瀏覽器 Web Worker 執行，在正式網址驗證 RDKit WASM 可載入；首頁加 SMILES 測試區（輸入 SMILES、選平台、顯示候選碎片純文字表格）；移除 legacy/README.md 中的 AI Studio 連結
 - 2b 結構輸入：Ketcher 繪圖器、SMILES／Molfile 貼上、PubChem 名稱查詢（Ketcher 與 Vite／React 版本相容性是主要風險，需放慢檢查）
 - 2c 結果畫面：質譜圖、候選表、篩選排序、結構圖；加入程式圖示（legacy/public/chemscutter_icon.jpg）
 - 2d 儀器參數表單、Excel 匯出、預設值統一（D1）
@@ -32,9 +32,10 @@
 - CI：checkout@v7、setup-node@v7（Node 24）、upload-pages-artifact@v5、deploy-pages@v5；若因 ubuntu-latest 轉 Ubuntu 26 出錯，改固定 runner 版本
 - 首頁版本資訊由 scripts/build-info.mjs 注入（git 短雜湊、建置時間）
 - RDKit MinimalLib 沒有 get_molformula() 與標準化方法；分子式由 get_json() 計算；鹽類標準化自行實作於 src/engine/chem/standardize.ts
-- 標準答案 tests/golden/（591 個案例，由 npm run golden:generate 以新引擎產生，npm run golden:diff 檢查差異）；永久化學測試 tests/chemistry/；測試共 1230 個
+- 標準答案 tests/golden/（591 個案例，由 npm run golden:generate 以新引擎產生，npm run golden:diff 檢查差異）；永久化學測試 tests/chemistry/；含 Worker 協定與錯誤處理測試共 1242 個
 - 完成標準：npm run typecheck、npm run test:clean、npm run build 全部通過
 - test:clean 會先刪除 Vitest 快取，因為 import.meta.glob 的檔案清單會被快取而造成測試假通過
+- 2a 本機正式建置驗證：乙酸乙酯 CCOC(C)=O 三平台候選數依序為 TOF-SIMS 22、LC-MS/MS 13、GC-MS 11；空白、無效 SMILES 提示及錯誤後重試通過，瀏覽器無錯誤。推送後須在正式網址重做三平台運作驗證。
 
 ## 引擎目錄
 src/engine/：index.ts（入口 runMultiPlatformAnalysis）、types.ts、constants/masses.ts、rdkit/、chem/、rules/、platform/、platforms/（tofSims、lcMsMs、gcMs）、platforms/shared/、scoring/deduplicate

@@ -39,6 +39,7 @@
 - Q34 LC [M+Na]+ 是否納入醯胺
 
 ## 架構與流程決定
+- 階段 2a：首頁以 module Worker 呼叫 runMultiPlatformAnalysis；RDKit WASM 由 Vite 匯入資源網址並透過 locateFile 載入，沿用 /chemscutter/ base。介面顯示既有參數，D1、D2 留待後續階段處理；不新增套件。
 - 標準答案換行固定為 LF：.gitattributes 僅對 tests/golden/ 設定 text eol=lf，避免 Windows 檢出為 CRLF 造成逐位元組差異；golden:diff 比對腳本保持不變。
 - 純前端靜態網站，無後端、無 AI API；結構輸入用 Ketcher、名稱查詢用 PubChem；圖片辨識延後到階段 4
 - 介面台灣繁體中文；實驗室使用，先全公開測試
