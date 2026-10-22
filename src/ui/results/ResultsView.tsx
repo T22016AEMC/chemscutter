@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { AnalysisResult, FragmentCandidate } from '../../engine/types';
 import IonFormula from './IonFormula';
-import { defaultFilter, filterCandidates, type CandidateFilter } from './model';
+import { defaultFilter, filterCandidates, toggleIonType, type CandidateFilter } from './model';
 import Depiction, { useDepictions, type Depictions } from './Depiction';
 import Spectrum from './Spectrum';
 import { parameterRows, recordOnly } from '../../shared/parameters';
@@ -44,6 +44,7 @@ function CandidateDetail({ item, result, depictions }: { item: FragmentCandidate
 
 export default function ResultsView({ result, provenance }: { result: AnalysisResult; provenance?: { cid: number; title: string } }) {
   const candidates = result.candidates || [];
+  const ionTypes = [...new Set(candidates.map((item) => item.ionType))].sort();
   const [filter, setFilter] = useState<CandidateFilter>(defaultFilter);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -86,7 +87,12 @@ export default function ResultsView({ result, provenance }: { result: AnalysisRe
       <div className="result-filters" aria-label="候選篩選與排序">
         <label>搜尋候選<input value={filter.query} onChange={(event) => update({ query: event.target.value })} placeholder="離子式、說明、來源規則…" /></label>
         <label>最低分數<input type="number" min="0" max="100" step="any" value={filter.minScore} onChange={(event) => update({ minScore: Math.max(0, Math.min(100, Number(event.target.value))) })} /></label>
-        <label>離子類型<select value={filter.ionType} onChange={(event) => update({ ionType: event.target.value })}><option value="">全部類型</option>{[...new Set(candidates.map((item) => item.ionType))].sort().map((type) => <option key={type}>{type}</option>)}</select></label>
+        <fieldset className="ion-types"><legend>離子類型（可多選）</legend>
+          <button type="button" onClick={() => update({ ionTypes: null })}>全選離子類型</button>{' '}
+          <button type="button" onClick={() => update({ ionTypes: [] })}>清除離子類型</button>
+          <div className="ion-type-options">{ionTypes.map((type) => <label key={type}><input type="checkbox" checked={filter.ionTypes === null || filter.ionTypes.includes(type)} onChange={() => update({ ionTypes: toggleIonType(filter.ionTypes, type, ionTypes) })} />{type}</label>)}</div>
+          <p>已選：{filter.ionTypes === null ? '全部類型' : filter.ionTypes.length ? filter.ionTypes.join('、') : '無（不顯示候選）'}</p>
+        </fieldset>
         <label>極性篩選<select value={filter.polarity} onChange={(event) => update({ polarity: event.target.value })}><option value="">正、負離子</option><option value="Positive">正離子</option><option value="Negative">負離子</option></select></label>
         <label>候選排序<select value={filter.sort} onChange={(event) => update({ sort: event.target.value as CandidateFilter['sort'] })}><option value="score-desc">分數：高至低</option><option value="score-asc">分數：低至高</option><option value="mz-asc">m/z：小至大</option><option value="mz-desc">m/z：大至小</option></select></label>
         <button type="button" onClick={() => { setFilter(defaultFilter); setPage(0); setSelected(null); }}>清除篩選</button>

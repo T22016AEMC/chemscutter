@@ -20,13 +20,18 @@ export function formatIonFormula(formula: string): FormulaPart[] {
 }
 export const restoreFormula = (parts: FormulaPart[]) => parts.map((part) => part.raw).join('');
 export type SortBy = 'mz-asc' | 'mz-desc' | 'score-desc' | 'score-asc';
-export interface CandidateFilter { query: string; minScore: number; ionType: string; polarity: string; sort: SortBy }
-export const defaultFilter: CandidateFilter = { query: '', minScore: 0, ionType: '', polarity: '', sort: 'score-desc' };
+export interface CandidateFilter { query: string; minScore: number; ionTypes: string[] | null; polarity: string; sort: SortBy }
+export const defaultFilter: CandidateFilter = { query: '', minScore: 0, ionTypes: null, polarity: '', sort: 'score-desc' };
+export function toggleIonType(selected: string[] | null, type: string, all: string[]): string[] {
+  const next = new Set(selected ?? all);
+  if (next.has(type)) next.delete(type); else next.add(type);
+  return [...next];
+}
 export function filterCandidates(candidates: readonly FragmentCandidate[], filter: CandidateFilter): FragmentCandidate[] {
   const query = filter.query.trim().toLocaleLowerCase();
   return candidates.filter((item) => (!query || [item.formula, item.ionType, item.sourceRule, item.explanation, item.mechanism, item.smiles, item.id].join(' ').toLocaleLowerCase().includes(query))
     && (item.heuristicScore === undefined ? filter.minScore === 0 : item.heuristicScore >= filter.minScore)
-    && (!filter.ionType || item.ionType === filter.ionType) && (!filter.polarity || item.polarity === filter.polarity))
+    && (filter.ionTypes === null || filter.ionTypes.includes(item.ionType)) && (!filter.polarity || item.polarity === filter.polarity))
     .sort((a, b) => {
       if (filter.sort.startsWith('mz')) return (a.mz - b.mz) * (filter.sort === 'mz-asc' ? 1 : -1);
       if (a.heuristicScore === undefined) return b.heuristicScore === undefined ? 0 : 1;

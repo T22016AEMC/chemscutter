@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
 import type { AnalysisResult, FragmentCandidate } from '../../src/engine/types';
-import { defaultFilter, filterCandidates, formatIonFormula, restoreFormula, groupPolarity, fullMzRange, validRange, plotX, plotY, peakLabels } from '../../src/ui/results/model';
+import { defaultFilter, filterCandidates, toggleIonType, formatIonFormula, restoreFormula, groupPolarity, fullMzRange, validRange, plotX, plotY, peakLabels } from '../../src/ui/results/model';
 const golden = import.meta.glob<string>('../golden/*.json', { eager: true, query: '?raw', import: 'default' });
 const sample = (options: Partial<FragmentCandidate> = {}): FragmentCandidate => ({ id: 'a', technique: 'TOF-SIMS', polarity: 'Positive', mz: 10, formula: 'CH4+.', smiles: '[CH4+]', exactMass: 16, neutralExactMass: 16, ionExactMass: 16, charge: 1, ionType: 'M+.', mechanism: '測試機制', confidence: 'High', priority: 'High', sourceRule: 'test_rule', heuristicScore: 80, ...options });
 describe('離子式只改顯示，保留來源', () => {
@@ -39,9 +39,18 @@ describe('候選排序、篩選與極性', () => {
   });
   it('分數、極性、離子類型可同時篩選，沒有分數不當成數值', () => {
     expect(filterCandidates(items, { ...defaultFilter, minScore: 50 }).map((item) => item.id)).toEqual(['a']);
-    expect(filterCandidates(items, { ...defaultFilter, minScore: 10, polarity: 'Negative', ionType: '[M-H]-' }).map((item) => item.id)).toEqual(['b']);
+    expect(filterCandidates(items, { ...defaultFilter, minScore: 10, polarity: 'Negative', ionTypes: ['[M-H]-'] }).map((item) => item.id)).toEqual(['b']);
     expect(groupPolarity(items).Positive).toHaveLength(2);
     expect(groupPolarity(items).Negative).toHaveLength(1);
+  });
+  it('離子類型多選、全選、清除與其他條件共同作用', () => {
+    const all = ['M+.', '[M-H]-'];
+    expect(filterCandidates(items, { ...defaultFilter, ionTypes: all })).toHaveLength(3);
+    expect(filterCandidates(items, { ...defaultFilter, ionTypes: [] })).toEqual([]);
+    expect(toggleIonType(null, 'M+.', all)).toEqual(['[M-H]-']);
+    expect(toggleIonType([], 'M+.', all)).toEqual(['M+.']);
+    expect(filterCandidates(items, { ...defaultFilter, ionTypes: all, minScore: 10, polarity: 'Negative', query: '水' }).map((item) => item.id)).toEqual(['b']);
+    expect(filterCandidates(items, { ...defaultFilter, ionTypes: null })).toHaveLength(3);
   });
   it('500 筆可排序並分成 25 頁，保留全部候選而不改引擎輸入', () => {
     const large = Array.from({ length: 500 }, (_, index) => sample({ id: String(index), mz: 500 - index }));
