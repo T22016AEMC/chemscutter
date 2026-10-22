@@ -13,13 +13,15 @@
 .pagination { align-items: center; justify-content: space-between; }
 .results button:disabled { cursor: default; }
 .candidate-table { min-width: 850px; table-layout: fixed; }
-.candidate-table th:nth-child(1) { width: 90px; }
-.candidate-table th:nth-child(2) { width: 115px; }
-.candidate-table th:nth-child(3) { width: 220px; }
-.candidate-table th:nth-child(4) { width: 140px; }
-.candidate-table th:nth-child(5) { width: 110px; }
-.candidate-table th:nth-child(6) { width: 90px; }
-.candidate-table th:nth-child(7) { width: 150px; }
+.candidate-table th:nth-child(1) { width: 75px; }
+.candidate-table th:nth-child(2) { width: 90px; }
+.candidate-table th:nth-child(3) { width: 115px; }
+.candidate-table th:nth-child(4) { width: 220px; }
+.candidate-table th:nth-child(5) { width: 140px; }
+.candidate-table th:nth-child(6) { width: 110px; }
+.candidate-table th:nth-child(7) { width: 90px; }
+.candidate-table th:nth-child(8) { width: 150px; }
+.candidate-table input[type="checkbox"] { width: auto; }
 .candidate-table td { cursor: pointer; }
 .candidate-table tr[aria-selected="true"] { background: #fff4d6; outline: 2px solid #20343c; outline-offset: -2px; }
 .candidate-toggle { padding: 6px 2px; color: #155d70; background: transparent; text-align: left; }

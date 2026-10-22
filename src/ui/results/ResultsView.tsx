@@ -6,6 +6,7 @@ import Depiction, { useDepictions, type Depictions } from './Depiction';
 import Spectrum from './Spectrum';
 import { parameterRows, recordOnly } from '../../shared/parameters';
 import ExportButton from './ExportButton';
+import { selectAll, toggleCandidate, selectedCandidates, hiddenSelectionCount } from './selection';
 import './results.css';
 
 const ranks = { High: '高', Medium: '中', Low: '低' };
@@ -48,6 +49,8 @@ export default function ResultsView({ result, provenance }: { result: AnalysisRe
   const [filter, setFilter] = useState<CandidateFilter>(defaultFilter);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [checked, setChecked] = useState(() => selectAll(candidates));
+  useEffect(() => { setChecked(selectAll(result.candidates || [])); }, [result]);
   const scrollSelection = useRef(false);
   const table = useRef<HTMLTableElement>(null);
   const depictions = useDepictions();
@@ -82,7 +85,13 @@ export default function ResultsView({ result, provenance }: { result: AnalysisRe
       </details>
     </div>
     <p className="score-warning">分數為啟發式可信度，不是訊號強度。信心標籤與質量平衡標示沿用引擎，化學正確性需自行驗證。</p>
-    <ExportButton result={result} filtered={filtered} provenance={provenance} />
+    <ExportButton result={result} selected={selectedCandidates(candidates, checked)} provenance={provenance} />
+    <div className="export-selection" aria-label="碎片匯出勾選">
+      <button type="button" onClick={() => setChecked(selectAll(candidates))}>全選碎片</button>{' '}
+      <button type="button" onClick={() => setChecked(new Set())}>全不選碎片</button>{' '}
+      <button type="button" onClick={() => setChecked(selectAll(filtered))}>選取目前篩選結果</button>
+      <p role="status">已勾選 {selectedCandidates(candidates, checked).length}／共 {candidates.length} 筆；其中 {hiddenSelectionCount(candidates, filtered, checked)} 筆目前被篩選隱藏。勾選跨頁保留；「選取目前篩選結果」會取代原勾選。</p>
+    </div>
     {!candidates.length ? <p role="status">這次分析沒有產生候選碎片。</p> : <>
       <div className="result-filters" aria-label="候選篩選與排序">
         <label>搜尋候選<input value={filter.query} onChange={(event) => update({ query: event.target.value })} placeholder="離子式、說明、來源規則…" /></label>
@@ -108,16 +117,17 @@ export default function ResultsView({ result, provenance }: { result: AnalysisRe
         <div className="table-scroll" tabIndex={0} role="region" aria-label="候選表格，可在容器內水平捲動">
           <table ref={table} className="candidate-table">
             <caption>候選碎片，共 {filtered.length} 筆（總計 {candidates.length} 筆）；點選離子式展開詳情</caption>
-            <thead><tr>{['m/z', '離子式', '離子類型／說明', '來源規則', '分數（0–100）', '信心標籤', '結構縮圖'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
+            <thead><tr>{['匯出勾選', 'm/z', '離子式', '離子類型／說明', '來源規則', '分數（0–100）', '信心標籤', '結構縮圖'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
             <tbody>{visible.map((item) => <Fragment key={item.id}>
               <tr aria-selected={selected === item.id} data-candidate={item.id} onClick={() => setSelected(selected === item.id ? null : item.id)}>
+                <td><input type="checkbox" aria-label={`匯出候選 ${item.id}`} checked={checked.has(item.id)} onClick={(event) => event.stopPropagation()} onChange={() => setChecked((current) => toggleCandidate(current, item.id))} /></td>
                 <td className="number">{item.mz.toFixed(4)}<small className="polarity-label">{item.polarity === 'Positive' ? '正離子 +' : '負離子 −'}</small></td>
                 <td><button type="button" className="candidate-toggle" aria-expanded={selected === item.id} onClick={(event) => { event.stopPropagation(); setSelected(selected === item.id ? null : item.id); }} aria-label={`展開候選 ${item.id} 詳情`}><IonFormula formula={item.formula} />{selected === item.id ? ' ▾' : ' ▸'}</button></td>
                 <td><strong>{item.ionType}</strong><p className="candidate-explanation">{item.explanation || item.mechanism || '未提供說明'}</p></td>
                 <td className="source-rule">{item.sourceRule}</td><td className="number">{item.heuristicScore ?? '未提供'}</td><td>{ranks[item.confidence]}</td>
                 <td><Depiction key={item.id} smiles={item.canonicalSmiles || item.smiles} depictions={depictions} /></td>
               </tr>
-              {selected === item.id && <tr className="detail-row"><td colSpan={7}><CandidateDetail item={item} result={result} depictions={depictions} /></td></tr>}
+              {selected === item.id && <tr className="detail-row"><td colSpan={8}><CandidateDetail item={item} result={result} depictions={depictions} /></td></tr>}
             </Fragment>)}</tbody>
           </table>
         </div>

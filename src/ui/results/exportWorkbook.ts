@@ -16,7 +16,8 @@ export function workbookData(result: AnalysisResult, options: ExportOptions): { 
   const parent = result.parent;
   const parameters: SheetData = [row(['參數', '實際使用值']), ...parameterRows(result.simulationConfig || { technique: result.technique }).map(row),
     row(['引擎模式標籤', result.technique === 'TOF-SIMS' ? `${result.simulationModeLabel || '未提供'}（${recordOnly}）` : result.simulationModeLabel]), row(['參數情境', result.parameterContext]), row(['引擎條件說明', result.activeRegimeDescription]),
-    row(['網站版本', options.version]), row(['匯出時間', options.at.toISOString()]), row(['匯出範圍', options.candidates ? '目前篩選結果' : '全部候選']),
+    row(['網站版本', options.version]), row(['匯出時間', options.at.toISOString()]), row(['匯出範圍', options.candidates ? '已勾選候選' : '全部候選']),
+    row(['匯出筆數／本次分析總候選數', `匯出筆數 ${candidates.length}／本次分析總候選數 ${result.candidates?.length || 0}`]),
     row(['聲明', '分數為啟發式可信度，不是訊號強度'])];
   if (result.technique === 'LC-MS/MS') parameters.push(row(['碰撞能量掃描', '固定執行碰撞能量掃描（10／25／40 eV）']));
   for (const sweep of result.sweepResults || []) {

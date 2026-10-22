@@ -47,7 +47,9 @@ describe('Excel 匯出及實際讀回', () => {
     expect(result.candidates!.length).toBeGreaterThan(2);
     expect(sheets[1].data).toContainEqual(['被移除成分', '[Na+]']);
     expect(sheets[1].data.find((row) => row[0] === '標準化說明')?.[1]).toBe(result.parent.standardization_note);
-    expect(sheets[2].data.map((row) => row.slice(0, 2))).toContainEqual(['匯出範圍', '目前篩選結果']);
+    expect(sheets[2].data.map((row) => row.slice(0, 2))).toContainEqual(['匯出範圍', '已勾選候選']);
+    expect(sheets[2].data.map((row) => row.slice(0, 2))).toContainEqual(['匯出筆數／本次分析總候選數', `匯出筆數 2／本次分析總候選數 ${result.candidates!.length}`]);
+    expect(sheets[0].data.slice(1).map((row) => row[0])).toEqual(candidates.map((item) => item.mz));
     const filename = exportFilename({ ...result, parent: { ...result.parent, formula: 'bad:/\\?*"<>|\n' } }, at);
     expect(filename).toMatch(/^CheMScutter_GC-MS_.*_20261022_\d{6}\.xlsx$/);
     expect(filename).not.toMatch(/[<>:"/\\|?*\x00-\x1f]/);
