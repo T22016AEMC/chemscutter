@@ -7,7 +7,7 @@
 | 範圍 | 使用欄位 | 用途 |
 | --- | --- | --- |
 | AnalysisResult | technique、simulationConfig、simulationModeLabel、parameterContext、activeRegimeDescription、disclaimer | 結果標題、此次分析的參數快照與引擎說明 |
-| parent | smiles、formula、exact_mass、standardization_note、removed_components | 標準化後母分子摘要 |
+| parent | smiles、input_smiles、formula、exact_mass、standardization_note、removed_components | 標準化後母分子摘要；2d 匯出同時保存輸入 SMILES |
 | candidates | id、technique、polarity、mz、formula、ionType、heuristicScore、confidence、priority、sourceRule | 表格、篩選、排序、分組、棒狀圖及連動 |
 | candidates | explanation、mechanism、fragmentationPathway、pathwayStatus | 說明及詳情；不據此新增信心理由 |
 | candidates | neutralFormula、exactMass、neutralExactMass、ionExactMass、charge、precursorMz | 詳情中的既有質量與電荷；只展示 ionExactMass / abs(charge)，不重算化學質量 |
@@ -16,7 +16,7 @@
 | structures | id、name | 依 parentStructureId 找關聯名稱，不依公式或質量猜測關聯 |
 | sweepResults | parameterValue、parameterLabel、regimeSummary、topCandidates 的全部欄位 | CE／EE 掃描的可展開表格 |
 
-未使用：signals（不重複建立另一份候選）、candidates.image（改以可見列的原有 SMILES 在 Worker 繪圖）、structures 除 id／name 外的欄位、parent.input_smiles／detected_format／compound_name／original_image／detected_groups／negative_path_enabled／fragmentation_theories。沒有要求引擎增加任何欄位。
+未使用：signals（不重複建立另一份候選）、candidates.image（改以可見列的原有 SMILES 在 Worker 繪圖）、structures 除 id／name 外的欄位、parent.detected_format／compound_name／original_image／detected_groups／negative_path_enabled／fragmentation_theories。沒有要求引擎增加任何欄位。
 
 ## 顯示決定
 
@@ -39,4 +39,10 @@
 - 主頁 JS 約 242 kB → 258 kB（gzip 約 77 kB → 82 kB）；繪圖 Worker 約 65 kB，只有可見結構需要時才建立，RDKit WASM 沿用同一個 Vite 資源網址。
 - 390px iframe 視窗中，內容視寬與頁面寬度均為 375px（扣除瀏覽器捲軸），表格在寬 317px 的容器內捲動，未溢出整頁。截圖、測試頁與原始量測保存在已忽略的 test-results/，不提交。
 
-正式站須在部署成功後以乙酸乙酯及指定橋環 SMILES 逐平台驗證摘要、圖表、排序篩選、縮放、連動、詳情與縮圖；驗證結果另於階段回報列出。完成後等待使用者指示，不開始 2d。
+2c 已完成部署及正式站三平台驗證；驗證結果另於該階段回報列出。
+
+## 階段 2d
+
+- 儀器參數表單獨立於結果；舊結果保留該次 simulationConfig，參數改變只顯示待重新分析提示。摘要與 Excel 共用中文參數標籤及「僅記錄，不影響目前模擬」說明，不增加引擎欄位。
+- 新增延後載入的 Excel 匯出，預設全部候選，可選目前篩選結果；保存原始離子式、數值精度、母分子、參數與既有掃描。完整對照與安全處理見 docs/PARAMETERS.md。
+- 2d 主頁 JS 約 267.64 kB（gzip 85.34 kB），相較 2c 約增加 9.36 kB（gzip 2.99 kB）；Excel 匯出 chunk 約 72.82 kB（gzip 21.13 kB），不在首頁首次載入。
