@@ -4,6 +4,8 @@ import IonFormula from './IonFormula';
 import { defaultFilter, filterCandidates, type CandidateFilter } from './model';
 import Depiction, { useDepictions, type Depictions } from './Depiction';
 import Spectrum from './Spectrum';
+import { parameterRows, recordOnly } from '../../shared/parameters';
+import ExportButton from './ExportButton';
 import './results.css';
 
 const ranks = { High: '高', Medium: '中', Low: '低' };
@@ -11,7 +13,6 @@ const statusNames = { 'Verified Graph Product': '分子圖產物已驗證', Cand
 const number = (value: number | undefined, digits = 4) => value === undefined ? '未提供' : value.toFixed(digits);
 const rawNumber = (value: number | undefined) => value === undefined ? '未提供' : String(value);
 const yesNo = (value: boolean | undefined) => value === undefined ? '未提供' : value ? '引擎標示通過' : '引擎標示未通過';
-const configLabels: Record<string, string> = { technique: '平台', analyzer: '分析器', polarity: '極性', ionization: '游離方式', fragmentationMethod: '碎裂方式', collisionEnergy: 'CE（eV）', collisionEnergyUnit: 'CE 單位', collisionEnergyRange: 'CE 範圍', electronEnergy: '電子能量（eV）', primaryIon: '一次離子', primaryIonEnergy: '一次離子能量（keV）', simulationMode: '模擬模式', isolationWindow: '隔離窗', precursorAdduct: '前驅加合物', sourceTemperature: '離子源溫度', sourceVoltage: '離子源電壓', reagentGas: '試劑氣體', customParameters: '其他參數' };
 
 function CandidateDetail({ item, result, depictions }: { item: FragmentCandidate; result: AnalysisResult; depictions: Depictions }) {
   const related = result.structures.find((structure) => structure.id === item.parentStructureId);
@@ -41,7 +42,7 @@ function CandidateDetail({ item, result, depictions }: { item: FragmentCandidate
   </section>;
 }
 
-export default function ResultsView({ result }: { result: AnalysisResult }) {
+export default function ResultsView({ result, provenance }: { result: AnalysisResult; provenance?: { cid: number; title: string } }) {
   const candidates = result.candidates || [];
   const [filter, setFilter] = useState<CandidateFilter>(defaultFilter);
   const [page, setPage] = useState(0);
@@ -74,12 +75,13 @@ export default function ResultsView({ result }: { result: AnalysisResult }) {
       <p>標準化說明：{result.parent.standardization_note || '引擎未回報標準化變動。'}</p>
       <p>被移除成分：{result.parent.removed_components?.join('、') || '無'}</p>
       <details><summary>此次分析的參數與引擎說明</summary>
-        <dl>{Object.entries(result.simulationConfig || {}).map(([key, value]) => <Fragment key={key}><dt>{configLabels[key] || key}</dt><dd>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</dd></Fragment>)}</dl>
-        <p>模式：{result.simulationModeLabel || '未提供'}；參數情境：{result.parameterContext || '未提供'}</p>
+        <dl>{parameterRows(result.simulationConfig || { technique: result.technique }).map(([label, value]) => <Fragment key={label}><dt>{label}</dt><dd>{value}</dd></Fragment>)}</dl>
+        <p>模式：{result.simulationModeLabel || '未提供'}{result.technique === 'TOF-SIMS' && `（${recordOnly}）`}；參數情境：{result.parameterContext || '未提供'}</p>
         <p>{result.activeRegimeDescription}</p><p>{result.disclaimer}</p>
       </details>
     </div>
     <p className="score-warning">分數為啟發式可信度，不是訊號強度。信心標籤與質量平衡標示沿用引擎，化學正確性需自行驗證。</p>
+    <ExportButton result={result} filtered={filtered} provenance={provenance} />
     {!candidates.length ? <p role="status">這次分析沒有產生候選碎片。</p> : <>
       <div className="result-filters" aria-label="候選篩選與排序">
         <label>搜尋候選<input value={filter.query} onChange={(event) => update({ query: event.target.value })} placeholder="離子式、說明、來源規則…" /></label>

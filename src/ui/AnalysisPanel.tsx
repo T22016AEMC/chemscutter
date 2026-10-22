@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AnalysisResult, MassTechnique } from '../engine/types';
-import { getProfileForConfig } from '../engine/platform/instrumentProfiles';
+import type { AnalysisResult } from '../engine/types';
+import { defaultConfig, parametersChanged, toDraft, toEngineConfig, validateParameters } from '../shared/parameters';
+import ParameterForm from './ParameterForm';
 import { createAnalysisWorker } from '../worker/client';
-import { techniques } from '../worker/protocol';
 import type { StructureRequest, StructureResponse } from '../worker/structureSession';
 import type { PreparedStructure } from '../engine/chem/prepareStructure';
 import { FRAME_CHANNEL, fromExpectedWindow, isFrameResponse, type FrameRequest, type FrameResponse } from '../shared/ketcherProtocol';
@@ -16,7 +16,13 @@ export default function AnalysisPanel() {
   const [smiles, setSmiles] = useState('CCOC(C)=O');
   const [drawingInput, setDrawingInput] = useState({ value: 'CCOC(C)=O' });
   const [selectedCompound, setSelectedCompound] = useState<PubChemCompound | null>(null);
-  const [technique, setTechnique] = useState<MassTechnique>('TOF-SIMS');
+  const [draft, setDraft] = useState(() => toDraft(defaultConfig('TOF-SIMS')));
+  const technique = draft.technique;
+  const [resultConfig, setResultConfig] = useState(() => defaultConfig('TOF-SIMS'));
+  const runConfig = useRef(resultConfig);
+  const confirmedInput = useRef(false);
+  const [resultSource, setResultSource] = useState<{ cid: number; title: string } | undefined>();
+  const runSource = useRef<{ cid: number; title: string } | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
@@ -40,7 +46,7 @@ export default function AnalysisPanel() {
   const openedAt = useRef(0);
   const frameHandler = useRef<(message: FrameResponse) => void>(() => {});
   const workerHandler = useRef<(message: StructureResponse) => void>(() => {});
-  const config = getProfileForConfig(technique).defaultConfig;
+  const validParameters = !Object.keys(validateParameters(draft)).length;
 
   useEffect(() => () => workerRef.current?.terminate(), []);
   useEffect(() => {
@@ -83,6 +89,7 @@ export default function AnalysisPanel() {
   }
 
   function invalidate() {
+    confirmedInput.current = false;
     exportId.current = 0;
     setPrepared(null);
     preparationId.current = 0;
@@ -106,9 +113,13 @@ export default function AnalysisPanel() {
   }
 
   function runPrepared(confirmed: boolean, id = preparationId.current) {
+    if (!validParameters) { setError('儀器參數尚未通過驗證，請修正標示的欄位。'); return; }
+    runConfig.current = toEngineConfig(draft);
+    confirmedInput.current = confirmed;
+    runSource.current = source.current === 'drawing' && selectedCompound ? { cid: selectedCompound.cid, title: selectedCompound.title } : undefined;
     setBusy(true);
     setError('');
-    try { sendWorker({ type: 'run-prepared', id: ++requestId.current, preparationId: id, confirmed, technique }); }
+    try { sendWorker({ type: 'run-prepared', id: ++requestId.current, preparationId: id, confirmed, technique, config: runConfig.current }); }
     catch { workerFailed(); }
   }
 
@@ -120,7 +131,7 @@ export default function AnalysisPanel() {
       if (source.current === 'text') setTextPreview(response.structure);
       if (response.structure.multipleComponents) setPrepared(response.structure);
       else runPrepared(false, response.id);
-    } else if (response.type === 'result') setResult(response.result);
+    } else if (response.type === 'result') { setResult(response.result); setResultConfig(runConfig.current); setResultSource(runSource.current); }
     else {
       setError(response.message);
       setErrorDetails(response.details || '來源：Worker 流程；RDKit 未提供額外訊息。');
@@ -137,6 +148,7 @@ export default function AnalysisPanel() {
       setFrameStatus(`繪圖器已就緒，首次載入耗時 ${((performance.now() - openedAt.current) / 1000).toFixed(2)} 秒。`);
     } else if (response.type === 'changed') {
       if (source.current === 'drawing') invalidate();
+      setSelectedCompound(null);
       setSynced(true);
       setDrawingError('');
     } else if (response.type === 'loaded' && response.id === loadId.current) {
@@ -163,6 +175,7 @@ export default function AnalysisPanel() {
 
   function analyze() {
     if (busy) return;
+    if (!validParameters) { setError('儀器參數尚未通過驗證，請修正標示的欄位。'); return; }
     source.current = 'drawing';
     setTextPreview(null);
     setError('');
@@ -179,6 +192,7 @@ export default function AnalysisPanel() {
 
   function analyzeText() {
     if (busy) return;
+    if (!validParameters) { setError('儀器參數尚未通過驗證，請修正標示的欄位。'); return; }
     invalidate();
     source.current = 'text';
     setBusy(true);
@@ -221,22 +235,7 @@ export default function AnalysisPanel() {
           {drawingError && <div className="error"><p role="alert">繪圖區：{drawingError}</p>
             <details><summary>繪圖區技術細節</summary><pre>{drawingDetails}</pre></details>
           </div>}
-          <label htmlFor="technique">分析平台</label>
-          <select id="technique" value={technique} disabled={busy}
-            onChange={(event) => setTechnique(event.target.value as MassTechnique)}>
-            {techniques.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-          <div className="parameters">
-            <h3>目前使用的參數</h3>
-            <p>分析器：{config.analyzer}；極性：{config.polarity === 'Both' ? '正、負離子' : '正離子'}；
-              模式：{config.simulationMode === 'General' ? '通用' : '儀器參數模式'}。</p>
-            {technique === 'TOF-SIMS' && <p>一次離子：{config.primaryIon}；能量：{config.primaryIonEnergy} keV。</p>}
-            {technique === 'LC-MS/MS' && <>
-              <p>游離方式：自動；碎裂方式：{config.fragmentationMethod}；碰撞能量 CE：{config.collisionEnergy} eV。</p>
-              <p>CE 掃描：10、25、40 eV（間隔 15 eV）。目前沿用引擎預設，與舊版介面的 QTOF、CE 25 eV 及掃描間隔 10 eV 不同。</p>
-            </>}
-            {technique === 'GC-MS' && <p>游離方式：{config.ionization}；電子能量：{config.electronEnergy} eV。</p>}
-          </div>
+          <ParameterForm draft={draft} onChange={setDraft} disabled={busy} />
           <button type="button" disabled={busy || !ready || !synced} onClick={analyze}>{busy ? '處理中…' : '從 Ketcher 取得結構並分析'}</button>
           <small>使用繪圖區內容。{!open ? '請先開啟 Ketcher；文字欄位可使用「直接分析」。' : !ready ? '繪圖器正在載入，請稍候。' : !synced ? '繪圖區尚未同步完成，請先處理匯入訊息。' : ''}</small>
           {prepared?.multipleComponents && <section className="component-confirmation" aria-labelledby="confirmation-title">
@@ -250,7 +249,10 @@ export default function AnalysisPanel() {
           {busy ? '正在載入分析引擎並計算候選碎片，請稍候…' : result ? `分析完成：${result.technique}，共 ${result.candidates?.length ?? 0} 筆候選。` : ''}
         </p>
       </section>
-      {result && <ResultsView result={result} />}
+      {result && <>
+        {parametersChanged(draft, resultConfig) && <div className="parameter-stale" role="status"><p>參數已變更，結果尚未更新。</p><button type="button" disabled={busy} onClick={() => runPrepared(confirmedInput.current)}>重新分析</button></div>}
+        <ResultsView key={result.technique + requestId.current} result={result} provenance={resultSource} />
+      </>}
     </>
   );
 }

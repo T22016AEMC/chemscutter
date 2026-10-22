@@ -2,12 +2,13 @@ import { getRDKit, type RDKitLoaderOptions } from '../engine/rdkit/loader';
 import { prepareStructure, type PreparedStructure } from '../engine/chem/prepareStructure';
 import { runMultiPlatformAnalysis } from '../engine';
 import { techniques, type AnalysisResponse } from './protocol';
-import type { MassTechnique } from '../engine/types';
+import type { MassTechnique, SimulationConfig } from '../engine/types';
+import { isFormConfig } from '../shared/parameters';
 import { InputValidationError, inputMessages } from '../shared/inputErrors';
 
 export type StructureRequest =
   | { type: 'prepare'; id: number; input: string; source?: 'text' | 'drawing' }
-  | { type: 'run-prepared'; id: number; preparationId: number; confirmed: boolean; technique: MassTechnique }
+  | { type: 'run-prepared'; id: number; preparationId: number; confirmed: boolean; technique: MassTechnique; config?: SimulationConfig }
   | { type: 'invalidate'; id: number };
 export type StructureResponse = AnalysisResponse | { type: 'prepared'; id: number; structure: PreparedStructure };
 
@@ -18,7 +19,8 @@ export function isStructureRequest(value: unknown): value is StructureRequest {
   return r.type === 'invalidate' || (r.type === 'prepare' && typeof r.input === 'string'
     && (r.source === undefined || r.source === 'text' || r.source === 'drawing'))
     || (r.type === 'run-prepared' && Number.isSafeInteger(r.preparationId) && (r.preparationId as number) > 0
-      && typeof r.confirmed === 'boolean' && techniques.includes(r.technique as MassTechnique));
+      && typeof r.confirmed === 'boolean' && techniques.includes(r.technique as MassTechnique)
+      && (r.config === undefined || isFormConfig(r.config, r.technique as MassTechnique)));
 }
 
 /** 準備與確認綁定同一份結構；多成分未確認時絕不呼叫分析引擎。 */
@@ -43,7 +45,7 @@ export function createStructureSession(analyze = runMultiPlatformAnalysis) {
       if (!pending || pending.id !== request.preparationId) throw new Error('結構已變更，請重新驗證文字或取得繪圖結構。');
       if (pending.structure.multipleComponents && !request.confirmed) throw new InputValidationError('MULTIPLE_COMPONENTS', '來源：確認流程；未呼叫分析引擎。');
       const input = pending.analysisInput;
-      const result = await analyze(input, { technique: request.technique });
+      const result = await analyze(input, request.config ?? { technique: request.technique });
       return { type: 'result', id, result };
     } catch (error) {
       if (loadingEngine) return { type: 'error', id, code: 'ENGINE_LOAD_FAILED', message: '分析引擎載入失敗，請確認網路連線後再試。' };

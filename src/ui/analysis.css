@@ -31,6 +31,19 @@ button:disabled { cursor: wait; opacity: .65; }
 :focus-visible { outline: 3px solid #d57516; outline-offset: 3px; }
 .parameters { padding: 16px; margin: 10px 0; background: #edf5f6; border-radius: 6px; }
 .parameters p { margin: 6px 0; }
+.parameters { min-width: 0; border: 1px solid #c4d7dc; }
+.parameters legend { font-weight: 700; }
+.technique-cards { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.technique-cards button { background: #edf5f6; color: #155d70; border: 2px solid #71868f; }
+.technique-cards button[aria-pressed="true"] { background: #155d70; color: white; border-color: #155d70; }
+.parameter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 12px; margin-bottom: 16px; }
+.parameter-grid p { align-self: center; }
+.parameter-grid label { display: grid; align-content: start; }
+.parameter-grid [aria-invalid="true"] { border: 2px solid #9d2525; }
+.parameter-grid [aria-invalid="true"] + small { color: #9d2525; }
+.parameter-stale { margin-top: 24px; padding: 16px; background: #fff3d9; border: 2px solid #a66d13; border-radius: 8px; }
+.excel-export { display: grid; gap: 10px; margin-block: 16px; padding: 16px; border: 1px solid #c4d7dc; border-radius: 8px; }
+.excel-export input { width: auto; margin-right: 8px; }
 .error { padding: 12px; color: #9d2525; background: #fff0ee; border-left: 4px solid #bb3939; overflow-wrap: anywhere; }
 [role="status"]:empty { margin: 0; }
 .result-note, small { color: #52636a; }
