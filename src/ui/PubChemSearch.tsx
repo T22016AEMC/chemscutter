@@ -33,11 +33,12 @@ export default function PubChemSearch({ onSelect, disabled }: { onSelect: (compo
         onChange={(event) => { setName(event.target.value); setResult(null); setError(''); }} />
       <label htmlFor="name-match">名稱比對方式</label>
       <select id="name-match" value={match} disabled={busy || disabled} onChange={(event) => { setMatch(event.target.value as NameMatch); setResult(null); setError(''); }}>
-        <option value="complete">完整名稱或 CAS 號</option><option value="word">名稱關鍵字（可回傳多筆）</option>
+        <option value="complete">完整名稱或 CAS 號（自動查物質紀錄）</option><option value="word">名稱關鍵字（進階搜尋）</option>
       </select>
+      <small>化合物名稱查無時，會自動查物質紀錄並合併不重複的 CID；CAS 號不需手動切換模式。</small>
       <button type="submit" disabled={busy || disabled}>{busy ? '查詢中…' : '查詢 PubChem'}</button>
     </form>
-    <p role="status" aria-live="polite">{busy ? '正在查詢 PubChem，請稍候…' : result ? `找到 ${result.total} 筆，顯示前 ${result.compounds.length} 筆。請自行選擇，不會自動載入或分析。` : ''}</p>
+    <p role="status" aria-live="polite">{busy ? '正在查詢 PubChem，請稍候…' : result ? `找到 ${result.total} 個不重複 CID，僅顯示前 ${result.compounds.length} 筆。請自行選擇，不會自動載入或分析。` : ''}</p>
     {error && <p role="alert" className="error">{error}</p>}
     {result && <ul className="pubchem-results">{result.compounds.map((item) => <li key={item.cid}>
       <p><strong>{item.title}</strong>；CID：{item.cid}；分子式：{item.formula}</p>

@@ -85,10 +85,40 @@ describe('PubChem 網路、限流與防連按（全數模擬 fetch）', () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
     expect(await client.search('aspirin')).toMatchObject({ total: 1 });
   });
-  it.each([[404, 'NOT_FOUND'], [429, 'RATE_LIMIT'], [503, 'RATE_LIMIT'], [500, 'SERVICE']])('HTTP %s 提供明確錯誤且不自動重試', async (status, code) => {
+  it.each([[429, 'RATE_LIMIT'], [503, 'RATE_LIMIT'], [500, 'SERVICE']])('HTTP %s 提供明確錯誤且不自動重試', async (status, code) => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json({}, status as number));
     await expect(createPubChemClient(fetcher).search('aspirin')).rejects.toMatchObject({ code });
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('化合物查無時自動查物質，忽略無 CID 的紀錄並去重，不自動選取', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json({}, 404))
+      .mockResolvedValueOnce(json({ InformationList: { Information: [{ SID: 1, CID: [12577030] }, { SID: 2, CID: [12577030, 44607779] }, { SID: 3 }] } }))
+      .mockResolvedValueOnce(json(properties([row(12577030), row(44607779)])));
+    const pending = createPubChemClient(fetcher).search('33791-58-1');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await pending).toMatchObject({ total: 2, compounds: [expect.objectContaining({ cid: 12577030 }), expect.objectContaining({ cid: 44607779 })] });
+    expect(fetcher.mock.calls[1][0]).toBe('https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/name/33791-58-1/cids/JSON');
+    expect(fetcher.mock.calls[2][0]).toContain('/cid/12577030,44607779/');
+  });
+  it('兩種方式都查無時說明已嘗試的範圍', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json({}, 404));
+    const check = expect(createPubChemClient(fetcher).search('unknown')).rejects.toMatchObject({ code: 'NOT_FOUND', message: expect.stringContaining('物質紀錄') });
+    await vi.advanceTimersByTimeAsync(500); await check;
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+  it('後備查詢仍遵守限流，不繼續取得屬性', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json({}, 404)).mockResolvedValueOnce(json({}, 429));
+    const check = expect(createPubChemClient(fetcher).search('33791-58-1')).rejects.toMatchObject({ code: 'RATE_LIMIT' });
+    await vi.advanceTimersByTimeAsync(500); await check;
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+  it('後備物質查詢沿用同一個二十秒逾時', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(json({}, 404)).mockImplementation((_url, options) => new Promise((_resolve, reject) => {
+      options?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+    }));
+    const check = expect(createPubChemClient(fetcher).search('33791-58-1')).rejects.toMatchObject({ code: 'TIMEOUT' });
+    await vi.advanceTimersByTimeAsync(20_000); await check;
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
   it('限流冷卻遵守 Retry-After，冷卻期間不連線', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(json({}, 429, { 'Retry-After': '75' }));
@@ -111,7 +141,8 @@ describe('PubChem 網路、限流與防連按（全數模擬 fetch）', () => {
     await check;
     expect(fetcher.mock.calls[0][1]?.signal?.aborted).toBe(true);
     fetcher.mockResolvedValue(json({}, 404));
-    await expect(client.search('aspirin')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const retry = expect(client.search('aspirin')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await vi.advanceTimersByTimeAsync(500); await retry;
   });
   it('離線或網路失敗提供中文提示', async () => {
     const fetcher = vi.fn<typeof fetch>().mockRejectedValue(new TypeError('Failed to fetch'));
@@ -131,8 +162,8 @@ describe('PubChem 網路、限流與防連按（全數模擬 fetch）', () => {
     await check;
     fetcher.mockResolvedValue(json({}, 404));
     const retry = expect(client.search('aspirin')).rejects.toMatchObject({ code: 'NOT_FOUND' });
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(1000);
     await retry;
-    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(fetcher).toHaveBeenCalledTimes(4);
   });
 });

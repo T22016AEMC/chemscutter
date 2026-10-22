@@ -14,7 +14,7 @@ export type PubChemErrorCode = 'EMPTY' | 'BUSY' | 'NOT_FOUND' | 'TIMEOUT' | 'NET
 const messages: Record<PubChemErrorCode, string> = {
   EMPTY: '請輸入英文名稱或 CAS 號。',
   BUSY: '正在查詢，請等候本次查詢完成。',
-  NOT_FOUND: '查無符合的化合物，請檢查英文名稱或 CAS 號；也可改用名稱關鍵字搜尋。',
+  NOT_FOUND: '已嘗試化合物名稱與物質紀錄查詢，仍查無可用的化合物。請改用英文名稱，或直接貼上 SMILES 分析。',
   TIMEOUT: 'PubChem 查詢逾時，請稍後再試。',
   NETWORK: '無法連線 PubChem，請檢查網路連線；離線時仍可貼上 SMILES／Molfile 分析。',
   RATE_LIMIT: 'PubChem 暫時限制請求，請至少等候 30 秒後再試。',
@@ -40,6 +40,19 @@ export function compoundUrl(cid: number): string {
 export function parseCids(value: unknown): number[] {
   const ids = record(record(value).IdentifierList).CID;
   if (!Array.isArray(ids) || !ids.every(isCid)) throw new PubChemError('FORMAT');
+  if (!ids.length) throw new PubChemError('NOT_FOUND');
+  return [...new Set(ids)];
+}
+export function parseSubstanceCids(value: unknown): number[] {
+  const rows = record(record(value).InformationList).Information;
+  if (!Array.isArray(rows)) throw new PubChemError('FORMAT');
+  const ids: number[] = [];
+  for (const value of rows) {
+    const row = record(value);
+    if (row.CID === undefined) continue;
+    if (!Array.isArray(row.CID) || !row.CID.every(isCid)) throw new PubChemError('FORMAT');
+    ids.push(...row.CID);
+  }
   if (!ids.length) throw new PubChemError('NOT_FOUND');
   return [...new Set(ids)];
 }
@@ -97,7 +110,12 @@ export function createPubChemClient(fetcher: typeof fetch = fetch) {
         catch { if (controller.signal.aborted) throw new PubChemError('TIMEOUT'); throw new PubChemError('FORMAT'); }
       }
       try {
-        const ids = parseCids(await get(`${API}/name/${encodeURIComponent(name)}/cids/JSON?name_type=${match}`));
+        let ids: number[];
+        try { ids = parseCids(await get(`${API}/name/${encodeURIComponent(name)}/cids/JSON?name_type=${match}`)); }
+        catch (error) {
+          if (!(error instanceof PubChemError) || error.code !== 'NOT_FOUND') throw error;
+          ids = parseSubstanceCids(await get(`${HOST}/rest/pug/substance/name/${encodeURIComponent(name)}/cids/JSON`));
+        }
         const first = ids.slice(0, 5);
         const compounds = parseProperties(await get(`${API}/cid/${first.join(',')}/property/Title,IUPACName,MolecularFormula,SMILES,ConnectivitySMILES/JSON`), first);
         const result = { compounds, total: ids.length };
