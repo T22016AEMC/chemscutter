@@ -54,4 +54,25 @@ describe('Excel 匯出及實際讀回', () => {
     expect(filename).toMatch(/^CheMScutter_GC-MS_.*_20261022_\d{6}\.xlsx$/);
     expect(filename).not.toMatch(/[<>:"/\\|?*\x00-\x1f]/);
   });
+  it('SMILES 純文字、缺值原因與可選 PNG 圖片可實際寫入讀回', async () => {
+    const result = await runMultiPlatformAnalysis('CCOC(C)=O', defaultConfig('LC-MS/MS'));
+    const candidates = result.candidates!.slice(0, 2).map((item, index) => index ? { ...item, smiles: '', canonicalSmiles: '' } : item);
+    const png = new Blob([Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aG2kAAAAASUVORK5CYII='), c => c.charCodeAt(0))], { type: 'image/png' });
+    const options = { at, version: 'test', candidates, images: new Map([[candidates[0].id, { content: png, note: '' }]]) };
+    const data = workbookData(result, options);
+    expect(data[0].images).toHaveLength(1);
+    expect(data[0].images![0]).toMatchObject({ anchor: { row: 2, column: 12 }, width: 180, height: 120, contentType: 'image/png' });
+    const blob = await createWorkbook(result, options);
+    const sheets = await readXlsxFile(await blob.arrayBuffer());
+    expect(sheets[0].data[0]).toEqual([...candidateHeaders, '結構圖（PNG）']);
+    expect(sheets[0].data[1][9]).toBe(candidates[0].canonicalSmiles || candidates[0].smiles);
+    expect(sheets[0].data[2][9]).toBeNull();
+    expect(sheets[0].data[2][10]).toBe('引擎未提供結構 SMILES，無法還原結構。');
+    expect(sheets[0].data[2][11]).toContain('引擎未提供');
+    const exportedIds = new Set(candidates.map((item) => item.id));
+    const allIds = new Set(result.candidates!.map((item) => item.id));
+    for (const row of sheets[2].data) {
+      if (typeof row[0] === 'string' && allIds.has(row[0])) expect(exportedIds.has(row[0])).toBe(true);
+    }
+  });
 });
