@@ -43,7 +43,7 @@
 - 使用者核准的例外：TOF／GC 分析器、TOF 通用／儀器感知標籤與 Hybrid Orbitrap-SIMS 皆以「僅記錄，不影響目前模擬」明示並納入結果與 Excel，列為 D3。LC 不放 CE 掃描開關，明示固定 10／25／40 eV；CID／HCD 在 QTOF、Orbitrap、QQQ 不一定改變候選。GC 條件文字以引擎回傳為準。
 - 表單變更不自動分析，保留結果參數快照，顯示待重新分析提示。重新分析仍沿用已驗證及已確認的結構；結構改變則撤銷準備。未新增可選的 localStorage 記錄，減少狀態同步及資料保存範圍。
 - Excel 採固定 write-excel-file 4.1.1（MIT），以動態模組匯入 universal 入口；read-excel-file 9.3.12 僅供測試讀回。選擇理由為相依較少、維護較新且安裝後 npm audit 零漏洞，避開 npm xlsx 舊版安全問題及 ExcelJS 較重相依。三工作表保存引擎原值，所有文字明確用字串儲存格，不建立公式。比較、參數對照與匯出細節見 docs/PARAMETERS.md。
-- 依使用者決定移除計畫中的 CFM-ID 對照項目，本階段不替換成其他對照服務。
+- 2e-1 使用者決定取消圖片辨識（原階段 4），連帶不再需要後端與託管方案；取消 CFM-ID 對照，原因為需後端、授權不明、不適用 TOF-SIMS。取消項目不列為後續待辦。
 - 2c 結果顯示只讀既有 AnalysisResult：以分頁候選表及自製 SVG 分數圖提供篩選、排序、縮放與選取連動，不新增套件，不修改引擎型別、化學邏輯或標準答案。縮圖透過延後建立的繪圖 Worker 呼叫既有 depiction，只為可見列繪製，使用 img data URL。欄位盤點、顯示取捨與量測方式見 docs/RESULTS_UI.md。
 - 使用者確認：沒有獨立信心理由時明示「引擎未提供獨立信心理由」，僅列原始 explanation、mechanism、pathwayStatus；質量詳情列既有中性／離子質量、電荷及 m/z，只展示離子質量除以電荷絕對值，不重新計算化學質量。離子式顯示 +• 等排版，但保留各段原字串，以逐字還原驗證，不修改資料。
 - 2c 效能驗證採 59 筆最大 golden 及 500 筆合成候選，表格每頁二十筆。LC／GC 的能量掃描直接顯示既有資料，保留 D2／Q20 行為並在畫面說明限制；信心、質量平衡及途徑標示不作二次化學判定。
@@ -52,7 +52,7 @@
 - 名稱查詢只傳使用者輸入名稱，後續屬性查詢只傳 PubChem 回傳的 CID，不傳使用者繪圖、SMILES 或 Molfile。請求不帶認證、不送 referrer、不接受重新導向，使用 cache: no-store；資料僅以 React 文字顯示，不插入 HTML。查詢快取最多二十筆，只存在目前頁面的記憶體，不使用持久儲存。頁面清楚提示「請輸入英文名稱或 CAS 號」、資料來源及資料傳送範圍。
 - 查詢到的結構只載入 Ketcher，不覆寫自行貼入的文字欄位，不送入 Worker。使用者須確認繪圖並按「從 Ketcher 取得結構並分析」，才能進入既有 RDKit 驗證與分析流程；多成分仍需第二次明確確認。重新選擇（包含相同 CID）會撤銷先前的分析準備並重新載圖。
 - 依 [PubChem 請求限制](https://pubchem.ncbi.nlm.nih.gov/docs/dynamic-request-throttling) 保守限制請求至少間隔 500ms，同一時間只允許一筆名稱查詢，總逾時二十秒並用 AbortController 中止。HTTP 429／503 顯示暫時限流並至少冷卻三十秒，有可讀取的 Retry-After 則遵守較長時間；不自動重試。查無結果、格式異常、網路／離線與逾時分別顯示中文訊息。
-- 2b-1 問題 B（使用者決定）：自行貼上的 SMILES／Molfile 可經 RDKit 驗證後直接分析，不必載入 Ketcher；以 Worker 產生的小結構圖顯示實際分析內容。Ketcher 為選用繪圖器，使用繪圖區內容的按鈕與文字直接分析分開標示。先在 Ketcher 確認才計算的要求，僅保留給之後的 PubChem 名稱查詢與圖片辨識，因為這些來源可能認錯結構。所有路徑仍共用既有標準化與多成分明確確認，不更改化學規則。
+- 2b-1 問題 B（使用者決定）：自行貼上的 SMILES／Molfile 可經 RDKit 驗證後直接分析，不必載入 Ketcher；以 Worker 產生的小結構圖顯示實際分析內容。Ketcher 為選用繪圖器，使用繪圖區內容的按鈕與文字直接分析分開標示。先在 Ketcher 確認才計算的要求，只適用於 PubChem 名稱查詢，因為查詢結果可能不是使用者想要的結構。所有路徑仍共用既有標準化與多成分明確確認，不更改化學規則。
 - 直接分析保存原始文字送入既有引擎，保留 SMILES 縮寫／修復及格式回報行為；繪圖路徑維持原本 Molfile 轉 SMILES 的行為。兩者的驗證結果與錯誤狀態分開，文字分析不會被繪圖器載入或同步失敗阻擋。Ketcher 的 setMolecule 可能吞掉例外並發出 FAILURE，因此同步必須同時檢查該事件，失敗不得標為已同步。
 - 2b-1 問題 A：Indigo 的未指定立體組態警告不作為 RDKit 解析失敗。輸入轉換僅攔截不支援的繪圖內容，再以既有 RDKit 解析、消毒及標準化流程驗證；不更改 SMILES 解析行為或化學規則。錯誤分為空白、無法解析、價鍵／消毒失敗、不支援內容、多成分及其他，附來源與原始訊息；重現輸入與證據見 docs/INPUT_FIXES.md。
 - 階段 2b-1 採獨立子套件與 iframe：Ketcher 3.18.0 的 Miew 相依只宣告支援 React 18，故子套件固定使用 React 18.3.1 與三個 Ketcher 3.18.0 套件，維持自己的 lockfile；主站保留 React 19，不加 overrides。建置產物應由 CI 產生到 dist/ketcher/，不提交預先建置的二進位檔，以保留可重現建置與來源可追溯性。
@@ -67,7 +67,7 @@
 - 子套件建置後附上固定官方版本的 LICENSE、NOTICE，以及 lockfile 正式相依的授權原文與聲明；這些文字隨同一份 GitHub Pages artifact 發布。CI 只增加子套件安裝與建置，不改變部署架構。
 - 階段 2a：首頁以 module Worker 呼叫 runMultiPlatformAnalysis；RDKit WASM 由 Vite 匯入資源網址並透過 locateFile 載入，沿用 /chemscutter/ base。介面顯示既有參數，D1、D2 留待後續階段處理；不新增套件。
 - 標準答案換行固定為 LF：.gitattributes 僅對 tests/golden/ 設定 text eol=lf，避免 Windows 檢出為 CRLF 造成逐位元組差異；golden:diff 比對腳本保持不變。
-- 純前端靜態網站，無後端、無 AI API；結構輸入用 Ketcher、名稱查詢用 PubChem；圖片辨識延後到階段 4
+- 純前端靜態網站，無後端、無 AI API；結構輸入用 Ketcher、名稱查詢用 PubChem。
 - 介面台灣繁體中文；實驗室使用，先全公開測試
 - 部署（階段 3）提前於階段 2 執行，讓每次推送都能在正式網址驗證（使用者 2026-10-20 前一日要求先上線）
 - 化學正確性由使用者驗證；開發者只做運作驗證；有疑問先問使用者
